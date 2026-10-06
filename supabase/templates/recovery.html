@@ -1,0 +1,5 @@
+<h2>Reset your password</h2>
+<p>Someone asked to reset the password for your That's Game Dev Plus account.</p>
+<!-- RedirectTo is the app's /auth/callback?next=/reset-password URL (lib/site-url.ts). -->
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery">Set a new password</a></p>
+<p>The link works for 1 hour. If you didn't ask for this, you can ignore this email.</p>
