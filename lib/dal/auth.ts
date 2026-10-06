@@ -20,6 +20,7 @@ export type Profile = {
   displayName: string
   role: Enums<"user_role">
   dropEmails: boolean
+  stripeCustomerId: string | null
 }
 
 export type Membership = {
@@ -44,7 +45,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from("profiles")
-    .select("id, email, display_name, role, drop_emails")
+    .select("id, email, display_name, role, drop_emails, stripe_customer_id")
     .eq("id", user.id)
     .maybeSingle()
   if (!data) return null
@@ -55,6 +56,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     displayName: data.display_name,
     role: data.role,
     dropEmails: data.drop_emails,
+    stripeCustomerId: data.stripe_customer_id,
   }
 })
 

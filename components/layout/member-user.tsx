@@ -3,17 +3,16 @@ import { LogOutIcon } from "lucide-react"
 import { cn } from "cn"
 import { signOut } from "@/app/(auth)/actions"
 import { Skeleton } from "@/components/ui/skeleton"
+import { isLiveStatus } from "@/lib/billing/status"
 import { getMembership, getProfile, requireUser } from "@/lib/dal/auth"
 import { PLANS } from "@/lib/plans"
 
 // Session-dependent parts of the member shell. Render them inside <Suspense>.
 
-const LIVE_STATUSES = new Set(["active", "trialing", "past_due"])
-
 async function getShellUser() {
   const user = await requireUser()
   const [profile, membership] = await Promise.all([getProfile(), getMembership()])
-  const live = membership && LIVE_STATUSES.has(membership.status)
+  const live = membership && isLiveStatus(membership.status)
 
   return {
     displayName: profile?.displayName || user.email.split("@")[0],

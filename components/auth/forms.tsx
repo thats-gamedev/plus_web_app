@@ -57,7 +57,10 @@ function ResendConfirmation({ email }: { email: string }) {
 
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, idleState)
-  const plan = parsePlan(useSearchParams().get("plan"))
+  const params = useSearchParams()
+  const plan = parsePlan(params.get("plan"))
+  const consent = params.get("consent")
+  const loginHref = withParams("/login", { next: withParams("/app", { plan, consent }) })
   const errors = state.fieldErrors ?? {}
 
   if (state.status === "success" && state.values?.email) {
@@ -68,15 +71,16 @@ export function SignUpForm() {
           activate your account; it signs you in right away.
         </Banner>
         <ResendConfirmation email={state.values.email} />
-        <SwitchLink text="Already confirmed?" href={withParams("/login", { plan })} label="Log in" />
+        <SwitchLink text="Already confirmed?" href={loginHref} label="Log in" />
       </div>
     )
   }
 
   return (
     <form action={action} className="space-y-5" noValidate>
-      {/* Phase 4 sends this plan on to Stripe Checkout. */}
+      {/* Carried through email confirmation to the paywall and checkout. */}
       {plan && <input type="hidden" name="plan" value={plan} />}
+      {consent && <input type="hidden" name="consent" value={consent} />}
       <FormField
         name="displayName"
         label="Display name"
@@ -122,7 +126,7 @@ export function SignUpForm() {
       </Button>
       <SwitchLink
         text="Already have an account?"
-        href={withParams("/login", { plan })}
+        href={loginHref}
         label="Log in"
       />
     </form>

@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation"
 import { type FormState, readFields } from "@/lib/auth/form-state"
-import { safeNextPath } from "@/lib/auth/redirects"
+import { safeNextPath, withParams } from "@/lib/auth/redirects"
+import { parseConsent } from "@/lib/billing/consent"
 import {
   fieldErrors,
   forgotPasswordSchema,
@@ -11,6 +12,7 @@ import {
   signUpSchema,
 } from "@/lib/auth/schemas"
 import { getUser } from "@/lib/dal/auth"
+import { parsePlan } from "@/lib/plans"
 import { authCallbackUrl } from "@/lib/site-url"
 import { createClient } from "@/lib/supabase/server"
 
@@ -40,9 +42,18 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     "email",
     "password",
     "passwordRepeat",
+    "plan",
+    "consent",
     "captchaToken",
   ])
   const values = { displayName: raw.displayName, email: raw.email }
+
+  // After confirming, the member lands on the paywall with the plan they
+  // picked, its waiver tick kept, one click away from checkout.
+  const landing = withParams("/app", {
+    plan: parsePlan(raw.plan),
+    consent: parseConsent(raw.consent),
+  })
 
   const parsed = signUpSchema.safeParse(raw)
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error), values }
@@ -55,7 +66,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
       // Read by the handle_new_user trigger to fill profiles.display_name.
       data: { display_name: parsed.data.displayName },
       // The confirmation link verifies the email and signs the user in.
-      emailRedirectTo: await authCallbackUrl("/app"),
+      emailRedirectTo: await authCallbackUrl(landing),
       ...captcha(raw.captchaToken),
     },
   })
@@ -92,7 +103,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   // so the form can't be used to find out who is registered.
   if (!data.session) return { status: "success", values: { email: parsed.data.email } }
 
-  redirect("/app")
+  redirect(landing)
 }
 
 export async function signIn(_prev: FormState, formData: FormData): Promise<FormState> {
