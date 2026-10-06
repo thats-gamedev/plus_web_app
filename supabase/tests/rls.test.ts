@@ -249,3 +249,45 @@ describe("admin", () => {
     expect(draftContent.error?.code).toBe(PERMISSION_DENIED)
   })
 })
+
+describe("is_plus (database function)", () => {
+  // Writes a temporary subscription for the visitor with the secret key, so
+  // it needs SUPABASE_SECRET_KEY in .env.local.
+  const secretKey = process.env.SUPABASE_SECRET_KEY
+  const service = secretKey
+    ? createClient<Database>(url!, secretKey, { auth: { persistSession: false, autoRefreshToken: false } })
+    : null
+  const SUB_ID = "sub_rls_test_is_plus"
+
+  it.skipIf(!service).each([
+    ["active", true],
+    ["trialing", true],
+    ["past_due", true],
+    ["incomplete", false],
+    ["incomplete_expired", false],
+    ["unpaid", false],
+    ["canceled", false],
+    ["paused", false],
+  ] as const)("status %s → %s", async (status, expected) => {
+    const { data: user } = await visitor.auth.getUser()
+    const uid = user.user!.id
+    try {
+      const { error } = await service!.from("subscriptions").upsert(
+        {
+          user_id: uid,
+          stripe_subscription_id: SUB_ID,
+          stripe_price_id: "price_rls_test",
+          plan: "founding_monthly",
+          status,
+          created_at: new Date().toISOString(),
+        },
+        { onConflict: "stripe_subscription_id" },
+      )
+      expect(error).toBeNull()
+      const { data } = await visitor.rpc("is_plus", { uid })
+      expect(data).toBe(expected)
+    } finally {
+      await service!.from("subscriptions").delete().eq("stripe_subscription_id", SUB_ID)
+    }
+  })
+})
