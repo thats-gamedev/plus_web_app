@@ -59,11 +59,30 @@ update public.profiles set role = 'admin' where email = 'you@example.com';
 | Emails → SMTP | Resend (Phase 10 / launch) |
 | Attack Protection → CAPTCHA | Turnstile with the secret key; then set `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. Leave both off in dev |
 
+## Payments (Stripe)
+
+Access is granted only by the verified Stripe webhook, never by the checkout redirect.
+
+1. **Plan cards** (`components/billing/plan-card.tsx`, on `/#pricing` and the `/app` paywall) need the § 356 (5) BGB waiver ticked before Join. Logged-out visitors go to `/signup?plan=…&consent=…`. After confirming their email they land on the paywall with that plan pre-ticked (valid for 24 h).
+2. **`startCheckout`** (Server Action, `lib/billing/actions.ts`) creates or reuses the Stripe customer (`metadata.user_id`) and opens Checkout with `client_reference_id`, `subscription_data.metadata` (`user_id`, `waiver_consent_at`), automatic tax, address collection and required ToS consent.
+3. **`POST /api/webhooks/stripe`** verifies the raw body and logs the event in `webhook_events`. Duplicates of processed events are skipped; failed ones are retried. On every `customer.subscription.*` event and on `checkout.session.completed` it re-fetches the subscription from Stripe and upserts `subscriptions`. The logic is in `lib/stripe/webhook.ts` and is unit-tested with fakes.
+4. **`/welcome`** polls `is_plus` every 2 s for up to 60 s, then continues to `/app`.
+5. **`openBillingPortal`** opens the Stripe Customer Portal (`/app/account` → Manage billing).
+
+**Stripe setup (test mode):**
+
+- **Products:** a product with two recurring prices, *Founding monthly* $7.99/month and *Founding annual* $79/year. Put their ids in `STRIPE_PRICE_FOUNDING_MONTHLY` / `STRIPE_PRICE_FOUNDING_ANNUAL`.
+- **Tax:** Settings → Tax: add the origin address; Checkout uses automatic tax.
+- **Terms of service URL:** Settings → Public details → Terms of service URL (required by the Checkout ToS consent).
+- **Customer Portal:** Settings → Billing → Customer portal: cancel at end of period, update payment method, invoice history.
+- **Webhooks in dev:** `stripe listen --forward-to localhost:3001/api/webhooks/stripe` and copy the `whsec_…` into `STRIPE_WEBHOOK_SECRET`.
+- **Webhooks in production:** an endpoint for `checkout.session.completed` and `customer.subscription.*`.
+
 ## Routes so far
 
 | Area | Routes |
 | --- | --- |
 | Public | `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback` |
-| Members | `/app`, `/app/library`, `/app/shop`, `/app/perks`, `/app/spotlight`, `/app/account`, `/app/more` |
+| Members | `/welcome`, `/app` (paywall for non-members), `/app/library`, `/app/shop`, `/app/perks`, `/app/spotlight`, `/app/account`, `/app/more` |
 | Admin | `/admin`, `/admin/members`, `/admin/content`, `/admin/drops`, `/admin/codes`, `/admin/spotlight`, `/admin/inbox` |
 | Dev | `/styleguide` (404 in production) |
