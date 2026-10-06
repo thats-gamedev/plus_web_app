@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { useActionState } from "react"
 import {
   requestPasswordReset,
+  resendConfirmation,
   resetPassword,
   signIn,
   signUp,
@@ -38,10 +39,39 @@ function SwitchLink({ text, href, label }: { text: string; href: string; label: 
   )
 }
 
+/** "Resend confirmation email" as its own small form (forms can't nest). */
+function ResendConfirmation({ email }: { email: string }) {
+  const [state, action, pending] = useActionState(resendConfirmation, idleState)
+
+  return (
+    <form action={action} className="space-y-3">
+      <input type="hidden" name="email" value={email} />
+      <Turnstile resetKey={state} appearance="interaction-only" />
+      <Button type="submit" variant="outline" className="w-full" disabled={pending}>
+        {pending ? "Sending…" : "Resend confirmation email"}
+      </Button>
+      <FormMessage state={state} />
+    </form>
+  )
+}
+
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, idleState)
   const plan = parsePlan(useSearchParams().get("plan"))
   const errors = state.fieldErrors ?? {}
+
+  if (state.status === "success" && state.values?.email) {
+    return (
+      <div className="space-y-5">
+        <Banner variant="success" title="Check your inbox">
+          We sent a confirmation link to <strong>{state.values.email}</strong>. Click it to
+          activate your account; it signs you in right away.
+        </Banner>
+        <ResendConfirmation email={state.values.email} />
+        <SwitchLink text="Already confirmed?" href={withParams("/login", { plan })} label="Log in" />
+      </div>
+    )
+  }
 
   return (
     <form action={action} className="space-y-5" noValidate>
@@ -88,7 +118,7 @@ export function SignUpForm() {
       <Turnstile resetKey={state} />
       <FormMessage state={state} />
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
-        {pending ? "Creating account…" : "Continue to checkout"}
+        {pending ? "Creating account…" : "Create account"}
       </Button>
       <SwitchLink
         text="Already have an account?"
@@ -104,50 +134,62 @@ export function LoginForm() {
   const params = useSearchParams()
   const errors = state.fieldErrors ?? {}
   const linkExpired = params.get("error") === "link_expired" && state.status === "idle"
+  const unconfirmed = state.code === "email_not_confirmed"
   // The mockup shows the login error under the password field.
-  const passwordError = errors.password ?? (state.status === "error" ? state.message : undefined)
+  const passwordError =
+    errors.password ?? (state.status === "error" && !unconfirmed ? state.message : undefined)
 
   return (
-    <form action={action} className="space-y-5" noValidate>
-      <input type="hidden" name="next" value={params.get("next") ?? ""} />
-      {linkExpired && (
-        <Banner variant="warning">That link has expired or was already used. Log in again.</Banner>
-      )}
-      <FormField
-        name="email"
-        type="email"
-        label="Email"
-        placeholder="you@studio.com"
-        autoComplete="email"
-        required
-        defaultValue={state.values?.email}
-        error={errors.email}
-      />
-      <div className="space-y-3">
-        <FormField
-          name="password"
-          password
-          label="Password"
-          autoComplete="current-password"
-          required
-          error={passwordError}
-        />
-        <div className="text-right">
-          <Link href="/forgot-password" className="text-sm font-semibold text-brand hover:underline">
-            Forgot password?
-          </Link>
+    <div className="space-y-5">
+      {unconfirmed && state.values?.email && (
+        <div className="space-y-3">
+          <Banner variant="warning" title="Confirm your email first">
+            Click the link we sent to <strong>{state.values.email}</strong>, then log in.
+          </Banner>
+          <ResendConfirmation email={state.values.email} />
         </div>
-      </div>
-      <Turnstile resetKey={state} appearance="interaction-only" />
-      <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
-        {pending ? "Logging in…" : "Log in"}
-      </Button>
-      <SwitchLink
-        text="New here?"
-        href={withParams("/signup", { plan: params.get("plan") })}
-        label="Create an account"
-      />
-    </form>
+      )}
+      <form action={action} className="space-y-5" noValidate>
+        <input type="hidden" name="next" value={params.get("next") ?? ""} />
+        {linkExpired && (
+          <Banner variant="warning">That link has expired or was already used. Log in again.</Banner>
+        )}
+        <FormField
+          name="email"
+          type="email"
+          label="Email"
+          placeholder="you@studio.com"
+          autoComplete="email"
+          required
+          defaultValue={state.values?.email}
+          error={errors.email}
+        />
+        <div className="space-y-3">
+          <FormField
+            name="password"
+            password
+            label="Password"
+            autoComplete="current-password"
+            required
+            error={passwordError}
+          />
+          <div className="text-right">
+            <Link href="/forgot-password" className="text-sm font-semibold text-brand hover:underline">
+              Forgot password?
+            </Link>
+          </div>
+        </div>
+        <Turnstile resetKey={state} appearance="interaction-only" />
+        <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
+          {pending ? "Logging in…" : "Log in"}
+        </Button>
+        <SwitchLink
+          text="New here?"
+          href={withParams("/signup", { plan: params.get("plan") })}
+          label="Create an account"
+        />
+      </form>
+    </div>
   )
 }
 

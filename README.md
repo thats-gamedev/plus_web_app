@@ -34,7 +34,7 @@ Development runs against the hosted **dev** project (`shzzdyjdhnprpksrfjcd`); th
 
 ## Authentication
 
-Email and password via Supabase Auth with cookie sessions (`@supabase/ssr`).
+Email and password via Supabase Auth with cookie sessions (`@supabase/ssr`). Sign-up sends a confirmation email; its link verifies the address and signs the user in. Logging in before confirming shows a notice with a "Resend confirmation email" button.
 
 - `proxy.ts` refreshes the session on every request and redirects optimistically: signed-out visitors go from `/app/*` and `/welcome` to `/login?next=…`, and `/admin/*` returns 404. Signed-in users skip `/login`, `/signup` and `/forgot-password`.
 - The real checks live in `lib/dal/auth.ts` (`getUser`, `requireUser`, `requirePlus`, `requireAdmin`). Server Components and Server Actions call these, never the raw client. RLS enforces the same rules in the database.
@@ -50,10 +50,11 @@ update public.profiles set role = 'admin' where email = 'you@example.com';
 
 | Setting | Value |
 | --- | --- |
-| Sign In / Providers → Email | enabled, **Confirm email off**, Secure email change on |
-| Password security | Minimum length **10**; enable leaked-password protection if the plan allows |
+| Sign In / Providers → Email | enabled, **Confirm email on** (default), Secure email change on |
+| Password security | Default minimum length (6); enable leaked-password protection if the plan allows |
 | Require current password when updating | **on** (used by the account "change password" action) |
 | URL Configuration | Site URL = production URL; redirect URLs: `http://localhost:3000/**`, `http://localhost:3001/**`, the production domain and `https://*-<team>.vercel.app/**` |
+| Emails → Confirm signup template | contents of `supabase/templates/confirmation.html` |
 | Emails → Reset password template | contents of `supabase/templates/recovery.html` |
 | Emails → SMTP | Resend (Phase 10 / launch) |
 | Attack Protection → CAPTCHA | Turnstile with the secret key; then set `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. Leave both off in dev |

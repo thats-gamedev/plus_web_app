@@ -1,0 +1,5 @@
+<h2>Confirm your email</h2>
+<p>Welcome to That's Game Dev Plus! Confirm your email address to activate your account.</p>
+<!-- RedirectTo is the app's /auth/callback?next=/app URL (lib/site-url.ts). -->
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">Confirm my email</a></p>
+<p>If you didn't create an account, you can ignore this email.</p>

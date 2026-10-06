@@ -4,6 +4,8 @@ export type FormState = {
   /** Form-level message, e.g. "Email or password is wrong." */
   message?: string
   fieldErrors?: Record<string, string>
+  /** Machine-readable reason, e.g. "email_not_confirmed". */
+  code?: string
   /** Non-secret values to put back into the form after an error. */
   values?: Record<string, string>
 }

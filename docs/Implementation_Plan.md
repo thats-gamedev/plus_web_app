@@ -163,7 +163,7 @@ From the spec's "Before build day" list:
 **Spec:** "Accounts & authentication".
 
 - [ ] Supabase Auth settings:
-  - email/password on, Confirm email off, minimum password length 10
+  - email/password on, Confirm email **on** (decided in Phase 3: sign up → confirm the email → log in), default minimum password length
   - Turnstile CAPTCHA on
   - custom SMTP via Resend
   - site and redirect URLs set

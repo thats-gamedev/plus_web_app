@@ -54,6 +54,8 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     options: {
       // Read by the handle_new_user trigger to fill profiles.display_name.
       data: { display_name: parsed.data.displayName },
+      // The confirmation link verifies the email and signs the user in.
+      emailRedirectTo: await authCallbackUrl("/app"),
       ...captcha(raw.captchaToken),
     },
   })
@@ -85,12 +87,11 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     }
   }
 
-  // "Confirm email" is off, so sign-up returns a session right away.
-  if (!data.session) {
-    return { status: "success", message: "Check your inbox to confirm your email, then log in." }
-  }
+  // With "Confirm email" on, there is no session until the link is clicked.
+  // Supabase answers the same way for an email that already has an account,
+  // so the form can't be used to find out who is registered.
+  if (!data.session) return { status: "success", values: { email: parsed.data.email } }
 
-  // Phase 4: continue to Stripe Checkout for the chosen ?plan=.
   redirect("/app")
 }
 
@@ -111,11 +112,43 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   if (error) {
     if (error.code === "captcha_failed") return { ...CAPTCHA_FAILED, values }
     if (error.code === "over_request_rate_limit") return { ...RATE_LIMITED, values }
+    // Only reported after the password matched, so it reveals nothing new.
+    if (error.code === "email_not_confirmed") {
+      return {
+        status: "error",
+        code: "email_not_confirmed",
+        message: "Confirm your email first: click the link we sent you.",
+        values,
+      }
+    }
     // Same message for an unknown email and a wrong password.
     return { status: "error", message: "Email or password is wrong.", values }
   }
 
   redirect(safeNextPath(raw.next))
+}
+
+export async function resendConfirmation(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const raw = readFields(formData, ["email", "captchaToken"])
+
+  const parsed = forgotPasswordSchema.safeParse(raw)
+  if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error) }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: { emailRedirectTo: await authCallbackUrl("/app"), ...captcha(raw.captchaToken) },
+  })
+  if (error?.code === "captcha_failed") return CAPTCHA_FAILED
+  if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit") {
+    return { status: "error", message: "We just sent one. Wait a minute before asking again." }
+  }
+
+  return { status: "success", message: "Sent. Check your inbox (and the spam folder)." }
 }
 
 export async function signOut() {

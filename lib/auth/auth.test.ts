@@ -26,9 +26,9 @@ describe("signUpSchema", () => {
     expect(signUpSchema.parse(valid)).toMatchObject({ displayName: "Mara", email: "mara@studio.com" })
   })
 
-  it("requires at least 10 password characters", () => {
-    const result = signUpSchema.safeParse({ ...valid, password: "short-pw1", passwordRepeat: "short-pw1" })
-    expect(errorsOf(result)).toEqual({ password: "At least 10 characters." })
+  it("requires at least 6 password characters", () => {
+    const result = signUpSchema.safeParse({ ...valid, password: "short", passwordRepeat: "short" })
+    expect(errorsOf(result)).toEqual({ password: "At least 6 characters." })
   })
 
   it("requires matching passwords", () => {
@@ -41,7 +41,7 @@ describe("signUpSchema", () => {
     expect(errorsOf(result)).toEqual({
       displayName: "Enter a display name.",
       email: "Enter a valid email address.",
-      password: "At least 10 characters.",
+      password: "At least 6 characters.",
     })
   })
 })

@@ -6,7 +6,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 type FormFieldProps = Omit<React.ComponentProps<"input">, "name"> & {
   name: string
   label: string
-  /** Grey help text under the field, e.g. "At least 10 characters." */
+  /** Grey help text under the field, e.g. "At least 6 characters." */
   hint?: string
   /** Red error under the field; replaces the hint. */
   error?: string

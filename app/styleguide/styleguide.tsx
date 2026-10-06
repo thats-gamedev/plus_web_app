@@ -245,7 +245,7 @@ export function Styleguide() {
           <div className="grid gap-2">
             <Label htmlFor="sg-pass">Password</Label>
             <PasswordInput id="sg-pass" defaultValue="supersecret1" />
-            <p className="text-sm text-muted-foreground">At least 10 characters.</p>
+            <p className="text-sm text-muted-foreground">At least 6 characters.</p>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="sg-desc">Short description</Label>

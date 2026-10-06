@@ -3,7 +3,8 @@ import { z } from "zod"
 // Server-side validation for the auth and account forms. Error messages are
 // shown inline under the fields, so they are short and user-facing.
 
-export const PASSWORD_MIN = 10
+// Supabase's default minimum password length.
+export const PASSWORD_MIN = 6
 // bcrypt ignores everything after 72 bytes.
 const PASSWORD_MAX = 72
 
