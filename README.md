@@ -32,11 +32,37 @@ Development runs against the hosted **dev** project (`shzzdyjdhnprpksrfjcd`); th
 - **Env:** copy `.env.example` to `.env.local` and fill in the URL and publishable key (Dashboard → Project Settings → API Keys).
 - **Access model:** anon reads only the views `public_teaser_resources` and `public_teaser_items`. `is_plus(uid)` gates member content in RLS. Members can't select `resources.draft_content`/`draft_updated_at`, so select resources by explicit column list, never `*`.
 
+## Authentication
+
+Email and password via Supabase Auth with cookie sessions (`@supabase/ssr`).
+
+- `proxy.ts` refreshes the session on every request and redirects optimistically: signed-out visitors go from `/app/*` and `/welcome` to `/login?next=…`, and `/admin/*` returns 404. Signed-in users skip `/login`, `/signup` and `/forgot-password`.
+- The real checks live in `lib/dal/auth.ts` (`getUser`, `requireUser`, `requirePlus`, `requireAdmin`). Server Components and Server Actions call these, never the raw client. RLS enforces the same rules in the database.
+- Auth emails link to `/auth/callback`, which accepts both `?token_hash=&type=` (our templates) and PKCE `?code=`.
+
+**Make a user admin** (SQL editor or Supabase MCP):
+
+```sql
+update public.profiles set role = 'admin' where email = 'you@example.com';
+```
+
+**Supabase Auth settings** (dashboard, per project; `supabase/config.toml` mirrors them):
+
+| Setting | Value |
+| --- | --- |
+| Sign In / Providers → Email | enabled, **Confirm email off**, Secure email change on |
+| Password security | Minimum length **10**; enable leaked-password protection if the plan allows |
+| Require current password when updating | **on** (used by the account "change password" action) |
+| URL Configuration | Site URL = production URL; redirect URLs: `http://localhost:3000/**`, `http://localhost:3001/**`, the production domain and `https://*-<team>.vercel.app/**` |
+| Emails → Reset password template | contents of `supabase/templates/recovery.html` |
+| Emails → SMTP | Resend (Phase 10 / launch) |
+| Attack Protection → CAPTCHA | Turnstile with the secret key; then set `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. Leave both off in dev |
+
 ## Routes so far
 
 | Area | Routes |
 | --- | --- |
-| Public | `/` |
+| Public | `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback` |
 | Members | `/app`, `/app/library`, `/app/shop`, `/app/perks`, `/app/spotlight`, `/app/account`, `/app/more` |
 | Admin | `/admin`, `/admin/members`, `/admin/content`, `/admin/drops`, `/admin/codes`, `/admin/spotlight`, `/admin/inbox` |
 | Dev | `/styleguide` (404 in production) |
