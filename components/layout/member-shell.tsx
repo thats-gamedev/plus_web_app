@@ -12,27 +12,9 @@ import {
   memberTabs,
 } from "@/components/layout/nav-config"
 
-export type ShellUser = {
-  displayName: string
-  /** e.g. "Founding monthly" or "No membership" */
-  planLabel: string
-}
-
-function Avatar({ name, className }: { name: string; className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-bold text-brand",
-        className
-      )}
-    >
-      {name.charAt(0).toUpperCase()}
-    </span>
-  )
-}
-
-export function MemberSidebar({ user }: { user: ShellUser }) {
+// The user parts are slots: Server Components that read the session behind
+// <Suspense>, so the rest of the shell stays in the static shell.
+export function MemberSidebar({ userSlot }: { userSlot: React.ReactNode }) {
   const pathname = usePathname()
 
   return (
@@ -59,18 +41,12 @@ export function MemberSidebar({ user }: { user: ShellUser }) {
           )
         })}
       </nav>
-      <div className="mx-2 flex items-center gap-3 border-t border-border px-2 py-4">
-        <Avatar name={user.displayName} />
-        <div className="min-w-0 text-sm">
-          <p className="truncate font-semibold">{user.displayName}</p>
-          <p className="truncate text-muted-foreground">{user.planLabel}</p>
-        </div>
-      </div>
+      <div className="mx-2 border-t border-border px-2 py-4">{userSlot}</div>
     </aside>
   )
 }
 
-export function MemberMobileTopBar({ user }: { user: ShellUser }) {
+export function MemberMobileTopBar({ avatarSlot }: { avatarSlot: React.ReactNode }) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card/90 px-4 backdrop-blur md:hidden">
       <Logo href="/app" className="text-base" />
@@ -82,9 +58,7 @@ export function MemberMobileTopBar({ user }: { user: ShellUser }) {
         >
           <SearchIcon className="size-5" />
         </Link>
-        <Link href="/app/account" aria-label="Account">
-          <Avatar name={user.displayName} className="size-8" />
-        </Link>
+        {avatarSlot}
       </div>
     </header>
   )
