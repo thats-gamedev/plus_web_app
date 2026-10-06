@@ -7,6 +7,7 @@ export default defineConfig({
   },
   test: {
     include: ["**/*.test.ts", "**/*.test.tsx"],
-    exclude: ["node_modules/**", ".next/**"],
+    // RLS tests need the dev database; run them with `npm run test:rls`.
+    exclude: ["node_modules/**", ".next/**", "supabase/tests/**"],
   },
 })
