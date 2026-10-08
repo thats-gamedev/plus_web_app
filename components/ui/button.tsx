@@ -5,7 +5,7 @@ import { Slot } from "radix-ui"
 
 // "Chunky" buttons from the mockups: solid fill plus a darker 3px bottom
 // shadow that collapses when pressed.
-const buttonVariants = cva(
+const buttonStyles = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-semibold whitespace-nowrap transition-[transform,box-shadow,background-color] outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/40 active:not-aria-[haspopup]:translate-y-[2px] disabled:pointer-events-none disabled:border-transparent disabled:bg-muted disabled:text-faint disabled:shadow-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
@@ -41,6 +41,17 @@ const buttonVariants = cva(
   }
 )
 
+type ButtonVariantProps = Parameters<typeof buttonStyles>[0]
+
+/**
+ * Button classes for links styled as buttons. cva only joins strings, so
+ * merge here: otherwise the base `border-transparent` and a variant's
+ * border colour both reach the DOM and the CSS order picks the winner.
+ */
+function buttonVariants(props?: ButtonVariantProps) {
+  return cn(buttonStyles(props))
+}
+
 function Button({
   className,
   variant = "default",
@@ -48,7 +59,7 @@ function Button({
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
+  VariantProps<typeof buttonStyles> & {
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
@@ -58,7 +69,7 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={buttonVariants({ variant, size, className })}
       {...props}
     />
   )
