@@ -242,6 +242,7 @@ export type Database = {
           drop_id: string | null
           file_path: string | null
           id: string
+          item_count: number | null
           list_kind: Database["public"]["Enums"]["list_kind"] | null
           published_at: string | null
           slug: string
@@ -250,6 +251,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["resource_type"]
           updated_at: string
+          word_count: number | null
         }
         Insert: {
           body_md?: string | null
@@ -262,6 +264,7 @@ export type Database = {
           drop_id?: string | null
           file_path?: string | null
           id?: string
+          item_count?: number | null
           list_kind?: Database["public"]["Enums"]["list_kind"] | null
           published_at?: string | null
           slug: string
@@ -270,6 +273,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["resource_type"]
           updated_at?: string
+          word_count?: number | null
         }
         Update: {
           body_md?: string | null
@@ -282,6 +286,7 @@ export type Database = {
           drop_id?: string | null
           file_path?: string | null
           id?: string
+          item_count?: number | null
           list_kind?: Database["public"]["Enums"]["list_kind"] | null
           published_at?: string | null
           slug?: string
@@ -290,6 +295,7 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["resource_type"]
           updated_at?: string
+          word_count?: number | null
         }
         Relationships: [
           {
