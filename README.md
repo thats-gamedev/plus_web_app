@@ -71,11 +71,13 @@ Access is granted only by the verified Stripe webhook, never by the checkout red
 
 **Stripe setup (test mode):**
 
-- **Products:** a product with two recurring prices, *Founding monthly* $7.99/month and *Founding annual* $79/year. Put their ids in `STRIPE_PRICE_FOUNDING_MONTHLY` / `STRIPE_PRICE_FOUNDING_ANNUAL`.
-- **Tax:** Settings → Tax: add the origin address; Checkout uses automatic tax.
-- **Terms of service URL:** Settings → Public details → Terms of service URL (required by the Checkout ToS consent).
-- **Customer Portal:** Settings → Billing → Customer portal: cancel at end of period, update payment method, invoice history.
-- **Webhooks in dev:** `stripe listen --forward-to localhost:3001/api/webhooks/stripe` and copy the `whsec_…` into `STRIPE_WEBHOOK_SECRET`.
+The account uses **Managed Payments**: Stripe is the merchant of record and handles VAT, so there is no OSS registration or Stripe Tax filing on our side. Each sandbox and the live account keep their own settings, so repeat these steps in every one.
+
+- **Products:** one product with two recurring prices, *Founding monthly* $7.99/month and *Founding annual* $79/year, both with tax behavior **inclusive** (the site says "Prices include VAT"). Put the price ids in `STRIPE_PRICE_FOUNDING_MONTHLY` / `STRIPE_PRICE_FOUNDING_ANNUAL`.
+- **Tax code:** Managed Payments rejects Checkout unless the product has an eligible tax code. We use `txcd_10701401` (Website Information Services – Personal Use).
+- **Terms of service URL:** Settings → Business → Public details → Terms of service URL. Checkout refuses `consent_collection.terms_of_service` without it. Replace any placeholder with the real `/terms` page before going live.
+- **Customer Portal:** Settings → Billing → Customer portal: cancel at end of period, update payment method, invoice history. Click Save; the portal only works once a configuration exists.
+- **Webhooks in dev:** `stripe listen --forward-to localhost:3000/api/webhooks/stripe`. `stripe listen --print-secret` prints the `whsec_…` for `STRIPE_WEBHOOK_SECRET`; it stays the same between runs. The CLI login expires after 90 days (`stripe login` again).
 - **Webhooks in production:** an endpoint for `checkout.session.completed` and `customer.subscription.*`.
 
 ## Routes so far

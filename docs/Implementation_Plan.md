@@ -74,7 +74,7 @@ From the spec's "Before build day" list:
 
 - [ ] Gewerbe registration and tax number; decide between OSS and the small-business rule with a tax advisor.
 - [ ] **Supabase:** create two projects (dev, and prod in an EU region); install the Supabase CLI and Docker Desktop.
-- [ ] **Stripe:** activate the account; in test mode, create the products and prices *Founding monthly $7.99* and *Founding annual $79*; enable Stripe Tax; configure the Customer Portal (cancel at period end, update card, invoices); enable the receipt, failed-payment and renewal-reminder emails; install the Stripe CLI.
+- [ ] **Stripe:** activate the account; in test mode, create the products and prices *Founding monthly $7.99* and *Founding annual $79*; enable Stripe Tax *(superseded: the account uses Managed Payments, Stripe as merchant of record; see README → Payments)*; configure the Customer Portal (cancel at period end, update card, invoices); enable the receipt, failed-payment and renewal-reminder emails; install the Stripe CLI.
 - [ ] **Vercel** project, **domain**, **Resend** account with the domain verified (SPF, DKIM).
 - [ ] **Cloudflare Turnstile** site key, with the secret entered in the Supabase Auth settings.
 - [ ] **Fourthwall:** open the shop, create a storefront token and Platform API credentials, and verify the three open API points in the spec's "Perks" section.
