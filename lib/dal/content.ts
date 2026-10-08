@@ -116,6 +116,52 @@ export const getRecentResources = cache(async (limit: number): Promise<ResourceC
   return (data ?? []).map(toCard)
 })
 
+export type ResourceDetail = ResourceCard & {
+  /** Raw list document; parse with listDocumentSchema before rendering. */
+  content: unknown
+  bodyMd: string | null
+  hasFile: boolean
+  updatedAt: string
+  /** Month of the drop it belongs to, e.g. "2026-10-01". */
+  dropMonth: string | null
+}
+
+/** One published resource by slug, or null (missing, draft or not a member). */
+export const getResourceBySlug = cache(async (slug: string): Promise<ResourceDetail | null> => {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("resources")
+    .select(`${cardColumns}, content, body_md, file_path, updated_at, drop:drops (month)`)
+    .eq("slug", slug)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .maybeSingle()
+  if (!data) return null
+
+  return {
+    ...toCard(data),
+    content: data.content,
+    bodyMd: data.body_md,
+    hasFile: Boolean(data.file_path),
+    updatedAt: data.updated_at,
+    dropMonth: data.drop?.month ?? null,
+  }
+})
+
+/** A published e-book's slug and storage path, for the signed download. */
+export async function getEbookFile(id: string): Promise<{ slug: string; path: string | null } | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("resources")
+    .select("slug, file_path")
+    .eq("id", id)
+    .eq("type", "ebook")
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
+    .maybeSingle()
+  return data ? { slug: data.slug, path: data.file_path } : null
+}
+
 // Enough for years of monthly drops; paginate if the library outgrows it.
 const LIBRARY_LIMIT = 500
 

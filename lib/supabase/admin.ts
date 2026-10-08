@@ -5,8 +5,8 @@ import { supabaseUrl } from "./env"
 
 /**
  * Supabase client with the secret key: bypasses RLS. Only for the Stripe
- * webhook, cron jobs and admin actions, and only after requireAdmin() or a
- * signature/secret check.
+ * webhook, cron jobs, admin actions and signing e-book downloads, and only
+ * after requireAdmin(), an is_plus check or a signature/secret check.
  */
 export function createAdminClient() {
   const secretKey = process.env.SUPABASE_SECRET_KEY
