@@ -43,49 +43,40 @@ export function resourceTypeLabel({ type, listKind }: Pick<ResourceSummary, "typ
   return type === "ebook" ? "E-book" : "Guide"
 }
 
-/** Number of items across all sections of a list document, or null if it isn't one. */
-export function countListItems(content: unknown): number | null {
-  if (!content || typeof content !== "object" || !("sections" in content)) return null
-  const { sections } = content as { sections: unknown }
-  if (!Array.isArray(sections)) return null
-  return sections.reduce<number>((sum, section) => {
-    const items = (section as { items?: unknown })?.items
-    return sum + (Array.isArray(items) ? items.length : 0)
-  }, 0)
-}
-
 const WORDS_PER_MINUTE = 200
 
-/** Reading time of a Markdown body in whole minutes (at least 1). */
-export function readingMinutes(markdown: string): number {
-  const words = markdown
-    .replace(/[#>*_`[\]()|-]/g, " ")
-    .split(/\s+/)
-    .filter(Boolean).length
+/** Reading time in whole minutes (at least 1) for a word count. */
+export function readingMinutes(words: number): number {
   return Math.max(1, Math.round(words / WORDS_PER_MINUTE))
 }
 
+/** Counts from the generated resources.item_count / word_count columns. */
+export type ResourceCounts = Pick<ResourceSummary, "type" | "listKind"> & {
+  itemCount: number | null
+  wordCount: number | null
+}
+
 /**
- * Mono meta line for a resource: "Tools list · 18 items", "Guide · 12 min",
- * "E-book · PDF". Falls back to the type label when the detail is unknown.
+ * Size of a resource: "18 items", "20 prompts", "12 min read" or "PDF".
+ * Null when unknown (a list without content, a guide without a body).
  */
-export function resourceMeta(
-  resource: Pick<ResourceSummary, "type" | "listKind"> & {
-    content?: unknown
-    bodyMd?: string | null
-  }
-): string {
-  const label = resourceTypeLabel(resource)
-  if (resource.type === "list" && resource.listKind) {
-    const count = countListItems(resource.content)
-    if (count === null) return label
+export function resourceSize(resource: ResourceCounts): string | null {
+  if (resource.type === "list") {
+    if (!resource.listKind || resource.itemCount === null) return null
     const [one, many] = listKindUnits[resource.listKind]
-    return `${label} · ${count} ${count === 1 ? one : many}`
+    return `${resource.itemCount} ${resource.itemCount === 1 ? one : many}`
   }
   if (resource.type === "guide") {
-    return resource.bodyMd ? `${label} · ${readingMinutes(resource.bodyMd)} min` : label
+    return resource.wordCount ? `${readingMinutes(resource.wordCount)} min read` : null
   }
-  return `${label} · PDF`
+  return "PDF"
+}
+
+/** Mono meta line: "Tools list · 18 items", "Guide · 12 min read", "E-book · PDF". */
+export function resourceMeta(resource: ResourceCounts): string {
+  const size = resourceSize(resource)
+  const label = resourceTypeLabel(resource)
+  return size ? `${label} · ${size}` : label
 }
 
 /** "New" badge: published in the last 14 days (same window as list items). */

@@ -1,26 +1,26 @@
 import "server-only"
 import { cache } from "react"
+import { type LibraryFilters, searchPattern } from "@/lib/content/library-filters"
 import type { ResourceCategory, ResourceListKind, ResourceType } from "@/lib/content/resources"
 import { createClient } from "@/lib/supabase/server"
 
 // Data Access Layer for the library and drops. Queries run as the signed-in
 // user, so RLS decides what comes back: members see live drops and published
-// resources, everyone else gets empty results.
+// resources, everyone else gets empty results. Resources are selected by
+// column list, since members may not read the draft columns.
 
 export type ResourceCard = {
   id: string
   slug: string
   title: string
+  summary: string
   type: ResourceType
   listKind: ResourceListKind | null
   category: ResourceCategory
+  coverPath: string | null
+  itemCount: number | null
+  wordCount: number | null
   publishedAt: string | null
-}
-
-export type DropResource = ResourceCard & {
-  /** List document, used only to count items for the meta line. */
-  content: unknown
-  bodyMd: string | null
 }
 
 export type Drop = {
@@ -30,18 +30,23 @@ export type Drop = {
   title: string
   theme: string | null
   introMd: string | null
-  resources: DropResource[]
+  resources: ResourceCard[]
 }
 
-const cardColumns = "id, slug, title, type, list_kind, category, published_at"
+const cardColumns =
+  "id, slug, title, summary, type, list_kind, category, cover_path, item_count, word_count, published_at"
 
 type CardRow = {
   id: string
   slug: string
   title: string
+  summary: string
   type: ResourceType
   list_kind: ResourceListKind | null
   category: ResourceCategory
+  cover_path: string | null
+  item_count: number | null
+  word_count: number | null
   published_at: string | null
 }
 
@@ -50,33 +55,45 @@ function toCard(row: CardRow): ResourceCard {
     id: row.id,
     slug: row.slug,
     title: row.title,
+    summary: row.summary,
     type: row.type,
     listKind: row.list_kind,
     category: row.category,
+    coverPath: row.cover_path,
+    itemCount: row.item_count,
+    wordCount: row.word_count,
     publishedAt: row.published_at,
   }
+}
+
+type Client = Awaited<ReturnType<typeof createClient>>
+
+/**
+ * Query for published resources whose go-live time has passed. Not async on
+ * purpose: query builders are thenables, so awaiting one runs it.
+ */
+function publishedResources(supabase: Client) {
+  return supabase
+    .from("resources")
+    .select(cardColumns)
+    .eq("status", "published")
+    .lte("published_at", new Date().toISOString())
 }
 
 /** The most recent live drop with its published resources, or null before the first one. */
 export const getCurrentDrop = cache(async (): Promise<Drop | null> => {
   const supabase = await createClient()
-  const now = new Date().toISOString()
-
   const { data: drop } = await supabase
     .from("drops")
     .select("id, month, title, theme, intro_md")
-    .lte("published_at", now)
+    .lte("published_at", new Date().toISOString())
     .order("month", { ascending: false })
     .limit(1)
     .maybeSingle()
   if (!drop) return null
 
-  const { data: rows } = await supabase
-    .from("resources")
-    .select(`${cardColumns}, content, body_md`)
+  const { data: rows } = await publishedResources(supabase)
     .eq("drop_id", drop.id)
-    .eq("status", "published")
-    .lte("published_at", now)
     .order("published_at", { ascending: true })
     .order("title", { ascending: true })
 
@@ -86,24 +103,38 @@ export const getCurrentDrop = cache(async (): Promise<Drop | null> => {
     title: drop.title,
     theme: drop.theme,
     introMd: drop.intro_md,
-    resources: (rows ?? []).map((row) => ({
-      ...toCard(row),
-      content: row.content,
-      bodyMd: row.body_md,
-    })),
+    resources: (rows ?? []).map(toCard),
   }
 })
 
 /** The newest published resources across the library. */
 export const getRecentResources = cache(async (limit: number): Promise<ResourceCard[]> => {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("resources")
-    .select(cardColumns)
-    .eq("status", "published")
-    .lte("published_at", new Date().toISOString())
+  const { data } = await publishedResources(await createClient())
     .order("published_at", { ascending: false })
     .order("title", { ascending: true })
     .limit(limit)
   return (data ?? []).map(toCard)
 })
+
+// Enough for years of monthly drops; paginate if the library outgrows it.
+const LIBRARY_LIMIT = 500
+
+/** The library, filtered and sorted as in the URL. */
+export async function getLibrary(filters: LibraryFilters): Promise<ResourceCard[]> {
+  let query = publishedResources(await createClient())
+  if (filters.type) query = query.eq("type", filters.type)
+  if (filters.kind) query = query.eq("list_kind", filters.kind)
+  if (filters.category) query = query.eq("category", filters.category)
+
+  const pattern = searchPattern(filters.q)
+  if (pattern) query = query.or(`title.ilike.${pattern},summary.ilike.${pattern}`)
+
+  query =
+    filters.sort === "az"
+      ? query.order("title", { ascending: true })
+      : query.order("published_at", { ascending: false }).order("title", { ascending: true })
+
+  const { data, error } = await query.limit(LIBRARY_LIMIT)
+  if (error) throw new Error(`Could not load the library: ${error.message}`)
+  return (data ?? []).map(toCard)
+}

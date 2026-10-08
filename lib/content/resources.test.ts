@@ -1,21 +1,7 @@
 import { describe, expect, it } from "vitest"
-import {
-  countListItems,
-  isNewResource,
-  readingMinutes,
-  resourceMeta,
-  resourceTypeLabel,
-} from "./resources"
+import { isNewResource, readingMinutes, resourceMeta, resourceSize, resourceTypeLabel } from "./resources"
 
-const list = (...sizes: number[]) => ({
-  schemaVersion: 1,
-  kind: "tools",
-  sections: sizes.map((size, i) => ({
-    id: `sec_${i}`,
-    title: "Section",
-    items: Array.from({ length: size }, (_, j) => ({ id: `itm_${i}_${j}` })),
-  })),
-})
+const noCounts = { itemCount: null, wordCount: null }
 
 describe("resourceTypeLabel", () => {
   it("names lists by kind and the other types plainly", () => {
@@ -25,48 +11,46 @@ describe("resourceTypeLabel", () => {
   })
 })
 
-describe("countListItems", () => {
-  it("sums items across sections", () => {
-    expect(countListItems(list(2, 0, 3))).toBe(5)
-  })
-
-  it("returns null for anything that is not a list document", () => {
-    expect(countListItems(null)).toBeNull()
-    expect(countListItems("text")).toBeNull()
-    expect(countListItems({ sections: "nope" })).toBeNull()
-  })
-})
-
 describe("readingMinutes", () => {
   it("rounds to whole minutes at 200 words per minute", () => {
-    expect(readingMinutes(Array(1000).fill("word").join(" "))).toBe(5)
+    expect(readingMinutes(1000)).toBe(5)
+    expect(readingMinutes(2400)).toBe(12)
   })
 
   it("never returns less than one minute", () => {
-    expect(readingMinutes("## Short")).toBe(1)
-    expect(readingMinutes("")).toBe(1)
+    expect(readingMinutes(20)).toBe(1)
+    expect(readingMinutes(0)).toBe(1)
+  })
+})
+
+describe("resourceSize", () => {
+  it("counts list items with the kind's unit", () => {
+    expect(resourceSize({ type: "list", listKind: "tools", itemCount: 18, wordCount: null })).toBe("18 items")
+    expect(resourceSize({ type: "list", listKind: "prompts", itemCount: 1, wordCount: null })).toBe("1 prompt")
+    expect(resourceSize({ type: "list", listKind: "creators", itemCount: 0, wordCount: null })).toBe("0 creators")
+  })
+
+  it("shows reading time for guides and the format for e-books", () => {
+    expect(resourceSize({ type: "guide", listKind: null, itemCount: null, wordCount: 2400 })).toBe("12 min read")
+    expect(resourceSize({ type: "ebook", listKind: null, ...noCounts })).toBe("PDF")
+  })
+
+  it("is null when the count is unknown", () => {
+    expect(resourceSize({ type: "list", listKind: "assets", ...noCounts })).toBeNull()
+    expect(resourceSize({ type: "guide", listKind: null, ...noCounts })).toBeNull()
   })
 })
 
 describe("resourceMeta", () => {
-  it("counts list items with the kind's unit", () => {
-    expect(resourceMeta({ type: "list", listKind: "tools", content: list(18) })).toBe(
+  it("joins the type label and the size", () => {
+    expect(resourceMeta({ type: "list", listKind: "tools", itemCount: 18, wordCount: null })).toBe(
       "Tools list · 18 items"
     )
-    expect(resourceMeta({ type: "list", listKind: "prompts", content: list(1) })).toBe(
-      "Prompts list · 1 prompt"
-    )
+    expect(resourceMeta({ type: "ebook", listKind: null, ...noCounts })).toBe("E-book · PDF")
   })
 
-  it("falls back to the label when the list content is unknown", () => {
-    expect(resourceMeta({ type: "list", listKind: "assets" })).toBe("Assets list")
-  })
-
-  it("shows reading time for guides and the format for e-books", () => {
-    const body = Array(2400).fill("word").join(" ")
-    expect(resourceMeta({ type: "guide", listKind: null, bodyMd: body })).toBe("Guide · 12 min")
-    expect(resourceMeta({ type: "guide", listKind: null, bodyMd: null })).toBe("Guide")
-    expect(resourceMeta({ type: "ebook", listKind: null })).toBe("E-book · PDF")
+  it("falls back to the label when the size is unknown", () => {
+    expect(resourceMeta({ type: "list", listKind: "assets", ...noCounts })).toBe("Assets list")
   })
 })
 
