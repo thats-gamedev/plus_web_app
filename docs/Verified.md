@@ -65,6 +65,15 @@ In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were
 - "Refund & end now" on a throwaway subscription refunded $7.99, ended it, sent the confirmation, and the webhook stored the end.
 - A handled request can't be handled again.
 
+**Security (2026-10-09)**
+- Every Server Action checks the session or role first (`requireAdmin`, `requireUser`, `requirePlus` or `getUser`), except the ones that are public by design: sign-up, sign-in, sign-out, password reset and resend confirmation (Supabase's own checks), the `/cancel` and `/withdraw` forms (rate-limited), and the cancel confirmation (single-use token). `hasPlusAccess` only answers for the signed-in caller.
+- Supabase advisors on dev: the two security-definer teaser views are intended (they expose only teaser columns); `is_plus`/`is_admin` stay callable by signed-in users because the RLS policies need them, and they reveal nothing without a user id, which isn't guessable. Accepted.
+- Production dependencies: `npm audit --omit=dev` finds 0 vulnerabilities (after moving `shadcn` to the dev dependencies; runtime package versions unchanged).
+
+**Inbox and admin**
+- A cancellation or withdrawal whose receipt failed shows up under "Receipts not sent" (open or closed, after 2 minutes) and in the sidebar count; "Send receipt" sends it once, members get a 404, and a second click is refused.
+- Revoke, Discard draft and the drop announcement ask in the app's dialog instead of the browser's confirm box.
+
 **Pages**
 - The four legal pages render in English with the draft banner; every public page shows "Cancel contracts here" and "Withdraw from contract here" in the footer (server HTML).
 

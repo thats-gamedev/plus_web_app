@@ -12,7 +12,7 @@ Sources (details live there, every open task lives here):
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-09 (Phases 1–11 built; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check; next up: Phase 12, i.e. section 1)_
+_Last updated: 2026-10-09 (Phases 1–11 built, Phase 12 started; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
 
 **Contents**
 1. Before deployment and launch (the checklist)
@@ -51,7 +51,7 @@ Everything that has to be true, in order. Details for each step are in the secti
 - [ ] **Real content:** at least one published list of each kind, the real e-book PDF, covers, and the first drop with its text (section 7 lists the dev placeholders that must not be copied over).
 - [ ] **Fourthwall** set up, or knowingly launched with "The shop opens soon" (section 3).
 - [ ] **QA:** the browser checks in section 5 and the whole launch checklist in section 6, on phone and desktop, in Stripe test mode.
-- [ ] **Security pass:** repeat the client bundle check on the final build (`grep` `.next/static` for `sk_`, `service_role`, `SUPABASE_SECRET` and the secret values; clean on 2026-10-09); the Supabase advisor/linter is clean apart from the two expected view warnings; every Server Action calls the DAL.
+- [ ] **Security pass on the final build and the prod project:** repeat the client bundle check (`grep` `.next/static` for `sk_`, `service_role`, `SUPABASE_SECRET` and the secret values), and run the Supabase advisors on prod. Expected and accepted there: the two security-definer teaser views and `is_plus`/`is_admin` being callable by signed-in users (see `docs/Verified.md`). The Server Action audit was done on 2026-10-09; repeat it if actions are added.
 - [ ] **One real email of each kind** checked in Gmail and Outlook (section 3, Resend).
 - [ ] **One real live purchase,** then refund it; access and the codes are revoked.
 - [ ] **Launch,** and announce on @thats_gamedev.
@@ -95,6 +95,7 @@ Everything that has to be true, in order. Details for each step are in the secti
 - [ ] Vercel project, connected to the GitHub repo
 - [ ] Domain
 - [ ] Cloudflare Turnstile site key, with the secret entered in Supabase Auth settings
+- [ ] **Leaked-password protection** in Supabase Auth (Authentication → Passwords; it checks HaveIBeenPwned). The security advisor flags it as off; it may need a paid plan.
 - [ ] Content: at least one list of each kind and the first drop's text
 
 ### Stripe (Dashboard)
@@ -273,8 +274,9 @@ None of this exists in production as long as the seed isn't run there; it's abou
 
 ## 8. Known gaps and follow-ups in the code
 
-- [ ] **Failed cancellation and withdrawal receipts aren't flagged.** If the receipt email fails, the request has no `receipt_sent_at`, but the admin inbox doesn't show that. Show it there (the receipt is a legal requirement).
 - [ ] **Failed emails aren't retried.** If Resend fails during the webhook (welcome, cancellation confirmed), a Spotlight feature or an inbox action, the error is logged and the claim released, but nothing sends it again later. Drop announcements can be retried with "Retry sending".
+- [ ] **Unused index migration not applied.** The advisor reports `cancellation_requests_status_idx` and `cancellation_requests_kind_status_idx` as unused; one index on `(kind, status, created_at)` would replace both. The Supabase connector's migration tool failed ("Invalid or expired requestState") when this was tried, so nothing was changed. Apply it once the connector works again (reconnect it), as a migration file plus `apply_migration`. Harmless until then.
+- [ ] **Restart the dev server.** Moving `shadcn` to the dev dependencies briefly removed it, and the running `next dev` cached the failed `shadcn/tailwind.css` lookup (every page answers 500). Stop and start `npm run dev`; the production build compiles fine.
 - [ ] **Unconfirmed `/cancel` links** stay in the inbox as "Account found" requests. The admin should cancel them within 2 business days even without the click (see the legal check in section 2).
 - [ ] **Personal data left after Delete member** (GDPR):
   - `webhook_events.payload` keeps the raw Stripe events, which contain the member's email and name. Decide whether to scrub them on delete or prune events after a retention period (e.g. 90 days).
@@ -282,12 +284,10 @@ None of this exists in production as long as the seed isn't run there; it's abou
 - [ ] **Large drop announcements are slow.** Sending two at a time (Resend's rate limit) takes about a minute per 200 members, inside one Server Action. Fine for launch; past a few thousand members, switch to Resend's batch API or a background job.
 - [ ] **Withdrawal refunds only cover the last invoice.** Fine within 14 days (there's only one payment). If an admin accepts a late withdrawal, older payments must be refunded in the Stripe Dashboard.
 - [ ] **The admin "due" date** for cancellation and withdrawal requests counts weekdays only, not German public holidays.
-- [ ] **No contact link in the download error.** The e-book error banner says "let us know" but has no link. Add the contact mailto.
 - [ ] **E-book metadata.** The mockup shows "18 pages · 35 min read · PDF 4.2 MB", but there are no columns for page count or file size, so the page shows "PDF · updated …". Add columns and form fields if wanted.
 - [ ] **Markdown images** in guides and e-book descriptions are dropped (`components/shared/markdown.tsx` renders no `img`), because there's no image upload for Markdown. Add one if guides need inline images.
 - [ ] **Brand icons.** lucide 1.x has no brand logos, so creator links use neutral icons (a palette for ArtStation, a globe for websites). Add small brand SVGs to `components/layout/icons.tsx` if real logos are wanted.
 - [ ] **No shop collection chips** on `/app/shop` yet (see the Fourthwall checks in section 5).
-- [ ] **The "Revoke" confirmation** on `/admin/codes` uses the browser's `window.confirm`. Swap it for the app's Dialog (like Delete member) for a consistent look.
 - [ ] **The sections outline** in the list editor's left column is a jump list. Sections are reordered by dragging them in the middle column (or with Move up/down), not in the outline.
 - [ ] **List settings are live at once.** Title, slug, category and cover of a published list save straight to the row, not with "Publish". A slug change breaks shared links right away.
 - [ ] **Orphaned uploads.** Replacing a cover, PDF or item image leaves the old file in Storage. Delete only cleans up a resource's current cover and PDF, not item images. Add a cleanup if storage grows.
@@ -296,7 +296,6 @@ None of this exists in production as long as the seed isn't run there; it's abou
 - [ ] **Spotlight `admin_note` is readable by the member.** Members can select every column of their own submission, including `admin_note`. Nothing writes or shows it yet, but don't put private notes there, or revoke the column for members.
 - [ ] **Spotlight images removed before submitting** stay in the member's Storage folder (members have no delete permission). Harmless, but they count toward storage.
 - [ ] **Spotlight months are UTC.** A submission at 00:30 Berlin time on the 1st still counts for the previous month (the database's `now()` is UTC).
-- [ ] **`shadcn` in `dependencies`.** It's a CLI and pulls in packages with 7 high-severity `npm audit` findings (in `braces` via `ts-morph`). Nothing reaches the app bundle, but moving it to `devDependencies` would clear the production audit.
 - [ ] **Implementation plan checkboxes** were never ticked. This file is the record of what's open; tick the plan too, or leave it as the original plan.
 
 ## 9. Gotchas for later phases
