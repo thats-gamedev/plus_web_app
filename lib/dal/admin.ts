@@ -129,6 +129,40 @@ export async function getMemberDetail(id: string): Promise<MemberDetail | null> 
   }
 }
 
+export type AdminCode = {
+  id: string
+  code: string
+  kind: "merch" | "promotion"
+  percent: number
+  status: "active" | "pending_sync" | "revoked"
+  createdAt: string
+  revokedAt: string | null
+  userId: string
+  email: string
+}
+
+/** Every member code with its owner, newest first. */
+export async function getAdminCodes(): Promise<AdminCode[]> {
+  await requireAdmin()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("member_codes")
+    .select("id, code, kind, percent, status, created_at, revoked_at, user_id, profile:profiles (email)")
+    .order("created_at", { ascending: false })
+  if (error) throw new Error(`member_codes read: ${error.message}`)
+  return data.map((row) => ({
+    id: row.id,
+    code: row.code,
+    kind: row.kind,
+    percent: row.percent,
+    status: row.status,
+    createdAt: row.created_at,
+    revokedAt: row.revoked_at,
+    userId: row.user_id,
+    email: row.profile?.email ?? "deleted member",
+  }))
+}
+
 export type Snapshot = { day: string; activeMembers: number; mrrCents: number }
 
 /** Daily snapshots for the last `days` days, oldest first. */
