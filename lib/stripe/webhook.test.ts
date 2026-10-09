@@ -87,6 +87,7 @@ function fakes() {
   const subscriptions = new Map<string, SubscriptionRow>()
   const customers = new Map<string, string>() // userId -> customerId
   const remote = new Map<string, Stripe.Subscription>() // what the Stripe API returns now
+  const membershipChanges: string[] = []
   let retrieveCalls = 0
 
   const store: WebhookStore = {
@@ -125,9 +126,12 @@ function fakes() {
     },
     planForPrice,
     store,
+    onMembershipChange: async (userId) => {
+      membershipChanges.push(userId)
+    },
   }
 
-  return { deps, events, subscriptions, customers, remote, retrieves: () => retrieveCalls }
+  return { deps, events, subscriptions, customers, remote, membershipChanges, retrieves: () => retrieveCalls }
 }
 
 let counter = 0
@@ -222,6 +226,32 @@ describe("handleStripeWebhook", () => {
     f.remote.set("sub_1", subscription())
     expect(await handleStripeWebhook(event.payload, event.header, f.deps)).toMatchObject({ status: 200, body: "OK" })
     expect(f.subscriptions.get("sub_1")?.status).toBe("active")
+  })
+
+  it("reports the membership change after saving, for member codes", async () => {
+    f.remote.set("sub_1", subscription())
+    const { payload, header } = signedEvent("customer.subscription.updated", { id: "sub_1" })
+
+    await handleStripeWebhook(payload, header, f.deps)
+    expect(f.membershipChanges).toEqual(["user-1"])
+  })
+
+  it("skips the membership hook when the subscription has no known user", async () => {
+    f.remote.set("sub_8", subscription({ id: "sub_8", customer: "cus_unknown", metadata: {} }))
+    const { payload, header } = signedEvent("customer.subscription.updated", { id: "sub_8" })
+
+    await handleStripeWebhook(payload, header, f.deps)
+    expect(f.membershipChanges).toEqual([])
+  })
+
+  it("answers 500 when the membership hook fails, so Stripe retries", async () => {
+    f.remote.set("sub_1", subscription())
+    f.deps.onMembershipChange = async () => {
+      throw new Error("member_codes insert: connection reset")
+    }
+    const { payload, header } = signedEvent("customer.subscription.updated", { id: "sub_1" })
+
+    expect(await handleStripeWebhook(payload, header, f.deps)).toMatchObject({ status: 500 })
   })
 
   it("ignores unrelated event types", async () => {

@@ -25,6 +25,11 @@ export type WebhookDeps = {
   retrieveSubscription(id: string): Promise<Stripe.Subscription>
   planForPrice(priceId: string): PlanId | null
   store: WebhookStore
+  /**
+   * Runs after a subscription row is saved, e.g. to issue or revoke member
+   * codes. It must be idempotent: Stripe sends several events per change.
+   */
+  onMembershipChange?(userId: string): Promise<void>
 }
 
 export type WebhookResult = { status: number; body: string }
@@ -99,4 +104,5 @@ async function syncSubscription(id: string, deps: WebhookDeps, knownUserId: stri
   await deps.store.upsertSubscription(
     toSubscriptionRow(subscription, { userId, planForPrice: deps.planForPrice }),
   )
+  if (userId) await deps.onMembershipChange?.(userId)
 }
