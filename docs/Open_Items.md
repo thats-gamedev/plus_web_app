@@ -8,12 +8,12 @@ Sources this list is built from (details live there, every open task lives here)
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-09 (Phases 1–7 built; Phase 6 waits on Fourthwall credentials; next up: Phase 8)_
+_Last updated: 2026-10-09 (Phases 1–8 built; Phase 6 waits on Fourthwall credentials; next up: Phase 9)_
 
 **Contents**
 1. Decisions and paperwork (you)
 2. Accounts and setup (you)
-3. Still to build (Phases 8–12)
+3. Still to build (Phases 9–12)
 4. Testing and verification
 5. Launch QA checklist (from the spec)
 6. Dev data to clean up or replace
@@ -88,24 +88,9 @@ The code is built and works without Fourthwall: members get their promotion code
   - later: `RESEND_API_KEY`, `EMAIL_FROM`, `UNSUBSCRIBE_SECRET`
 - [ ] **Vercel Cron enabled.** `vercel.json` registers `/api/cron/sync-codes` daily at 03:15 UTC; Phase 7 adds `/api/cron/snapshot`.
 
-## 3. Still to build (Phases 8–12)
+## 3. Still to build (Phases 9–12)
 
-From `docs/Implementation_Plan.md`; see there for mockup references and details. Phases 1–7 are built; their leftovers are in sections 4 and 7.
-
-### Phase 8: Admin, content, list editor and drops
-
-- [ ] `/admin/content`: a table with kind and status chips, and "New list" (title + kind → empty document → editor).
-- [ ] A "New e-book / guide" form: title, slug, category, summary, cover upload, Markdown body, and a PDF upload for e-books. Optionally add page count and file size for the e-book page (see section 7).
-- [ ] **List editor** `/admin/content/[id]`, committed in sub-steps:
-  1. Zustand draft store and the three-column layout (the inspector becomes a sheet below 1024 px)
-  2. Inspector forms generated per kind from the Zod schema, with inline errors
-  3. Drag and drop with dnd-kit: items within and across sections, sections, keyboard support
-  4. Autosave the draft after 1.5 s, with a conflict check on `draft_updated_at` (Reload / Overwrite)
-  5. Publish / Discard / Unpublish via Server Actions with server-side re-validation
-  6. Member preview and Teaser view tabs, built from the Phase 5 renderers
-  7. Extras: Paste CSV import, duplicate and delete with undo, image upload to `covers` (item images, prompt example images)
-- [ ] `/admin/drops`: month, title, intro, go-live date, a sortable list of attached content, Preview as member, Publish. "Publish & announce" sends the drop email once (wired in Phase 10).
-- [ ] *Done when:* the list editor item of the launch QA checklist passes.
+From `docs/Implementation_Plan.md`; see there for mockup references and details. Phases 1–8 are built; their leftovers are in sections 4 and 7.
 
 ### Phase 9: Spotlight
 
@@ -177,8 +162,16 @@ From `docs/Implementation_Plan.md`; see there for mockup references and details.
 
 ## 4. Testing and verification
 
-### Still to check from Phases 4–7
+### Still to check from Phases 4–8
 
+- [ ] **The admin editors in the browser (Phase 8).** All their Server Actions were tested end to end, but nothing was clicked through, because the Chrome extension kept disconnecting. Check:
+  - **List editor, drag and drop:** items within and across sections, into an empty section, sections among themselves, by mouse and by keyboard (Space, arrows, Space)
+  - **List editor, editing:** the inspector for each kind (creator links, prompt variables), the "Saving…/Saved" label, the error dots and the error count
+  - **List editor, other actions:** Paste CSV, Cmd/Ctrl+D, Delete with Undo, the Member preview and Teaser view tabs
+  - **Conflict banner:** open the same list in two tabs and edit both
+  - **Narrow screens:** below 1024 px the inspector should be a sheet
+  - **Document editor:** an actual cover and PDF upload (no file upload has been run yet), the Markdown preview, and the "Upload the PDF before publishing" guard
+  - **Drops page:** the editor, Add content, Delete, and the date/time fields
 - [ ] **Layouts in the browser.** These were only checked by fetching the server HTML: the content is right, but the layout is unchecked.
   - `/app/perks` and `/app/shop`
   - all admin pages: overview, members and the drawer, codes, inbox and its webhook log
@@ -236,7 +229,7 @@ The spec's full list, unticked items only. The ones already verified are in sect
 - [ ] The public views return only teaser fields, and logged-out users can't read `resources`.
 - [ ] `/lists/[slug]` renders title, summary and teaser items while logged out.
 - [ ] A list of each kind (tools, assets, creators, prompts) renders correctly for members *(done on desktop)* and as a public teaser.
-- [ ] The list editor: drag items within and between sections, reorder sections, keyboard drag; autosave survives a reload; Publish is blocked while fields are invalid; members see changes only after Publish.
+- [ ] The list editor: drag items within and between sections, reorder sections, keyboard drag *(built; needs the browser check in section 4)*. Already verified: autosave survives a reload, Publish is blocked while fields are invalid, and members see changes only after Publish (section 9).
 
 **Perks and shop**
 - [ ] A new paid member gets both codes within a minute *(verified for the issuing: a real Stripe test subscription made the webhook issue both codes in seconds)*; the merch code works at Fourthwall checkout *(needs Fourthwall)*.
@@ -254,6 +247,7 @@ The spec's full list, unticked items only. The ones already verified are in sect
 
 - [ ] **Test member** `stripe-e2e-…@example.com` in the dev Supabase project. It has an active test subscription and the display name "Mara Test". Keep it as a member account, or delete it (auth user and Stripe test customer).
 - [ ] **Dev member codes.** The test member and the seed's `member@example.com` each have codes in the dev database (merch pending, promotion active). They're harmless, but they'll sync to Fourthwall once credentials are set.
+- [ ] **"Test creators list"** in the dev database: an unpublished list with one creator, left there for trying the list editor. Delete it from `/admin/content` when done.
 - [ ] **Disposable Stripe test data** from the Delete member test: customer `cus_VPQKJUOZoVCVAk` with a cancelled test subscription, plus its anonymised subscription row in dev. These are harmless test-mode leftovers; delete them in the Stripe Dashboard if wanted.
 - [ ] **Revoked seed code.** `member@example.com`'s promotion code was rotated in the revoke test (`TGD-PROMO-6XAJ4S` revoked, `TGD-PROMO-JTNXHT` active).
 - [ ] **Your browser session.** The automated tests logged the test member out of `localhost:3000` in Chrome. Log in again if you were using it.
@@ -273,6 +267,11 @@ The spec's full list, unticked items only. The ones already verified are in sect
   - The Stripe customer stays in Stripe, which is normal for billing records. Mention it in the Datenschutzerklärung.
 - [ ] **The "Revoke" confirmation** on `/admin/codes` uses the browser's `window.confirm`. Swap it for the app's Dialog (like Delete member) for a consistent look.
 - [ ] **The admin "due" date** for cancellation requests counts weekdays only, not German public holidays.
+- [ ] **Drop content order.** The spec asks for a sortable list of a drop's content, but there is no position column. The member card orders by publish date, then title. Add a `drop_position` column (with a grant) if the order matters.
+- [ ] **The sections outline** in the list editor's left column is a jump list. Sections are reordered by dragging them in the middle column (or with Move up/down), not in the outline.
+- [ ] **List settings are live at once.** Title, slug, category and cover of a published list save straight to the row, not with "Publish". A slug change breaks shared links right away.
+- [ ] **Orphaned uploads.** Replacing a cover, PDF or item image leaves the old file in Storage. Delete only cleans up a resource's current cover and PDF, not item images. Add a cleanup if storage grows.
+- [ ] **`shadcn` in `dependencies`.** It's a CLI and pulls in packages with 7 high-severity `npm audit` findings (in `braces` via `ts-morph`). Nothing reaches the app bundle, but moving it to `devDependencies` would clear the production audit.
 - [ ] **Implementation plan checkboxes** were never ticked. This file is the record of what's open; tick the plan too, or leave it as the original plan.
 
 ## 8. Gotchas for later phases
@@ -309,3 +308,18 @@ Verified in dev with Stripe test mode, 2026-10-08/09.
 - [x] Code revoke rotates: the old code is revoked and a current member gets a new one; revoking twice is a no-op.
 - [x] Webhook Replay re-processes a failed event and clears the error.
 - [x] Cancellation requests can be closed as cancelled or no match; the inbox and sidebar counts update.
+- [x] Content: "New list" and "New e-book / guide" create drafts with unique slugs (umlauts transliterated); invalid and taken slugs are refused; a guide saved, published and shown to members with its Markdown and drop badge; delete removes it.
+- [x] List drafts (server side):
+  - incomplete drafts autosave
+  - a stale save is refused as a conflict
+  - the next save with the fresh token works (`…Z` vs `…+00:00` handled)
+  - Publish is refused with errors, then works once complete, into a drop
+  - members see exactly the published version
+  - a draft of the wrong kind is refused
+- [x] Drops:
+  - "New drop" picks the next free month at 09:00 Berlin
+  - go-live times convert to UTC correctly, including the summer-time switch (unit tests)
+  - the preview renders the member card
+  - "Publish now" switches the member home to that drop, and deleting it switches back
+  - the content stays in the library
+- [x] Members get a 404 from every admin content and drop action tried.
