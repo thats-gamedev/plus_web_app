@@ -8,12 +8,12 @@ Sources this list is built from (details live there, every open task lives here)
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-09 (Phases 1–6 built; Phase 6 waits on Fourthwall credentials; next up: Phase 7)_
+_Last updated: 2026-10-09 (Phases 1–7 built; Phase 6 waits on Fourthwall credentials; next up: Phase 8)_
 
 **Contents**
 1. Decisions and paperwork (you)
 2. Accounts and setup (you)
-3. Still to build (Phases 7–12)
+3. Still to build (Phases 8–12)
 4. Testing and verification
 5. Launch QA checklist (from the spec)
 6. Dev data to clean up or replace
@@ -88,23 +88,9 @@ The code is built and works without Fourthwall: members get their promotion code
   - later: `RESEND_API_KEY`, `EMAIL_FROM`, `UNSUBSCRIBE_SECRET`
 - [ ] **Vercel Cron enabled.** `vercel.json` registers `/api/cron/sync-codes` daily at 03:15 UTC; Phase 7 adds `/api/cron/snapshot`.
 
-## 3. Still to build (Phases 7–12)
+## 3. Still to build (Phases 8–12)
 
-From `docs/Implementation_Plan.md`; see there for mockup references and details.
-
-### Phase 7: Admin, overview, members, codes, inbox
-
-- [ ] Every admin mutation is a Server Action that calls `requireAdmin()` first, and only then uses the service-role client.
-- [ ] `/admin` overview: KPI cards (active, MRR, new this month, churn), alert cards, a 90-day area chart from `member_snapshots`, and a latest-events feed.
-- [ ] `GET /api/cron/snapshot`, protected by `CRON_SECRET` and registered in `vercel.json` (daily).
-- [ ] `/admin/members`: search, status chips, table, CSV export. The member drawer has:
-  - status, codes and an activity timeline
-  - Open in Stripe
-  - **Export data (JSON)**
-  - **Delete member** (cancel in Stripe → delete the auth user → anonymise)
-- [ ] `/admin/codes`: lookup, a pending-sync banner with Retry, and Revoke / Reissue. Retry calls `syncCodes(userId, { retryPending: true })`.
-- [ ] `/admin/inbox`: cancellation requests and payment/sync problems, plus a **webhook log** tab (formatted JSON + Replay).
-- [ ] *Done when:* the KPIs match Stripe for the test data, and deleting a member works end to end.
+From `docs/Implementation_Plan.md`; see there for mockup references and details. Phases 1–7 are built; their leftovers are in sections 4 and 7.
 
 ### Phase 8: Admin, content, list editor and drops
 
@@ -143,7 +129,11 @@ From `docs/Implementation_Plan.md`; see there for mockup references and details.
   - cancellation verify link
   - drop announcement
   - Spotlight featured
-- [ ] Wire the emails into the webhook (welcome, cancellation confirmed), the drops page (announce in batches, respecting `drop_emails`) and Spotlight (featured).
+- [ ] Wire the emails into:
+  - the webhook (welcome, cancellation confirmed)
+  - the drops page (announce in batches, respecting `drop_emails`)
+  - Spotlight (featured)
+  - the admin inbox: "Mark as cancelled" sends the confirmation, and "Mark as no match" should become "Send no-match reply". Today both only change the status.
 - [ ] `GET /api/email/unsubscribe` with an HMAC-signed token.
 - [ ] `/cancel`:
   - a rate-limited form
@@ -187,9 +177,15 @@ From `docs/Implementation_Plan.md`; see there for mockup references and details.
 
 ## 4. Testing and verification
 
-### Still to check from Phases 4–6
+### Still to check from Phases 4–7
 
-- [ ] **`/app/perks` and `/app/shop` in the browser.** They were only checked by fetching the server HTML: the content is right, but the layout is unchecked.
+- [ ] **Layouts in the browser.** These were only checked by fetching the server HTML: the content is right, but the layout is unchecked.
+  - `/app/perks` and `/app/shop`
+  - all admin pages: overview, members and the drawer, codes, inbox and its webhook log
+  - the admin pages at phone width
+  - the chart's crosshair and tooltip, which need at least 2 daily snapshots (a few days of the cron, or insert test rows)
+  - the Delete member dialog. The action itself was tested end to end; the UI wasn't clicked through.
+- [ ] **KPIs vs Stripe.** The overview counts every live subscription row. In dev that includes the seed's `member@example.com`, whose subscription doesn't exist in Stripe, so dev shows 2 members while the Stripe test account has 1 active subscription. Compare against Stripe once the seed member is out of the way (or in prod).
 - [ ] **Phone layouts.** In Chrome DevTools' device mode, check:
   - `/app` and `/app/library`
   - one list of each kind
@@ -243,15 +239,13 @@ The spec's full list, unticked items only. The ones already verified are in sect
 - [ ] The list editor: drag items within and between sections, reorder sections, keyboard drag; autosave survives a reload; Publish is blocked while fields are invalid; members see changes only after Publish.
 
 **Perks and shop**
-- [ ] A new paid member gets both codes within a minute; the merch code works at Fourthwall checkout.
+- [ ] A new paid member gets both codes within a minute *(verified for the issuing: a real Stripe test subscription made the webhook issue both codes in seconds)*; the merch code works at Fourthwall checkout *(needs Fourthwall)*.
 - [ ] When a subscription ends, both codes are revoked and the merch code no longer works at Fourthwall.
 - [ ] A Fourthwall API failure leaves the code as `pending_sync`, and the cron retry fixes it. *(Verified without credentials: the codes stay pending. The fix by retry is still open.)*
 - [ ] `/app/shop` shows Fourthwall products with member prices; Buy copies the code and opens the product in a new tab.
 
 **Admin, emails, Spotlight**
-- [ ] A non-admin gets a 404 on `/admin` routes.
-- [ ] The snapshot cron writes one row per day; the KPI cards match Stripe's counts.
-- [ ] Admin "Delete member" removes the auth user and keeps the anonymised subscription row.
+- [ ] The KPI cards match Stripe's counts (see the dev caveat in section 4).
 - [ ] A drop announcement is sent once and respects the unsubscribe toggle.
 - [ ] Spotlight: one submission per month, images upload, the admin can feature it and the member gets the email.
 - [ ] The footer legal links and "Verträge hier kündigen" are on every page.
@@ -260,6 +254,10 @@ The spec's full list, unticked items only. The ones already verified are in sect
 
 - [ ] **Test member** `stripe-e2e-…@example.com` in the dev Supabase project. It has an active test subscription and the display name "Mara Test". Keep it as a member account, or delete it (auth user and Stripe test customer).
 - [ ] **Dev member codes.** The test member and the seed's `member@example.com` each have codes in the dev database (merch pending, promotion active). They're harmless, but they'll sync to Fourthwall once credentials are set.
+- [ ] **Disposable Stripe test data** from the Delete member test: customer `cus_VPQKJUOZoVCVAk` with a cancelled test subscription, plus its anonymised subscription row in dev. These are harmless test-mode leftovers; delete them in the Stripe Dashboard if wanted.
+- [ ] **Revoked seed code.** `member@example.com`'s promotion code was rotated in the revoke test (`TGD-PROMO-6XAJ4S` revoked, `TGD-PROMO-JTNXHT` active).
+- [ ] **Your browser session.** The automated tests logged the test member out of `localhost:3000` in Chrome. Log in again if you were using it.
+- [ ] **One `member_snapshots` row** exists for 2026-10-09 from testing the cron. It's correct, so it can stay.
 - [ ] **Placeholder PDF** at `ebooks/texturing-starter-guide.pdf` in the dev bucket. Replace it with the real e-book.
 - [ ] **No covers or item images** are uploaded yet. Cards show pastel placeholders until Phase 8 adds uploads.
 
@@ -270,11 +268,18 @@ The spec's full list, unticked items only. The ones already verified are in sect
 - [ ] **Markdown images** are dropped in guides and e-book descriptions until uploads exist (Phase 8).
 - [ ] **No contact link in the download error.** The e-book error banner says "let us know" but has no link. Add the contact mailto.
 - [ ] **No shop collection chips** on `/app/shop` yet (see the Fourthwall checks in section 4).
+- [ ] **Personal data left after Delete member** (GDPR):
+  - `webhook_events.payload` keeps the raw Stripe events, which contain the member's email and name. Decide whether to scrub them on delete or prune events after a retention period (e.g. 90 days).
+  - The Stripe customer stays in Stripe, which is normal for billing records. Mention it in the Datenschutzerklärung.
+- [ ] **The "Revoke" confirmation** on `/admin/codes` uses the browser's `window.confirm`. Swap it for the app's Dialog (like Delete member) for a consistent look.
+- [ ] **The admin "due" date** for cancellation requests counts weekdays only, not German public holidays.
 - [ ] **Implementation plan checkboxes** were never ticked. This file is the record of what's open; tick the plan too, or leave it as the original plan.
 
 ## 8. Gotchas for later phases
 
-- **No head-only counts.** Supabase `head: true` counts (a `HEAD` request) hung forever under Next's patched fetch in dev. Count by selecting ids instead. This matters for the Phase 7 KPI cards.
+- **No head-only counts.** Supabase `head: true` counts (a `HEAD` request) hung forever under Next's patched fetch in dev. Count by selecting ids instead (as `lib/dal/admin.ts` does).
+- **Admin Route Handlers check the role themselves.** The admin layout doesn't run for `route.ts` files; use `adminRouteGuard()` (`lib/dal/admin-route.ts`).
+- **Testing Server Actions without a browser.** Find the action id in `.next/dev/server/server-reference-manifest.json`, then POST to the page with the `Next-Action` header, a session cookie, and a body built by React's `encodeReply` (from `next/dist/compiled/react-server-dom-webpack/client.edge`). FormData fields are prefixed `_1_`.
 - **`usePathname()` needs `<Suspense>`.** Client components that read it on dynamic routes need a `<Suspense>` boundary (see `components/layout/member-shell.tsx`). The admin shell needs the same once `/admin/content/[id]` exists.
 - **Supabase query builders are thenables.** Never return one from an `async` helper, because awaiting it runs the query (see `publishedResources` in `lib/dal/content.ts`).
 - **Members read `resources` by column list.** Every new column needs a `grant select (…)` (see `supabase/migrations/20261008221422_resource_counts.sql`).
@@ -294,3 +299,13 @@ Verified in dev with Stripe test mode, 2026-10-08/09.
 - [x] Members cannot read drafts, and non-members get nothing from `resources` through the Supabase API (RLS test suite, 41 tests).
 - [x] The e-book URL expires after 60 s; signed-out download requests go to `/login`.
 - [x] Member codes: issued once per member, idempotent on re-runs, merch code pending without Fourthwall, cron rejects calls without `CRON_SECRET` (14 unit tests and a run against dev).
+- [x] A non-admin gets a 404 on `/admin`, on the admin export routes and on every admin Server Action tried (delete member, revoke code, replay event).
+- [x] The snapshot cron writes one row per day (running it twice upserts the same day) and rejects calls without `CRON_SECRET`.
+- [x] Admin "Delete member", end to end with a real Stripe test subscription:
+  - the Stripe subscription is cancelled
+  - the auth user, profile and codes are deleted
+  - the subscription row stays with `user_id = null`, and the later `customer.subscription.deleted` webhook is stored without errors
+  - the wrong confirmation email and admin accounts are refused
+- [x] Code revoke rotates: the old code is revoked and a current member gets a new one; revoking twice is a no-op.
+- [x] Webhook Replay re-processes a failed event and clears the error.
+- [x] Cancellation requests can be closed as cancelled or no match; the inbox and sidebar counts update.
