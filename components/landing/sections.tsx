@@ -19,7 +19,8 @@ import { buttonVariants } from "@/components/ui/button"
 import { PlaceholderCover } from "@/components/ui/placeholder-cover"
 import { coverUrl } from "@/lib/content/covers"
 import { dropHeading, dropSummary } from "@/lib/content/landing"
-import { categoryLabels, categoryTones, resourceMeta, resourceSize, resourceTypeLabel } from "@/lib/content/resources"
+import { monthName } from "@/lib/admin/drops"
+import { categoryLabels, categoryTones, resourceSize, resourceTypeLabel } from "@/lib/content/resources"
 import type { LandingData, PublicList, PublicResource } from "@/lib/dal/public"
 import type { ListItem, ListSection } from "@/lib/lists/schema"
 import { teaserItemCount } from "@/lib/lists/teaser"
@@ -62,7 +63,8 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
   return (
     <ul aria-label="Recently added" className="space-y-3 lg:space-y-0 lg:[&>li+li]:-mt-3">
       {cards.map((card, i) => {
-        const size = resourceSize(card)
+        // "Tools list · October drop" for drop content, else "Tools list · 32 items" (LW1).
+        const detail = card.dropMonth ? `${monthName(card.dropMonth)} drop` : resourceSize(card)
         return (
           <li
             key={card.title}
@@ -82,13 +84,15 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
             )}
             <div className="min-w-0">
               <p className="text-sm text-muted-foreground lg:hidden">
-                {[categoryLabels[card.category], resourceTypeLabel(card), size].filter(Boolean).join(" · ")}
+                {[categoryLabels[card.category], resourceTypeLabel(card), detail].filter(Boolean).join(" · ")}
               </p>
               <Badge variant={card.category} className="hidden lg:inline-flex">
                 {categoryLabels[card.category]}
               </Badge>
               <p className="mt-0.5 text-lg leading-snug font-semibold lg:mt-2 lg:text-xl">{card.title}</p>
-              <p className="mt-1 hidden font-mono text-sm text-muted-foreground lg:block">{resourceMeta(card)}</p>
+              <p className="mt-1 hidden font-mono text-sm text-muted-foreground lg:block">
+                {[resourceTypeLabel(card), detail].filter(Boolean).join(" · ")}
+              </p>
             </div>
           </li>
         )

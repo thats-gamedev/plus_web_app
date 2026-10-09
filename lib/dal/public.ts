@@ -31,6 +31,8 @@ export type PublicResource = {
   wordCount: number | null
   /** Path in the public `covers` bucket. */
   coverPath: string | null
+  /** First day of the drop's month when it belongs to the current drop. */
+  dropMonth: string | null
 }
 
 export type PublicList = {
@@ -46,7 +48,7 @@ export type PublicList = {
 }
 
 export type LandingData = {
-  /** The newest published resources outside the current drop (hero cards). */
+  /** Three of the newest published resources (hero cards), outside the current drop first. */
   hero: PublicResource[]
   drop: { month: string; title: string; theme: string | null; introMd: string | null; kinds: Pick<PublicResource, "type" | "listKind">[] } | null
   /** The newest list with teaser items (free list section). */
@@ -96,11 +98,15 @@ export async function getLandingData(): Promise<LandingData> {
     itemCount: r.item_count,
     wordCount: r.word_count,
     coverPath: r.cover_path,
+    dropMonth: drop && r.drop_id === drop.id ? drop.month : null,
   })
   const outsideDrop = rows.filter((r) => !drop || r.drop_id !== drop.id)
   const dropRows = drop ? rows.filter((r) => r.drop_id === drop.id) : []
+  // Titles outside the current drop come first; the drop's own titles fill
+  // up (the mockup's hero shows one, "Tools list · October drop").
+  const ranked = [...outsideDrop, ...dropRows]
   const pick = (match: (r: NonNullable<typeof rows>[number]) => boolean) => {
-    const row = outsideDrop.find(match)
+    const row = ranked.find(match)
     return row ? toPublic(row) : null
   }
 
@@ -109,7 +115,7 @@ export async function getLandingData(): Promise<LandingData> {
   const freeList = freeSlug ? await getPublicList(freeSlug) : null
 
   return {
-    hero: outsideDrop.slice(0, 3).map(toPublic),
+    hero: ranked.slice(0, 3).map(toPublic),
     drop: drop
       ? {
           month: drop.month,

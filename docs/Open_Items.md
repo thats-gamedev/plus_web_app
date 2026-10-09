@@ -160,7 +160,7 @@ The landing page (all 11 sections), `/lists/[slug]`, the sitemap, robots and the
 - [ ] **Join flow from the landing page:** "Join" → pricing → tick the waiver → sign-up → email confirmation → Checkout → `/app`, on a real phone.
 - [ ] **Lighthouse mobile check** of `/` and one `/lists/[slug]` on a production build.
 - [ ] **"Get featured" pictures.** The dark card shows three dashed "member work" boxes as in the mockup. Replace them with real featured Spotlight work (with the member's consent; the images are in the private `spotlight` bucket), or keep them as decoration.
-- [ ] **Hero and "What's inside" use real content:** the newest published resources outside the current drop, and real list, prompts and e-book titles. With an empty production database the hero shows no cards and the example chips stay empty; publish content before launch (section 1).
+- [ ] **Hero and "What's inside" use real content:** the three newest published resources (outside the current drop first, then the drop's, labelled "… · October drop" as in the mockup), and real list, prompts and e-book titles. With an empty production database the hero shows no cards and the example chips stay empty; publish content before launch (section 1).
 - [ ] **Share image font.** `app/opengraph-image.tsx` uses the default sans-serif; load Space Grotesk into `ImageResponse` if the brand font matters for shares.
 
 ### Phase 12: QA and launch
