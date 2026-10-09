@@ -8,6 +8,11 @@ import { PageHeader } from "@/components/layout/page-header"
 import { ContentCard } from "@/components/shared/content-card"
 import { DropCard, dropMonthName, FirstDropCard } from "@/components/shared/drop-card"
 import { PerksBanner } from "@/components/shared/perks-banner"
+import { ProductCard } from "@/components/shop/shop-parts"
+import { CODE_PERCENT } from "@/lib/codes/generate"
+import { getMemberCodes } from "@/lib/dal/perks"
+import type { ShopProduct } from "@/lib/fourthwall/products"
+import { getShopProducts, shopConfig } from "@/lib/fourthwall/storefront"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { parseConsent } from "@/lib/billing/consent"
@@ -88,12 +93,50 @@ async function Home({ searchParams }: Pick<PageProps<"/app">, "searchParams">) {
         )}
       </section>
 
-      {/* "New merch" goes here in Phase 6 (Fourthwall). */}
+      <NewMerch />
 
       <div className="mt-8 md:mt-10">
         <PerksBanner />
       </div>
     </>
+  )
+}
+
+/** The two newest products (MW1); hidden while the shop isn't set up or is down. */
+async function NewMerch() {
+  const config = shopConfig()
+  if (!config) return null
+
+  let products: ShopProduct[]
+  try {
+    products = (await getShopProducts(config.collection)).filter((p) => !p.soldOut).slice(0, 2)
+  } catch {
+    return null
+  }
+  if (products.length === 0) return null
+
+  const merch = (await getMemberCodes()).find((c) => c.kind === "merch")
+  const code = merch?.status === "active" ? merch.code : null
+  const percent = merch?.percent ?? CODE_PERCENT.merch
+
+  return (
+    <section className="mt-8 md:mt-10" aria-labelledby="merch-heading">
+      <div className="mb-4 flex items-baseline justify-between gap-4">
+        <h2 id="merch-heading" className="text-xl font-bold md:text-2xl">
+          New merch
+        </h2>
+        <Link href="/app/shop" className="hidden text-sm font-semibold text-brand hover:underline md:inline">
+          Open shop
+        </Link>
+      </div>
+      <ul className="grid grid-cols-2 gap-3 md:gap-4">
+        {products.map((product, index) => (
+          <li key={product.id}>
+            <ProductCard product={product} index={index} percent={percent} code={code} shopUrl={config.shopUrl} compact />
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
