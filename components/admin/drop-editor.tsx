@@ -35,6 +35,7 @@ import { FormField } from "@/components/auth/form-field"
 import { ResourceIcon } from "@/components/shared/resource-icon"
 import { Badge } from "@/components/ui/badge"
 import { Banner } from "@/components/ui/banner"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { CountedTextarea } from "@/components/ui/counted-textarea"
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -164,17 +165,21 @@ export function DropEditor({
               Publish now
             </Button>
           )}
-          <Button
-            variant={state === "announced" ? "ghost" : "default"}
-            disabled={pending}
-            onClick={() => {
-              if (state === "announced" || window.confirm("Email this drop to every member with drop emails on? Each member gets it once.")) {
-                run(() => announceDrop(drop.id))
+          {state === "announced" ? (
+            <Button variant="ghost" disabled={pending} onClick={() => run(() => announceDrop(drop.id))}>
+              Retry sending
+            </Button>
+          ) : (
+            <ConfirmDialog
+              trigger={
+                <Button disabled={pending}>{state === "planned" ? "Publish & announce" : "Send announcement"}</Button>
               }
-            }}
-          >
-            {state === "planned" ? "Publish & announce" : state === "published" ? "Send announcement" : "Retry sending"}
-          </Button>
+              title={state === "planned" ? "Publish and announce this drop?" : "Send the announcement?"}
+              description={`${state === "planned" ? "The drop goes live now, and every" : "Every"} member with drop emails on gets the announcement. Each member gets it once.`}
+              confirmLabel={state === "planned" ? "Publish & send" : "Send emails"}
+              onConfirm={() => run(() => announceDrop(drop.id))}
+            />
+          )}
         </div>
       </div>
     </div>

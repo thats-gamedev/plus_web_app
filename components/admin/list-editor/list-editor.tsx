@@ -8,6 +8,7 @@ import { cn } from "cn"
 import { discardListDraft, publishList, unpublishList } from "@/app/admin/content/list-actions"
 import { Badge } from "@/components/ui/badge"
 import { Banner } from "@/components/ui/banner"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import type { DropOption } from "@/lib/dal/admin-content"
@@ -171,18 +172,18 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
             </Button>
           )}
           {published && hasDraft && (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={pending}
-              onClick={() => {
-                if (window.confirm("Throw away all edits since the last publish?")) {
-                  run(() => discardListDraft(resourceId), () => window.location.reload())
-                }
-              }}
-            >
-              Discard draft
-            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button variant="ghost" size="sm" disabled={pending}>
+                  Discard draft
+                </Button>
+              }
+              title="Discard the draft?"
+              description="All edits since the last publish are thrown away. Members keep seeing the published version."
+              confirmLabel="Discard edits"
+              destructive
+              onConfirm={() => run(() => discardListDraft(resourceId), () => window.location.reload())}
+            />
           )}
           <label className="sr-only" htmlFor="publish-drop">
             Add to drop

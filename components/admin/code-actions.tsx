@@ -4,6 +4,7 @@ import { useTransition } from "react"
 import { RefreshCwIcon } from "lucide-react"
 import { toast } from "sonner"
 import { type CodeActionResult, reissueCodes, retryPendingCodes, revokeCode } from "@/app/admin/codes/actions"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { Button } from "@/components/ui/button"
 
 function useCodeAction() {
@@ -32,15 +33,7 @@ export function CodeRowAction({
   const { pending, run } = useCodeAction()
   const label = status === "revoked" ? "Reissue" : status === "pending_sync" ? "Retry sync" : "Revoke"
 
-  const onClick = () => {
-    if (status === "revoked") run(() => reissueCodes(userId))
-    else if (status === "pending_sync") run(() => reissueCodes(userId))
-    else if (window.confirm(`Revoke ${code}? It stops working right away; a current member gets a new code.`)) {
-      run(() => revokeCode(codeId))
-    }
-  }
-
-  return (
+  const link = (onClick?: () => void) => (
     <button
       type="button"
       onClick={onClick}
@@ -49,6 +42,18 @@ export function CodeRowAction({
     >
       {pending ? "Working…" : label}
     </button>
+  )
+
+  if (status !== "active") return link(() => run(() => reissueCodes(userId)))
+  return (
+    <ConfirmDialog
+      trigger={link()}
+      title={`Revoke ${code}?`}
+      description="It stops working right away. A current member gets a new code."
+      confirmLabel="Revoke code"
+      destructive
+      onConfirm={() => run(() => revokeCode(codeId))}
+    />
   )
 }
 
