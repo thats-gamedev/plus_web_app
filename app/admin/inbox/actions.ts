@@ -4,6 +4,7 @@ import { refresh } from "next/cache"
 import type Stripe from "stripe"
 import { cancelAtPeriodEnd } from "@/lib/billing/cancel"
 import { refundAndEnd } from "@/lib/billing/withdraw"
+import { sendRequestReceipt } from "@/lib/cancel/deps"
 import { withdrawalAssessment } from "@/lib/cancel/withdrawal"
 import { requireAdmin } from "@/lib/dal/auth"
 import { sendEmailSafely } from "@/lib/email"
@@ -205,4 +206,28 @@ async function closeRequest(
   if (error) return { ok: false, message: `Couldn't update the request: ${error.message}` }
   refresh()
   return { ok: true, message }
+}
+
+/** Sends a receipt that failed when the request came in (statutory). */
+export async function resendReceipt(requestId: string): Promise<InboxActionResult> {
+  await requireAdmin()
+  const { data: request } = await createAdminClient()
+    .from("cancellation_requests")
+    .select("id, kind, name, email, reference, created_at, receipt_sent_at")
+    .eq("id", requestId)
+    .maybeSingle()
+  if (!request) return { ok: false, message: "That request no longer exists." }
+  if (request.receipt_sent_at) return { ok: false, message: "The receipt was already sent." }
+
+  const result = await sendRequestReceipt({
+    id: request.id,
+    kind: request.kind,
+    name: request.name,
+    email: request.email,
+    reference: request.reference,
+    createdAt: request.created_at,
+  })
+  if (result === "failed") return { ok: false, message: "Sending failed again. Check the email setup (Resend) and the server log." }
+  refresh()
+  return { ok: true, message: `Receipt sent to ${request.email}.` }
 }

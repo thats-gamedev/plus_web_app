@@ -6,6 +6,7 @@ import {
   type InboxActionResult,
   replayWebhookEvent,
   resolveCancellationRequest,
+  resendReceipt,
   resolveWithdrawalRequest,
 } from "@/app/admin/inbox/actions"
 import { Button } from "@/components/ui/button"
@@ -103,5 +104,14 @@ export function RefundWithdrawalButton({ requestId, name }: { requestId: string;
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+export function ResendReceiptButton({ requestId }: { requestId: string }) {
+  const { pending, run } = useInboxAction()
+  return (
+    <Button variant="dark" size="sm" disabled={pending} onClick={() => run(() => resendReceipt(requestId))}>
+      {pending ? "Sending…" : "Send receipt"}
+    </Button>
   )
 }

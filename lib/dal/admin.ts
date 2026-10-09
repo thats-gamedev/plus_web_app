@@ -217,6 +217,26 @@ export type WithdrawalRequest = CancellationRequest & {
   subscription: { startedAt: string; waiverConsentAt: string | null; status: string; endedAt: string | null } | null
 }
 
+export type MissingReceipt = { id: string; kind: Enums<"contract_request_kind">; name: string; email: string; createdAt: string }
+
+/**
+ * Cancellations and withdrawals whose receipt email didn't go out (any
+ * status). The law requires the receipt, so the inbox offers to send it.
+ * The last two minutes are left out: those may still be sending.
+ */
+export const getRequestsWithoutReceipt = cache(async (): Promise<MissingReceipt[]> => {
+  await requireAdmin()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("cancellation_requests")
+    .select("id, kind, name, email, created_at")
+    .is("receipt_sent_at", null)
+    .lt("created_at", new Date(Date.now() - 120_000).toISOString())
+    .order("created_at", { ascending: true })
+  if (error) throw new Error(`cancellation_requests read: ${error.message}`)
+  return data.map((r) => ({ id: r.id, kind: r.kind, name: r.name, email: r.email, createdAt: r.created_at }))
+})
+
 /** Withdrawal requests that still need the admin. */
 export const getOpenWithdrawalRequests = cache(async (): Promise<WithdrawalRequest[]> => {
   await requireAdmin()
@@ -326,7 +346,11 @@ export const getAdminNavCounts = cache(async (): Promise<AdminNavCounts> => {
   const month = new Date().toISOString().slice(0, 8) + "01"
   const [codes, requests, failed, spotlight] = await Promise.all([
     supabase.from("member_codes").select("id").eq("status", "pending_sync"),
-    supabase.from("cancellation_requests").select("id").in("status", ["received", "verified"]),
+    // Open requests, plus closed ones whose receipt failed (both need the admin).
+    supabase
+      .from("cancellation_requests")
+      .select("id")
+      .or(`status.in.(received,verified),and(receipt_sent_at.is.null,created_at.lt.${new Date(Date.now() - 120_000).toISOString()})`),
     supabase.from("webhook_events").select("id").is("processed_at", null).not("error", "is", null),
     supabase.from("spotlight_submissions").select("id").eq("month", month).eq("status", "submitted"),
   ])

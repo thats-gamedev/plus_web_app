@@ -1,11 +1,12 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { RefreshCwIcon, Undo2Icon, UserCheckIcon, UserXIcon } from "lucide-react"
+import { MailWarningIcon, RefreshCwIcon, Undo2Icon, UserCheckIcon, UserXIcon } from "lucide-react"
 import { cn } from "cn"
 import {
   DeclineWithdrawalButton,
   RefundWithdrawalButton,
   ReplayButton,
+  ResendReceiptButton,
   ResolveRequestButton,
   WithdrawalNoMatchButton,
 } from "@/components/admin/inbox-actions"
@@ -14,9 +15,11 @@ import { Badge } from "@/components/ui/badge"
 import { addBusinessDays, describeEventType } from "@/lib/admin/inbox"
 import { withdrawalAssessment } from "@/lib/cancel/withdrawal"
 import {
+  type MissingReceipt,
   type WebhookEvent,
   type WithdrawalRequest,
   getFailedWebhookEvents,
+  getRequestsWithoutReceipt,
   getOpenCancellationRequests,
   getOpenWithdrawalRequests,
   getWebhookLog,
@@ -35,12 +38,14 @@ const day = (date: Date) =>
 export default async function InboxPage({ searchParams }: PageProps<"/admin/inbox">) {
   const { tab } = await searchParams
   const showLog = tab === "log"
-  const [requests, withdrawals, failed] = await Promise.all([
+  const [requests, withdrawals, failed, receipts] = await Promise.all([
     getOpenCancellationRequests(),
     getOpenWithdrawalRequests(),
     getFailedWebhookEvents(),
+    getRequestsWithoutReceipt(),
   ])
-  const open = requests.length + withdrawals.length + failed.length
+  // A request can be open and miss its receipt; count it once, like the sidebar.
+  const open = new Set([...requests, ...withdrawals, ...receipts].map((r) => r.id)).size + failed.length
 
   return (
     <>
@@ -69,7 +74,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/admin/inbo
         ))}
       </nav>
 
-      {showLog ? <WebhookLog /> : <OpenItems requests={requests} withdrawals={withdrawals} failed={failed} />}
+      {showLog ? <WebhookLog /> : <OpenItems requests={requests} withdrawals={withdrawals} failed={failed} receipts={receipts} />}
     </>
   )
 }
@@ -78,13 +83,17 @@ function OpenItems({
   requests,
   withdrawals,
   failed,
+  receipts,
 }: {
   requests: Awaited<ReturnType<typeof getOpenCancellationRequests>>
   withdrawals: WithdrawalRequest[]
   failed: WebhookEvent[]
+  receipts: MissingReceipt[]
 }) {
   return (
     <div className="max-w-4xl space-y-10">
+      {receipts.length > 0 && <MissingReceipts receipts={receipts} />}
+
       {withdrawals.length > 0 && <Withdrawals withdrawals={withdrawals} />}
 
       <section aria-labelledby="cancellations">
@@ -177,6 +186,36 @@ function OpenItems({
         )}
       </section>
     </div>
+  )
+}
+
+function MissingReceipts({ receipts }: { receipts: MissingReceipt[] }) {
+  return (
+    <section aria-labelledby="receipts">
+      <h2 id="receipts" className="text-2xl font-bold">
+        Receipts not sent
+      </h2>
+      <p className="mb-4 text-muted-foreground">
+        The law requires a receipt for every cancellation and withdrawal, but these emails failed. Send them now.
+      </p>
+      <ul className="space-y-3">
+        {receipts.map((r) => (
+          <li key={r.id} className="flex flex-wrap items-center gap-4 rounded-card border border-danger/40 bg-card p-5">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
+              <MailWarningIcon aria-hidden className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p>
+                <span className="font-semibold">{r.kind === "withdrawal" ? "Withdrawal" : "Cancellation"}</span> from {r.name}{" "}
+                <span className="text-muted-foreground">{r.email}</span>
+              </p>
+              <p className="font-mono text-xs text-muted-foreground">Received {stamp(r.createdAt)}</p>
+            </div>
+            <ResendReceiptButton requestId={r.id} />
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

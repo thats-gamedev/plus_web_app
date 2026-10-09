@@ -15,6 +15,40 @@ import type { WithdrawalDeps } from "./withdrawal"
 
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString()
 
+export type ReceiptRequest = {
+  id: string
+  kind: "cancellation" | "withdrawal"
+  name: string
+  email: string
+  reference: string | null
+  createdAt: string
+}
+
+/**
+ * The statutory receipt (content, date and time of the request). Sets
+ * receipt_sent_at once it's out; a failed receipt shows up in the admin inbox
+ * with a button that calls this again. Sending is deduplicated per request,
+ * so a repeat never sends twice.
+ */
+export async function sendRequestReceipt(request: ReceiptRequest): Promise<"sent" | "duplicate" | "failed"> {
+  const content = { requestId: request.id, name: request.name, email: request.email, reference: request.reference, receivedAt: request.createdAt }
+  const result = await sendEmailSafely({
+    to: request.email,
+    userId: null,
+    kind: request.kind === "withdrawal" ? "withdrawal_receipt" : "cancellation_receipt",
+    refId: request.id,
+    content: request.kind === "withdrawal" ? withdrawalReceiptEmail(content) : cancellationReceiptEmail(content),
+  })
+  if (result !== "failed") {
+    const { error } = await createAdminClient()
+      .from("cancellation_requests")
+      .update({ receipt_sent_at: new Date().toISOString() })
+      .eq("id", request.id)
+    if (error) throw new Error(`Couldn't record the receipt: ${error.message}`)
+  }
+  return result
+}
+
 /** Requests of any kind, so cancellations and withdrawals share one limit. */
 function recentRequests(db: ReturnType<typeof createAdminClient>) {
   return async (email: string) => {
@@ -46,15 +80,7 @@ export function createCancelRequestDeps(): CancelRequestDeps {
     },
 
     async sendReceipt(row) {
-      const result = await sendEmailSafely({
-        to: row.email,
-        userId: null,
-        kind: "cancellation_receipt",
-        refId: row.id,
-        content: cancellationReceiptEmail({ requestId: row.id, name: row.name, email: row.email, reference: row.reference, receivedAt: row.createdAt }),
-      })
-      // A failed receipt stays visible in the admin inbox (receipt_sent_at empty).
-      if (result === "sent") await update(row.id, { receipt_sent_at: new Date().toISOString() })
+      await sendRequestReceipt({ ...row, kind: "cancellation" })
     },
 
     async findMember(email) {
@@ -111,16 +137,7 @@ export function createWithdrawalDeps(): WithdrawalDeps {
     },
 
     async sendReceipt(row) {
-      const result = await sendEmailSafely({
-        to: row.email,
-        userId: null,
-        kind: "withdrawal_receipt",
-        refId: row.id,
-        content: withdrawalReceiptEmail({ requestId: row.id, name: row.name, email: row.email, reference: row.reference, receivedAt: row.createdAt }),
-      })
-      if (result === "sent") {
-        await db.from("cancellation_requests").update({ receipt_sent_at: new Date().toISOString() }).eq("id", row.id)
-      }
+      await sendRequestReceipt({ ...row, kind: "withdrawal" })
     },
   }
 }
