@@ -11,6 +11,12 @@ export const PLANS: Record<PlanId, { name: string; price: string; interval: stri
 
 export const DEFAULT_PLAN: PlanId = "founding_monthly"
 
+/** Gross price per billing period in cents (prices include VAT). For the admin KPIs. */
+export const PLAN_AMOUNTS: Record<PlanId, { cents: number; months: number }> = {
+  founding_monthly: { cents: 799, months: 1 },
+  founding_annual: { cents: 7900, months: 12 },
+}
+
 export function parsePlan(value: unknown): PlanId | null {
   return typeof value === "string" && Object.hasOwn(PLANS, value) ? (value as PlanId) : null
 }

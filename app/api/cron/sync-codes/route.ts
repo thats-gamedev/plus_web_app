@@ -1,7 +1,7 @@
-import { timingSafeEqual } from "node:crypto"
 import type { NextRequest } from "next/server"
 import { LIVE_STATUSES } from "@/lib/billing/status"
 import { syncCodes } from "@/lib/codes/store"
+import { isCronRequest } from "@/lib/cron"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 // Daily safety net for member codes (vercel.json). Vercel sends
@@ -11,16 +11,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 //   - members without codes (a missed webhook)
 //   - live codes of people whose membership ended (e.g. a failed revoke)
 
-function authorized(request: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) return false
-  const expected = Buffer.from(`Bearer ${secret}`)
-  const actual = Buffer.from(request.headers.get("authorization") ?? "")
-  return actual.length === expected.length && timingSafeEqual(actual, expected)
-}
-
 export async function GET(request: NextRequest) {
-  if (!authorized(request)) return new Response("Unauthorized", { status: 401 })
+  if (!isCronRequest(request)) return new Response("Unauthorized", { status: 401 })
 
   const db = createAdminClient()
   const [members, holders] = await Promise.all([
