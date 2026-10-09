@@ -5,7 +5,7 @@ Everything that is still open, grouped by who has to act. Tick items off here as
 - **Build order:** `docs/Implementation_Plan.md` (phases 6–10 still to build)
 - **Launch QA checklist and open decisions:** the spec, `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md`, section "Launch checklist & open decisions". The QA items already verified are listed at the end of this file.
 
-_Last updated: 2026-10-09 (Phase 5 finished, starting Phase 6)_
+_Last updated: 2026-10-09 (Phase 6 built; waiting on Fourthwall credentials)_
 
 ---
 
@@ -34,20 +34,30 @@ _Last updated: 2026-10-09 (Phase 5 finished, starting Phase 6)_
 - [ ] **Production webhook.** Create an endpoint in the Dashboard (`checkout.session.completed`, `customer.subscription.*`) and put its signing secret in Vercel's `STRIPE_WEBHOOK_SECRET`.
 - [ ] **Stripe CLI login** expires every 90 days. When `stripe listen` fails with "api_key_expired", run `stripe login` again.
 
-## Phase 6 prerequisites (you, before the Fourthwall parts can be finished)
+## Phase 6: Fourthwall (you first, then a verification pass together)
+
+The code is built and works without Fourthwall: members get their promotion code right away, and the merch code waits as `pending_sync`. `/app/shop` says "The shop opens soon", and the home page's "New merch" row stays hidden. Once these are in place, the daily cron (or the next webhook) activates the pending merch codes.
 
 - [ ] **Fourthwall shop** open, with at least a couple of products.
-- [ ] **Credentials** for `.env.local`:
-  - `FOURTHWALL_STOREFRONT_TOKEN` (Settings → For Developers)
-  - `FOURTHWALL_API_USERNAME` / `FOURTHWALL_API_PASSWORD` (Platform API)
-  - `FOURTHWALL_SHOP_URL`
-- [ ] **The three API questions** from the spec's "Perks" section:
-  - which promotion `type` creates a plain discount code
-  - how to deactivate a promotion
-  - where EU orders are produced and shipped from
+- [ ] **Credentials** in `.env.local` and on Vercel (see `.env.example`):
+  - `FOURTHWALL_STOREFRONT_TOKEN` and `FOURTHWALL_SHOP_URL` (Settings → For Developers)
+  - `FOURTHWALL_API_USERNAME` / `FOURTHWALL_API_PASSWORD` (create an "Open API User")
+- [ ] **`CRON_SECRET` on Vercel.** It's already set in `.env.local`. The cron is registered in `vercel.json` (daily, 03:15 UTC).
+- [x] ~~Which promotion `type` creates a plain discount code~~ → `SHOP_SINGLE` with a `PERCENTAGE` discount.
+- [x] ~~How to deactivate a promotion~~ → `PUT /promotions/{id}` with `status: "ENDED"`.
+- [ ] **EU shipping.** Where EU orders are produced and shipped from, and the shipping cost to Germany. That's for the shop owner; the API docs don't say.
+- [ ] **To verify with the real credentials** (things the docs don't settle):
+  - the product image field names (`lib/fourthwall/products.ts` guesses `images[].url`)
+  - the product page URL pattern (`/products/{slug}`)
+  - the endpoint for listing collections. The spec's collection chips on `/app/shop` are left out until this is known.
+  - whether Fourthwall accepts `shipping: "Excluded"` in the discount
+  - what happens when a code already exists. A promotion that was created at Fourthwall but not saved here would fail on retry.
+  - one full run: a new test member gets both codes within a minute, and the merch code works at Fourthwall checkout
+- [ ] **"Book a promotion" target.** It's an email to the contact address with the code in the subject for now. Point it elsewhere (Instagram DM, a booking form) if wanted.
 
 ## Testing still to do
 
+- [ ] **Look at `/app/perks` and `/app/shop` in the browser.** They were only checked by fetching the server HTML: the content is right, but the layout is unchecked.
 - [ ] **Phone layouts.** The Phase 5 pages haven't been checked at phone width yet. In Chrome DevTools' device mode, check:
   - `/app` and `/app/library`
   - one list of each kind
@@ -65,6 +75,7 @@ _Last updated: 2026-10-09 (Phase 5 finished, starting Phase 6)_
 ## Dev data to clean up or replace
 
 - [ ] **Test member** `stripe-e2e-…@example.com` in the dev Supabase project. It has an active test subscription and the display name "Mara Test". Keep it as a member account, or delete it (auth user and Stripe test customer).
+- [ ] **Dev member codes.** The test member and the seed's `member@example.com` each have codes in the dev database (merch pending, promotion active). They're harmless, but they'll sync to Fourthwall once credentials are set.
 - [ ] **Placeholder PDF** at `ebooks/texturing-starter-guide.pdf` in the dev bucket. Replace it with the real e-book.
 - [ ] **No covers or item images** are uploaded yet. Cards show pastel placeholders until Phase 8 adds uploads.
 
