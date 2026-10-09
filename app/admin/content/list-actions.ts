@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache"
 import { z } from "zod"
+import { dropAssignment } from "@/lib/admin/drop-position"
 import { categories } from "@/lib/content/library-filters"
 import { SLUG_PATTERN } from "@/lib/content/slug"
 import { requireAdmin } from "@/lib/dal/auth"
@@ -143,7 +144,8 @@ export async function publishList(id: string, dropId: string | null): Promise<Pu
       draft_content: null,
       draft_updated_at: null,
       status: "published",
-      drop_id: dropId,
+      // Joining a drop places it last; staying keeps its place.
+      ...(await dropAssignment(db, id, dropId)),
       ...(!resource.published_at && { published_at: new Date().toISOString() }),
     })
     .eq("id", id)

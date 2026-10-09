@@ -4,6 +4,7 @@ import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { type FormState, readFields } from "@/lib/auth/form-state"
 import { fieldErrors } from "@/lib/auth/schemas"
+import { dropAssignment } from "@/lib/admin/drop-position"
 import { documentFormSchema, newResourceSchema } from "@/lib/content/document-schema"
 import { newListId, slugify, uniqueSlug } from "@/lib/content/slug"
 import { requireAdmin } from "@/lib/dal/auth"
@@ -62,7 +63,8 @@ export async function saveDocument(_prev: FormState, formData: FormData): Promis
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error), values: raw }
 
   const d = parsed.data
-  const { error } = await createAdminClient()
+  const db = createAdminClient()
+  const { error } = await db
     .from("resources")
     .update({
       title: d.title,
@@ -72,7 +74,8 @@ export async function saveDocument(_prev: FormState, formData: FormData): Promis
       body_md: d.bodyMd,
       cover_path: d.coverPath,
       file_path: d.filePath,
-      drop_id: d.dropId,
+      // Joining a drop places it last; staying keeps its place.
+      ...(await dropAssignment(db, id, d.dropId)),
     })
     .eq("id", id)
     .in("type", ["ebook", "guide"])

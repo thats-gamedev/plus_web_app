@@ -115,7 +115,7 @@ export async function getAdminDrops(): Promise<AdminDrop[]> {
   await requireAdmin()
   const { data, error } = await createAdminClient()
     .from("drops")
-    .select("id, month, title, theme, intro_md, published_at, announced_at, resources (id, title, type, list_kind, status)")
+    .select("id, month, title, theme, intro_md, published_at, announced_at, resources (id, title, type, list_kind, status, drop_position)")
     .order("month", { ascending: false })
   if (error) throw new Error(`drops read: ${error.message}`)
   return data.map((d) => ({
@@ -126,9 +126,10 @@ export async function getAdminDrops(): Promise<AdminDrop[]> {
     introMd: d.intro_md,
     publishedAt: d.published_at,
     announcedAt: d.announced_at,
-    resources: d.resources
-      .map((r) => ({ id: r.id, title: r.title, type: r.type, listKind: r.list_kind, status: r.status }))
-      .sort((a, b) => a.title.localeCompare(b.title)),
+    // Same order as members see: by position, unplaced items last.
+    resources: [...d.resources]
+      .sort((a, b) => (a.drop_position ?? Infinity) - (b.drop_position ?? Infinity) || a.title.localeCompare(b.title))
+      .map((r) => ({ id: r.id, title: r.title, type: r.type, listKind: r.list_kind, status: r.status })),
   }))
 }
 

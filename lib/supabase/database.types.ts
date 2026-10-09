@@ -240,6 +240,7 @@ export type Database = {
           draft_content: Json | null
           draft_updated_at: string | null
           drop_id: string | null
+          drop_position: number | null
           file_path: string | null
           id: string
           item_count: number | null
@@ -262,6 +263,7 @@ export type Database = {
           draft_content?: Json | null
           draft_updated_at?: string | null
           drop_id?: string | null
+          drop_position?: number | null
           file_path?: string | null
           id?: string
           item_count?: number | null
@@ -284,6 +286,7 @@ export type Database = {
           draft_content?: Json | null
           draft_updated_at?: string | null
           drop_id?: string | null
+          drop_position?: number | null
           file_path?: string | null
           id?: string
           item_count?: number | null

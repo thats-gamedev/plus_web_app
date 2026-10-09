@@ -3,6 +3,7 @@
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
+import { dropAssignment } from "@/lib/admin/drop-position"
 import { monthName, nextFreeMonth, zonedToUtc } from "@/lib/admin/drops"
 import { type FormState, readFields } from "@/lib/auth/form-state"
 import { fieldErrors } from "@/lib/auth/schemas"
@@ -66,19 +67,47 @@ export async function saveDrop(_prev: FormState, formData: FormData): Promise<Fo
   return { status: "success", message: "Saved." }
 }
 
-/** Attaches or detaches a resource. */
+/** Attaches a resource (at the end of the drop) or detaches it. */
 export async function setDropResource(dropId: string, resourceId: string, attach: boolean): Promise<DropActionResult> {
   await requireAdmin()
   if (!z.uuid().safeParse(dropId).success || !z.uuid().safeParse(resourceId).success) {
     return { ok: false, message: "Unknown drop or content." }
   }
   const db = createAdminClient()
-  let query = db.from("resources").update({ drop_id: attach ? dropId : null }).eq("id", resourceId)
-  if (!attach) query = query.eq("drop_id", dropId)
-  const { error } = await query
+  const { error } = attach
+    ? await db.from("resources").update(await dropAssignment(db, resourceId, dropId)).eq("id", resourceId)
+    : await db.from("resources").update({ drop_id: null, drop_position: null }).eq("id", resourceId).eq("drop_id", dropId)
   if (error) return { ok: false, message: `Couldn't update: ${error.message}` }
   refresh()
   return { ok: true, message: attach ? "Added to the drop." : "Removed from the drop." }
+}
+
+/**
+ * Saves the order of a drop's content (drag and drop on /admin/drops).
+ * `orderedIds` must be exactly the drop's current content, so a stale
+ * list from another tab can't detach or misplace anything.
+ */
+export async function reorderDropResources(dropId: string, orderedIds: string[]): Promise<DropActionResult> {
+  await requireAdmin()
+  const ids = z.array(z.uuid()).max(200).safeParse(orderedIds)
+  if (!z.uuid().safeParse(dropId).success || !ids.success) return { ok: false, message: "Unknown drop or content." }
+
+  const db = createAdminClient()
+  const { data: current, error: readError } = await db.from("resources").select("id").eq("drop_id", dropId)
+  if (readError) return { ok: false, message: `Couldn't load the drop: ${readError.message}` }
+  const currentIds = new Set(current.map((r) => r.id))
+  if (currentIds.size !== ids.data.length || !ids.data.every((id) => currentIds.has(id))) {
+    return { ok: false, message: "The drop changed meanwhile. Reload the page and try again." }
+  }
+
+  const results = await Promise.all(
+    ids.data.map((id, position) => db.from("resources").update({ drop_position: position }).eq("id", id).eq("drop_id", dropId))
+  )
+  const failed = results.find((r) => r.error)
+  if (failed?.error) return { ok: false, message: `Couldn't save the order: ${failed.error.message}` }
+
+  refresh()
+  return { ok: true, message: "Order saved." }
 }
 
 /** "Publish now": goes live immediately. The announcement email comes with Phase 10. */

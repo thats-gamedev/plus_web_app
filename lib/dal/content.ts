@@ -94,6 +94,8 @@ export const getCurrentDrop = cache(async (): Promise<Drop | null> => {
 
   const { data: rows } = await publishedResources(supabase)
     .eq("drop_id", drop.id)
+    // The admin's order (drag and drop on /admin/drops), unplaced items last.
+    .order("drop_position", { ascending: true, nullsFirst: false })
     .order("published_at", { ascending: true })
     .order("title", { ascending: true })
 

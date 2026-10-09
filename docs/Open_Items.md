@@ -171,7 +171,7 @@ From `docs/Implementation_Plan.md`; see there for mockup references and details.
   - **Conflict banner:** open the same list in two tabs and edit both
   - **Narrow screens:** below 1024 px the inspector should be a sheet
   - **Document editor:** an actual cover and PDF upload (no file upload has been run yet), the Markdown preview, and the "Upload the PDF before publishing" guard
-  - **Drops page:** the editor, Add content, Delete, and the date/time fields
+  - **Drops page:** the editor, Add content, Delete, the date/time fields, and dragging the content into a new order (by mouse and keyboard)
 - [ ] **Layouts in the browser.** These were only checked by fetching the server HTML: the content is right, but the layout is unchecked.
   - `/app/perks` and `/app/shop`
   - all admin pages: overview, members and the drawer, codes, inbox and its webhook log
@@ -267,7 +267,6 @@ The spec's full list, unticked items only. The ones already verified are in sect
   - The Stripe customer stays in Stripe, which is normal for billing records. Mention it in the Datenschutzerklärung.
 - [ ] **The "Revoke" confirmation** on `/admin/codes` uses the browser's `window.confirm`. Swap it for the app's Dialog (like Delete member) for a consistent look.
 - [ ] **The admin "due" date** for cancellation requests counts weekdays only, not German public holidays.
-- [ ] **Drop content order.** The spec asks for a sortable list of a drop's content, but there is no position column. The member card orders by publish date, then title. Add a `drop_position` column (with a grant) if the order matters.
 - [ ] **The sections outline** in the list editor's left column is a jump list. Sections are reordered by dragging them in the middle column (or with Move up/down), not in the outline.
 - [ ] **List settings are live at once.** Title, slug, category and cover of a published list save straight to the row, not with "Publish". A slug change breaks shared links right away.
 - [ ] **Orphaned uploads.** Replacing a cover, PDF or item image leaves the old file in Storage. Delete only cleans up a resource's current cover and PDF, not item images. Add a cleanup if storage grows.
@@ -323,3 +322,8 @@ Verified in dev with Stripe test mode, 2026-10-08/09.
   - "Publish now" switches the member home to that drop, and deleting it switches back
   - the content stays in the library
 - [x] Members get a 404 from every admin content and drop action tried.
+- [x] Drop content order (`resources.drop_position`):
+  - reordering on `/admin/drops` changes the order on the member home's "This month" card
+  - an order that's out of date (an item missing, or a foreign item) is refused
+  - newly attached content goes to the end, and detaching clears the position
+  - existing drops kept their order through the migration

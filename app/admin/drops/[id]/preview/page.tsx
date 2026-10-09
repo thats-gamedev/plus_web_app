@@ -17,7 +17,7 @@ export default async function DropPreviewPage({ params }: PageProps<"/admin/drop
   const { data } = await createAdminClient()
     .from("drops")
     .select(
-      "id, month, title, theme, intro_md, resources (id, slug, title, summary, type, list_kind, category, cover_path, item_count, word_count, published_at, status)"
+      "id, month, title, theme, intro_md, resources (id, slug, title, summary, type, list_kind, category, cover_path, item_count, word_count, published_at, status, drop_position)"
     )
     .eq("id", id)
     .maybeSingle()
@@ -31,7 +31,13 @@ export default async function DropPreviewPage({ params }: PageProps<"/admin/drop
     theme: data.theme,
     introMd: data.intro_md,
     resources: data.resources
-      .sort((a, b) => (a.published_at ?? "").localeCompare(b.published_at ?? "") || a.title.localeCompare(b.title))
+      // The member card's order: position, then publish date and title.
+      .sort(
+        (a, b) =>
+          (a.drop_position ?? Infinity) - (b.drop_position ?? Infinity) ||
+          (a.published_at ?? "").localeCompare(b.published_at ?? "") ||
+          a.title.localeCompare(b.title)
+      )
       .map((r) => ({
         id: r.id,
         slug: r.slug,

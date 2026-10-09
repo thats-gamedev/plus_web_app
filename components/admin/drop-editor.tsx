@@ -2,9 +2,34 @@
 
 import Link from "next/link"
 import { useActionState, useState, useTransition } from "react"
-import { CalendarClockIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { CalendarClockIcon, GripVerticalIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import { toast } from "sonner"
-import { deleteDrop, type DropActionResult, publishDropNow, saveDrop, setDropResource } from "@/app/admin/drops/actions"
+import { cn } from "cn"
+import {
+  deleteDrop,
+  type DropActionResult,
+  publishDropNow,
+  reorderDropResources,
+  saveDrop,
+  setDropResource,
+} from "@/app/admin/drops/actions"
 import { FormField } from "@/components/auth/form-field"
 import { ResourceIcon } from "@/components/shared/resource-icon"
 import { Badge } from "@/components/ui/badge"
@@ -113,29 +138,11 @@ export function DropEditor({
         {drop.resources.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing attached yet.</p>
         ) : (
-          <ul className="space-y-2">
-            {drop.resources.map((r) => (
-              <li key={r.id} className="flex items-center gap-3 rounded-xl bg-muted/60 px-3 py-2.5">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-card">
-                  <ResourceIcon type={r.type} listKind={r.listKind} className="size-4" />
-                </span>
-                <Link href={`/admin/content/${r.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
-                  {r.title}
-                </Link>
-                {r.status === "draft" && <Badge variant="warning">Draft</Badge>}
-                <span className="font-mono text-xs text-muted-foreground">{resourceTypeLabel(r)}</span>
-                <button
-                  type="button"
-                  aria-label={`Remove ${r.title} from the drop`}
-                  disabled={pending}
-                  onClick={() => run(() => setDropResource(drop.id, r.id, false))}
-                  className="rounded p-1 text-muted-foreground hover:bg-card hover:text-foreground"
-                >
-                  <XIcon className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
+          // Remounts when the content changes, so it starts from the server's order.
+          <DropContentList key={drop.resources.map((r) => r.id).join()} dropId={drop.id} resources={drop.resources} />
+        )}
+        {drop.resources.length > 1 && (
+          <p className="text-xs text-faint">Drag to set the order members see. Keyboard: Space, arrow keys, Space.</p>
         )}
         {drop.resources.some((r) => r.status === "draft") && (
           <p className="text-xs text-muted-foreground">Drafts aren&apos;t shown to members until you publish them.</p>
@@ -157,6 +164,109 @@ export function DropEditor({
         )}
       </div>
     </div>
+  )
+}
+
+type DropResourceRow = AdminDrop["resources"][number]
+
+/**
+ * The drop's content in member order, sortable by drag and drop (pointer or
+ * keyboard). The new order shows at once and saves in the background; if
+ * saving fails it snaps back.
+ */
+function DropContentList({ dropId, resources }: { dropId: string; resources: DropResourceRow[] }) {
+  const [order, setOrder] = useState(resources)
+  const { pending, run } = useDropAction()
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    const previous = order
+    const next = arrayMove(order, order.findIndex((r) => r.id === active.id), order.findIndex((r) => r.id === over.id))
+    setOrder(next)
+    run(async () => {
+      const result = await reorderDropResources(dropId, next.map((r) => r.id))
+      if (!result.ok) setOrder(previous)
+      return result
+    })
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={onDragEnd}
+      accessibility={{
+        screenReaderInstructions: {
+          draggable: "To pick up, press Space. Use the arrow keys to move, Space to drop, Escape to cancel.",
+        },
+      }}
+    >
+      <SortableContext items={order.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+        <ol className="space-y-2">
+          {order.map((r, index) => (
+            <SortableResource key={r.id} dropId={dropId} resource={r} position={index + 1} disabled={pending} />
+          ))}
+        </ol>
+      </SortableContext>
+    </DndContext>
+  )
+}
+
+function SortableResource({
+  dropId,
+  resource: r,
+  position,
+  disabled,
+}: {
+  dropId: string
+  resource: DropResourceRow
+  position: number
+  disabled: boolean
+}) {
+  const { pending, run } = useDropAction()
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: r.id })
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={cn(
+        "flex items-center gap-2 rounded-xl bg-muted/60 py-2.5 pr-3 pl-1.5",
+        isDragging && "relative z-10 bg-card shadow-lg ring-2 ring-brand/40"
+      )}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        disabled={disabled}
+        aria-label={`Move ${r.title}, position ${position}`}
+        className="cursor-grab touch-none rounded p-1 text-faint hover:bg-card hover:text-foreground active:cursor-grabbing"
+      >
+        <GripVerticalIcon className="size-4" />
+      </button>
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-card">
+        <ResourceIcon type={r.type} listKind={r.listKind} className="size-4" />
+      </span>
+      <Link href={`/admin/content/${r.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+        {r.title}
+      </Link>
+      {r.status === "draft" && <Badge variant="warning">Draft</Badge>}
+      <span className="hidden font-mono text-xs text-muted-foreground sm:inline">{resourceTypeLabel(r)}</span>
+      <button
+        type="button"
+        aria-label={`Remove ${r.title} from the drop`}
+        disabled={pending}
+        onClick={() => run(() => setDropResource(dropId, r.id, false))}
+        className="rounded p-1 text-muted-foreground hover:bg-card hover:text-foreground"
+      >
+        <XIcon className="size-4" />
+      </button>
+    </li>
   )
 }
 
