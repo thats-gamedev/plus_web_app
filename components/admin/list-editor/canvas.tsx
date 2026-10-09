@@ -1,6 +1,22 @@
 "use client"
 
-import { CopyIcon, MoreHorizontalIcon, MoreVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { useState } from "react"
+import {
+  closestCenter,
+  closestCorners,
+  type CollisionDetection,
+  DndContext,
+  type DragEndEvent,
+  type DragOverEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { CopyIcon, GripVerticalIcon, MoreHorizontalIcon, MoreVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "cn"
 import { ItemImage } from "@/components/lists/list-parts"
@@ -70,23 +86,120 @@ export function useRemoveWithUndo() {
   }
 }
 
+type DragData = { type: "section" } | { type: "item"; sectionId: string } | { type: "container"; sectionId: string }
+
+/** Which section an item or container belongs to, for drag-over moves. */
+function sectionOf(data: DragData | undefined): string | null {
+  return data && data.type !== "section" ? data.sectionId : null
+}
+
+/**
+ * Sections and items are sortable with dnd-kit (spec): items within and
+ * across sections, sections among themselves, by pointer or keyboard
+ * (Space picks up, arrows move, Space drops). Items move to another section
+ * live while dragging; the final position is set on drop.
+ */
 export function Canvas({ errors }: { errors: DocumentErrors }) {
   const sections = useEditor((s) => s.doc.sections)
+  const change = useEditor((s) => s.change)
+  const store = useEditorStore()
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  const sensors = useSensors(
+    // A small distance, so clicks on the handle don't start a drag.
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  // Sections only collide with sections; items with items and section bodies.
+  const collisionDetection: CollisionDetection = (args) => {
+    const type = (args.active.data.current as DragData | undefined)?.type
+    const droppableContainers = args.droppableContainers.filter((c) => {
+      const t = (c.data.current as DragData | undefined)?.type
+      return type === "section" ? t === "section" : t === "item" || t === "container"
+    })
+    return type === "section" ? closestCenter({ ...args, droppableContainers }) : closestCorners({ ...args, droppableContainers })
+  }
+
+  const onDragOver = ({ active, over }: DragOverEvent) => {
+    if (!over || (active.data.current as DragData | undefined)?.type !== "item") return
+    const from = sectionOf(active.data.current as DragData)
+    const to = sectionOf(over.data.current as DragData)
+    if (!from || !to || from === to) return
+    // Entering another section: move the item there now, so it can be placed.
+    const target = store.getState().doc.sections.find((s) => s.id === to)
+    const overIndex = target?.items.findIndex((i) => i.id === over.id) ?? -1
+    change((d) => ops.moveItem(d, String(active.id), to, overIndex >= 0 ? overIndex : Number.MAX_SAFE_INTEGER))
+  }
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveId(null)
+    if (!over || active.id === over.id) return
+    const data = active.data.current as DragData | undefined
+    const doc = store.getState().doc
+    if (data?.type === "section") {
+      const from = doc.sections.findIndex((s) => s.id === active.id)
+      const to = doc.sections.findIndex((s) => s.id === over.id)
+      if (from >= 0 && to >= 0) change((d) => ops.moveSection(d, from, to))
+      return
+    }
+    const to = sectionOf(over.data.current as DragData)
+    const target = doc.sections.find((s) => s.id === to)
+    if (!to || !target) return
+    const overIndex = target.items.findIndex((i) => i.id === over.id)
+    change((d) => ops.moveItem(d, String(active.id), to, overIndex >= 0 ? overIndex : Number.MAX_SAFE_INTEGER))
+  }
+
   return (
-    <div className="space-y-4">
-      {sections.map((section) => (
-        <SectionCard key={section.id} section={section} errors={errors} canDelete={sections.length > 1} />
-      ))}
-    </div>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={collisionDetection}
+      onDragStart={({ active }) => setActiveId(String(active.id))}
+      onDragOver={onDragOver}
+      onDragEnd={onDragEnd}
+      onDragCancel={() => setActiveId(null)}
+      accessibility={{
+        screenReaderInstructions: {
+          draggable: "To pick up, press Space. Use the arrow keys to move, Space to drop, Escape to cancel.",
+        },
+      }}
+    >
+      <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-4">
+          {sections.map((section) => (
+            <SectionCard key={section.id} section={section} errors={errors} canDelete={sections.length > 1} activeId={activeId} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   )
 }
 
-function SectionCard({ section, errors, canDelete }: { section: Section; errors: DocumentErrors; canDelete: boolean }) {
+function SectionCard({
+  section,
+  errors,
+  canDelete,
+  activeId,
+}: {
+  section: Section
+  errors: DocumentErrors
+  canDelete: boolean
+  activeId: string | null
+}) {
   const kind = useEditor((s) => s.doc.kind)
   const sections = useEditor((s) => s.doc.sections)
   const change = useEditor((s) => s.change)
   const select = useEditor((s) => s.select)
   const remove = useRemoveWithUndo()
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: section.id,
+    data: { type: "section" } satisfies DragData,
+  })
+  // The section body accepts items even when it is empty.
+  const { setNodeRef: setBodyRef, isOver } = useDroppable({
+    id: `drop:${section.id}`,
+    data: { type: "container", sectionId: section.id } satisfies DragData,
+  })
 
   const addItem = () => {
     const item = ops.newItem(kind)
@@ -95,8 +208,26 @@ function SectionCard({ section, errors, canDelete }: { section: Section; errors:
   }
 
   return (
-    <section id={section.id} aria-label={section.title || "Untitled section"} className="scroll-mt-24 overflow-hidden rounded-card border border-border bg-card">
-      <div className="flex items-start gap-3 border-b border-border px-5 py-3">
+    <section
+      ref={setNodeRef}
+      id={section.id}
+      aria-label={section.title || "Untitled section"}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={cn(
+        "scroll-mt-24 overflow-hidden rounded-card border border-border bg-card",
+        isDragging && "relative z-10 shadow-lg ring-2 ring-brand/40"
+      )}
+    >
+      <div className="flex items-start gap-2 border-b border-border px-3 py-3 sm:px-5">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label={`Move section ${section.title || "untitled"}`}
+          className="mt-1 cursor-grab touch-none rounded p-1 text-faint hover:bg-muted hover:text-foreground active:cursor-grabbing"
+        >
+          <GripVerticalIcon className="size-4" />
+        </button>
         <div className="min-w-0 flex-1">
           <input
             value={section.title}
@@ -145,17 +276,19 @@ function SectionCard({ section, errors, canDelete }: { section: Section; errors:
         </DropdownMenu>
       </div>
 
-      {section.items.length === 0 ? (
-        <p className="px-5 py-4 text-sm text-muted-foreground">No items yet.</p>
-      ) : (
-        <ul className="divide-y divide-border">
-          {section.items.map((item) => (
-            <li key={item.id}>
-              <ItemRow item={item as never} sectionId={section.id} hasErrors={errors.items.has(item.id)} />
+      <SortableContext items={section.items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+        <ul ref={setBodyRef} className={cn("min-h-12 divide-y divide-border", isOver && activeId && "bg-brand-soft/40")}>
+          {section.items.length === 0 ? (
+            <li className="px-5 py-4 text-sm text-muted-foreground">
+              {activeId ? "Drop an item here." : "No items yet."}
             </li>
-          ))}
+          ) : (
+            section.items.map((item) => (
+              <ItemRow key={item.id} item={item as never} sectionId={section.id} hasErrors={errors.items.has(item.id)} />
+            ))
+          )}
         </ul>
-      )}
+      </SortableContext>
 
       <div className="flex gap-4 border-t border-border px-5 py-2.5 text-sm">
         <button type="button" onClick={addItem} className="inline-flex items-center gap-1 font-semibold text-brand hover:underline">
@@ -175,14 +308,31 @@ function ItemRow({ item, sectionId, hasErrors }: { item: Record<string, unknown>
   const select = useEditor((s) => s.select)
   const remove = useRemoveWithUndo()
   const chips = itemChips(kind, item)
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: item.id,
+    data: { type: "item", sectionId } satisfies DragData,
+  })
 
   return (
-    <div
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(
-        "flex items-center gap-3 px-5 py-3 transition-colors",
-        selected ? "bg-brand-soft/70 shadow-[inset_3px_0_0_var(--brand)]" : "hover:bg-muted/40"
+        "flex items-center gap-2 bg-card py-3 pr-3 pl-2 transition-colors sm:gap-3 sm:pr-5",
+        selected ? "bg-brand-soft/70 shadow-[inset_3px_0_0_var(--brand)]" : "hover:bg-muted/40",
+        // The placeholder line where the item will land (spec).
+        isDragging && "relative z-10 opacity-60 shadow-[inset_0_-2px_0_var(--brand)]"
       )}
     >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label={`Move ${item.name || "untitled item"}`}
+        className="cursor-grab touch-none rounded p-1 text-faint hover:bg-muted hover:text-foreground active:cursor-grabbing"
+      >
+        <GripVerticalIcon className="size-4" />
+      </button>
       <ItemImage path={item.imagePath as string | undefined} sizes="40px" className="size-10" />
       <button type="button" onClick={() => select(item.id)} className="min-w-0 flex-1 text-left" aria-current={selected || undefined}>
         <span className="flex items-center gap-2 font-semibold">
@@ -249,6 +399,6 @@ function ItemRow({ item, sectionId, hasErrors }: { item: Record<string, unknown>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </li>
   )
 }

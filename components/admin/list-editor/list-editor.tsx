@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
+import { cn } from "cn"
 import { discardListDraft, publishList, unpublishList } from "@/app/admin/content/list-actions"
 import { Badge } from "@/components/ui/badge"
 import { Banner } from "@/components/ui/banner"
@@ -14,10 +15,11 @@ import { TIME_ZONE } from "@/lib/format"
 import { validateDocument } from "@/lib/lists/editor"
 import type { ListDocument } from "@/lib/lists/schema"
 import { useMediaQuery } from "@/lib/use-media-query"
-import { Canvas } from "./canvas"
+import { Canvas, useRemoveWithUndo } from "./canvas"
 import { Inspector } from "./inspector"
+import { ListPreview } from "./preview"
 import { type ListSettings, SettingsPanel } from "./settings-panel"
-import { createEditorStore, EditorContext, useEditor } from "./store"
+import { createEditorStore, EditorContext, ops, useEditor, useEditorStore } from "./store"
 import { useAutosave } from "./use-autosave"
 
 export type ListEditorProps = {
@@ -44,6 +46,39 @@ export function ListEditor(props: ListEditorProps) {
   )
 }
 
+/**
+ * Spec shortcuts for the selected item: Cmd/Ctrl+D duplicates, Delete
+ * removes with an undo toast. Ignored while typing in a field.
+ */
+function useEditorShortcuts() {
+  const store = useEditorStore()
+  const remove = useRemoveWithUndo()
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest("input, textarea, select, [contenteditable=true]")) return
+      const { selectedItemId, doc, change, select } = store.getState()
+      if (!selectedItemId) return
+      const found = ops.findItem(doc, selectedItemId)
+      if (!found) return
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d") {
+        event.preventDefault()
+        const newId = ops.newItem(doc.kind).id
+        change((d) => ops.duplicateItem(d, selectedItemId, newId))
+        select(newId)
+      } else if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault()
+        select(null)
+        remove(`"${found.item.name || "Untitled item"}"`, (d) => ops.removeItem(d, selectedItemId))
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [store, remove])
+}
+
 const time = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: TIME_ZONE })
 
@@ -59,6 +94,8 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
   const errors = useMemo(() => validateDocument(doc), [doc])
   const [drop, setDrop] = useState(dropId ?? "")
   const narrow = useMediaQuery("(max-width: 1023px)")
+  const [view, setView] = useState<"edit" | "member" | "teaser">("edit")
+  const teaserCount = doc.sections.reduce((n, s) => n + s.items.filter((i) => i.isTeaser).length, 0)
   const [pending, startTransition] = useTransition()
 
   const published = status === "published"
@@ -86,6 +123,8 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
         router.refresh()
       }
     )
+
+  useEditorShortcuts()
 
   const scrollToSection = (sectionId: string) =>
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -201,12 +240,36 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
         </aside>
 
         <div className="min-w-0 p-4 md:p-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-muted-foreground">
-              {doc.sections.reduce((n, s) => n + s.items.length, 0)} items in {doc.sections.length}{" "}
-              {doc.sections.length === 1 ? "section" : "sections"}
-            </p>
-            {!errors.valid && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div role="tablist" aria-label="View" className="inline-flex rounded-full bg-muted p-1">
+              {(
+                [
+                  { value: "edit", label: "Edit" },
+                  { value: "member", label: "Member preview" },
+                  { value: "teaser", label: `Teaser view · ${teaserCount}` },
+                ] as const
+              ).map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={view === t.value}
+                  onClick={() => setView(t.value)}
+                  className={cn(
+                    "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                    view === t.value ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {errors.valid ? (
+              <p className="text-sm text-muted-foreground">
+                {doc.sections.reduce((n, s) => n + s.items.length, 0)} items in {doc.sections.length}{" "}
+                {doc.sections.length === 1 ? "section" : "sections"}
+              </p>
+            ) : (
               <p className="font-mono text-xs text-danger">
                 {errors.count} {errors.count === 1 ? "error" : "errors"} · fix to publish
               </p>
@@ -217,7 +280,7 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
               {errors.general.join(" · ")}
             </Banner>
           )}
-          <Canvas errors={errors} />
+          {view === "edit" ? <Canvas errors={errors} /> : <ListPreview doc={doc} teaser={view === "teaser"} />}
         </div>
 
         <aside className="hidden border-l border-border p-6 lg:block">
