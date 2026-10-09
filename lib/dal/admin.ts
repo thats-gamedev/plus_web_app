@@ -1,5 +1,6 @@
 import "server-only"
 import { cache } from "react"
+import type { MemberRow } from "@/lib/admin/members"
 import type { SubscriptionFacts } from "@/lib/admin/metrics"
 import { requireAdmin } from "@/lib/dal/auth"
 import type { Json } from "@/lib/supabase/database.types"
@@ -37,6 +38,96 @@ export const getSubscriptionFacts = cache(async (): Promise<SubscriptionFacts[]>
     updatedAt: row.updated_at,
   }))
 })
+
+const memberColumns =
+  "id, email, display_name, role, created_at, stripe_customer_id, subscriptions (stripe_subscription_id, plan, status, cancel_at_period_end, current_period_end, created_at, canceled_at, ended_at)"
+
+type MemberQueryRow = {
+  id: string
+  email: string
+  display_name: string
+  role: "member" | "admin"
+  created_at: string
+  stripe_customer_id: string | null
+  subscriptions: {
+    stripe_subscription_id: string
+    plan: MemberRow["subscriptions"][number]["plan"]
+    status: MemberRow["subscriptions"][number]["status"]
+    cancel_at_period_end: boolean
+    current_period_end: string | null
+    created_at: string
+    canceled_at: string | null
+    ended_at: string | null
+  }[]
+}
+
+function toMemberRow(row: MemberQueryRow): MemberRow {
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    role: row.role,
+    createdAt: row.created_at,
+    stripeCustomerId: row.stripe_customer_id,
+    subscriptions: row.subscriptions
+      .map((s) => ({
+        stripeSubscriptionId: s.stripe_subscription_id,
+        plan: s.plan,
+        status: s.status,
+        cancelAtPeriodEnd: s.cancel_at_period_end,
+        currentPeriodEnd: s.current_period_end,
+        createdAt: s.created_at,
+        canceledAt: s.canceled_at,
+        endedAt: s.ended_at,
+      }))
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+  }
+}
+
+/** Every account with its subscriptions, newest account first. */
+export const getMembers = cache(async (): Promise<MemberRow[]> => {
+  await requireAdmin()
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("profiles").select(memberColumns).order("created_at", { ascending: false })
+  if (error) throw new Error(`profiles read: ${error.message}`)
+  return data.map(toMemberRow)
+})
+
+export type MemberDetail = {
+  member: MemberRow
+  codes: { kind: "merch" | "promotion"; code: string; percent: number; status: string; createdAt: string; revokedAt: string | null }[]
+  emails: { kind: string; refId: string; sentAt: string }[]
+}
+
+/** One account with codes and sent emails, for the member drawer. */
+export async function getMemberDetail(id: string): Promise<MemberDetail | null> {
+  await requireAdmin()
+  const supabase = await createClient()
+  const [member, codes, emails] = await Promise.all([
+    supabase.from("profiles").select(memberColumns).eq("id", id).maybeSingle(),
+    supabase
+      .from("member_codes")
+      .select("kind, code, percent, status, created_at, revoked_at")
+      .eq("user_id", id)
+      .order("created_at", { ascending: false }),
+    supabase.from("email_log").select("kind, ref_id, sent_at").eq("user_id", id).order("sent_at", { ascending: false }),
+  ])
+  if (member.error) throw new Error(`profiles read: ${member.error.message}`)
+  if (!member.data) return null
+
+  return {
+    member: toMemberRow(member.data),
+    codes: (codes.data ?? []).map((c) => ({
+      kind: c.kind,
+      code: c.code,
+      percent: c.percent,
+      status: c.status,
+      createdAt: c.created_at,
+      revokedAt: c.revoked_at,
+    })),
+    emails: (emails.data ?? []).map((e) => ({ kind: e.kind, refId: e.ref_id, sentAt: e.sent_at })),
+  }
+}
 
 export type Snapshot = { day: string; activeMembers: number; mrrCents: number }
 

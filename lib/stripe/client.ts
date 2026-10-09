@@ -14,6 +14,12 @@ export function getStripe(): Stripe {
   return client
 }
 
+/** Link into the Stripe Dashboard, in test mode when a test key is configured. */
+export function stripeDashboardUrl(path: string): string {
+  const test = process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_")
+  return `https://dashboard.stripe.com/${test ? "test/" : ""}${path.replace(/^\//, "")}`
+}
+
 // Plan ↔ Stripe price. Price ids differ between test and live mode, so they
 // come from the environment.
 function priceIds(): Record<PlanId, string | undefined> {
