@@ -56,7 +56,7 @@ update public.profiles set role = 'admin' where email = 'you@example.com';
 | URL Configuration | Site URL = production URL; redirect URLs: `http://localhost:3000/**`, `http://localhost:3001/**`, the production domain and `https://*-<team>.vercel.app/**` |
 | Emails → Confirm signup template | contents of `supabase/templates/confirmation.html` |
 | Emails → Reset password template | contents of `supabase/templates/recovery.html` |
-| Emails → SMTP | Resend (Phase 10 / launch) |
+| Emails → SMTP | Resend, see "Emails (Resend)" below |
 | Attack Protection → CAPTCHA | Turnstile with the secret key; then set `NEXT_PUBLIC_TURNSTILE_SITE_KEY`. Leave both off in dev |
 
 ## Payments (Stripe)
@@ -80,11 +80,39 @@ The account uses **Managed Payments**: Stripe is the merchant of record and hand
 - **Webhooks in dev:** `stripe listen --forward-to localhost:3000/api/webhooks/stripe`. `stripe listen --print-secret` prints the `whsec_…` for `STRIPE_WEBHOOK_SECRET`; it stays the same between runs. The CLI login expires after 90 days (`stripe login` again).
 - **Webhooks in production:** an endpoint for `checkout.session.completed` and `customer.subscription.*`.
 
+## Emails (Resend)
+
+There are two kinds of email, and both go through Resend once it's connected:
+
+- **App emails** (welcome, cancellation and withdrawal receipts, cancellation confirmed, drop announcements, Spotlight featured) are sent by the app through `lib/email`. Each is logged in `email_log` and sent at most once per (user, kind, reference). Without `RESEND_API_KEY` they're printed to the dev server console instead, so every flow works in dev.
+- **Auth emails** (sign-up confirmation, password reset, email change) are sent by Supabase Auth, using the templates in `supabase/templates/`.
+
+**Connecting Resend:**
+
+1. In Resend, add the domain and set the DNS records it shows (SPF, DKIM), until the domain shows as verified.
+2. Create an API key with "Sending access".
+3. App emails: set these in `.env.local` and on Vercel, then restart or redeploy:
+   - `RESEND_API_KEY`: the key
+   - `EMAIL_FROM`: a sender on the verified domain, e.g. `That's Game Dev Plus <plus@yourdomain>`
+   - `EMAIL_REPLY_TO` (optional): where replies go, if `EMAIL_FROM` isn't an inbox you read. The emails invite replies.
+   - `UNSUBSCRIBE_SECRET`: a long random string (production gets its own; changing it later breaks links in emails already sent)
+4. Auth emails: Supabase → Authentication → Emails → SMTP settings → enable custom SMTP with host `smtp.resend.com`, port `465`, username `resend`, the API key as password, and the same sender address. (Supabase's Resend integration fills these in for you.) Then raise the email rate limit under Authentication → Rate limits, since the built-in limit only applies to Supabase's own mailer.
+5. Check: sign up with a real address (confirmation email), then send `/cancel` with that address (the receipt arrives at once). The `email_log.resend_id` column fills with Resend's message ids.
+
+If `RESEND_API_KEY` is set without `EMAIL_FROM`, sending fails with a clear error in the logs. Resend's rate limit (a few requests per second) is handled: the transport retries `429` responses, and drop announcements send two at a time.
+
+## Statutory cancellation and withdrawal
+
+German law, English wording. Both links are in every footer and in the member area's sidebar and More page.
+
+- **"Cancel contracts here" → `/cancel`** (§ 312k BGB): stores the request and sends the receipt at once. Logged in, it cancels at period end right away; logged out, a single-use confirm link goes to the account's email. The flow is `lib/cancel/flow.ts`.
+- **"Withdraw from contract here" → `/withdraw`** (§ 356a BGB, Art. 11a Consumer Rights Directive, since 19 June 2026): "Confirm withdrawal" stores the request and sends the receipt at once. The admin decides in `/admin/inbox`: "Refund & end now" refunds the last payment in Stripe and ends the membership; "Decline" is only offered when the right had expired (waiver at checkout, or after 14 days) and emails the reason. The flow is `lib/cancel/withdrawal.ts`, the refund `lib/billing/withdraw.ts`.
+
 ## Routes so far
 
 | Area | Routes |
 | --- | --- |
-| Public | `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback` |
+| Public | `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`, `/cancel`, `/cancel/confirm`, `/withdraw`, `/imprint`, `/privacy`, `/terms`, `/withdrawal` |
 | Members | `/welcome`, `/app` (paywall for non-members), `/app/library`, `/app/shop`, `/app/perks`, `/app/spotlight`, `/app/account`, `/app/more` |
 | Admin | `/admin`, `/admin/members`, `/admin/content`, `/admin/drops`, `/admin/codes`, `/admin/spotlight`, `/admin/inbox` |
 | Dev | `/styleguide` (404 in production) |

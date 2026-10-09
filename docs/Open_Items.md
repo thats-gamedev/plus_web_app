@@ -8,7 +8,7 @@ Sources this list is built from (details live there, every open task lives here)
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-09 (Phases 1–10 built; Phase 6 waits on Fourthwall credentials, emails wait on Resend; next up: Phase 11)_
+_Last updated: 2026-10-09 (Phases 1–10 built, plus the withdrawal function; Phase 6 waits on Fourthwall credentials, emails wait on Resend; next up: Phase 11)_
 
 **Contents**
 1. Decisions and paperwork (you)
@@ -31,17 +31,20 @@ _Last updated: 2026-10-09 (Phases 1–10 built; Phase 6 waits on Fourthwall cred
   - that the product tax code `txcd_10701401` (Website Information Services – Personal Use) fits the membership
 - [ ] **VAT setup** (spec open decision: "OSS registration or small-business rule"). It's probably moot under Managed Payments; confirm with the tax advisor and close it.
 - [ ] **Outdated plan decision.** The plan's "Decisions to confirm" item 2 still says "you are the seller of record, VAT/OSS stays your job". That's superseded by Managed Payments; update the plan and spec when the legal check is done.
-- [ ] **Legal check of `/cancel`** (spec open decision). Have these points checked:
-  - **The verification step.** A logged-out request only cancels after the emailed link is confirmed. The spec warns the declaration may already count on submission, so the inbox treats unconfirmed requests from a matching account ("Account found") as due within 2 business days.
-  - **The confirm button.** Opening `/cancel/confirm` only shows a "Confirm cancellation" button; the click cancels. This stops mail scanners that open links from cancelling anyone, but it's one more step for the member.
-  - **The wording.** The page follows the mockup in English ("Cancel your membership", button "Cancel now"); the spec says the visible text of `/cancel` should be German, and § 312k BGB names "jetzt kündigen" for the button. Decide on German or bilingual labels.
-  - **The rate limit.** At most 3 requests per email per hour and 30 per minute overall. A flood of fake requests could briefly block real ones.
-- [ ] **Withdrawal button (§ 356a BGB, in force since 19 June 2026).** Online contracts may now need a "Vertrag widerrufen" button, much like the cancellation button. Check whether it applies when the withdrawal right has expired through the waiver checkbox, and whether Stripe Managed Payments covers it. The withdrawal page has a placeholder for this.
+- [x] ~~Language of the legal pages and `/cancel`~~ → **decided 2026-10-09:** the whole site stays in English, including the legal pages and `/cancel`; German law applies. The footer links read "Cancel contracts here" and "Withdraw from contract here". (The spec's line "only the visible content of the legal pages and the /cancel page is German" is superseded; update the spec with the other outdated decisions.)
+- [x] ~~Withdrawal button (§ 356a BGB, in force since 19 June 2026)~~ → **decided 2026-10-09: built**, to be on the safe side. "Withdraw from contract here" is in every footer and in the member area; `/withdraw` asks for name, email and contract and has the button "Confirm withdrawal"; the receipt with content, date and time goes out at once. The admin decides in the inbox (refund and end, or decline when the right had expired). It's offered even though most members waive the right at checkout, because a missing withdrawal function can extend the withdrawal period.
+- [ ] **Legal check of the statutory flows.** Have a lawyer or legal service look at these points:
+  - **English wording.** The law names German labels ("Verträge hier kündigen", "jetzt kündigen" for § 312k; "Vertrag widerrufen" for § 356a). We use the English equivalents: "Cancel contracts here" and "Cancel now", "Withdraw from contract here" and "Confirm withdrawal". Confirm that's enough for an English-language site that sells to German consumers.
+  - **The `/cancel` verification step.** A logged-out request only cancels after the emailed link is confirmed. The spec warns the declaration may already count on submission, so the inbox treats unconfirmed requests from a matching account ("Account found") as due within 2 business days.
+  - **The `/cancel/confirm` button.** Opening the link only shows a "Confirm cancellation" button; the click cancels. This stops mail scanners that open links from cancelling anyone, but it's one more step for the member.
+  - **Withdrawals are judged by hand.** Nothing happens automatically; the admin refunds or declines within 2 business days. "Decline" is only offered when the waiver is on record or 14 days have passed. Check the decline email's wording, and that the § 356 (5) BGB waiver at checkout (with the contract confirmation email) is enough to decline.
+  - **Refund amount.** "Refund & end now" refunds the whole last payment. The law may allow keeping a share for the days used; we don't.
+  - **The rate limit.** At most 3 requests per email per hour and 30 per minute overall, shared by cancellations and withdrawals. A flood of fake requests could briefly block real ones.
 - [ ] **Price of the post-launch annual plan**, alongside $12.99 monthly (spec open decision).
 - [ ] **Contact address.** Pick the address for questions and GDPR requests (it must match the Datenschutzerklärung) and set `NEXT_PUBLIC_CONTACT_EMAIL` in `.env.local` and on Vercel. Until then, "Contact us" and "Request data export or deletion" use the placeholder `hello@example.com`.
-- [ ] **Legal texts in German.** `/imprint`, `/privacy`, `/terms` and `/withdrawal` are German drafts with an "Entwurf" banner; every missing value is highlighted in `[…]`. Replace them with generated or lawyer-reviewed texts and remove the banner (`components/legal/legal-page.tsx`). Points the drafts leave open:
-  - name, address, contact and USt-IdNr (or small-business rule) in the Impressum
-  - how Stripe Managed Payments appears as seller in the AGB, Datenschutz and Widerruf
+- [ ] **Final legal texts** (in English, under German law). `/imprint`, `/privacy`, `/terms` and `/withdrawal` are English drafts with a "Draft" banner; every missing value is highlighted in `[…]`. Replace them with generated or lawyer-reviewed texts and remove the banner (`components/legal/legal-page.tsx`). Generators such as eRecht24 or IT-Recht Kanzlei offer English versions. Points the drafts leave open:
+  - name, address, contact and VAT ID (or small-business rule) in the imprint
+  - how Stripe Managed Payments appears as seller in the terms, privacy policy and withdrawal policy
   - each processor's region and transfer safeguard, checked against its DPA
   - retention periods, and that the Stripe customer stays after an account is deleted
   - the annual plan's renewal and notice period (§ 309 Nr. 9 BGB)
@@ -92,11 +95,14 @@ The code is built and works without Fourthwall: members get their promotion code
 
 Without `RESEND_API_KEY` every app email is printed to the dev server console and still logged in `email_log`.
 
+The code is ready: the Resend transport is unit-tested against a fake Resend API (request format, reply-to, retry on rate limits, no retry on a bad sender). The step-by-step guide is in the README, "Emails (Resend)".
+
 - [ ] **Domain verified** in Resend (SPF, DKIM), then set in `.env.local` and on Vercel:
   - `RESEND_API_KEY`
   - `EMAIL_FROM`, e.g. `That's Game Dev Plus <hello@yourdomain>`
+  - optional `EMAIL_REPLY_TO`, if `EMAIL_FROM` isn't an inbox you read (the emails invite replies)
   - `UNSUBSCRIBE_SECRET` (a long random string; `.env.local` has one, production needs its own). Changing it later breaks the unsubscribe links in emails already sent.
-- [ ] **Supabase Auth SMTP via Resend.** Sign-up confirmation and password reset still go through Supabase's built-in mailer, which is rate-limited and not meant for production. Enter Resend's SMTP details in Supabase Auth settings.
+- [ ] **Supabase Auth SMTP via Resend.** Sign-up confirmation and password reset still go through Supabase's built-in mailer, which is rate-limited and not meant for production. Enter Resend's SMTP details in Supabase Auth settings (host `smtp.resend.com`, port 465, user `resend`, the API key as password), or use Supabase's Resend integration. Then raise Supabase's auth email rate limit. Setting only this doesn't make the app emails real; they need the env vars above.
 - [ ] **One real email of each kind**, checked in Gmail and Outlook (layout, links, the unsubscribe link and the one-click unsubscribe in Gmail).
 
 ### Vercel and production env
@@ -149,6 +155,8 @@ From `docs/Implementation_Plan.md`; see there for mockup references and details.
 ### Still to check from Phases 4–10
 
 - [ ] **Phase 10 in the browser.** Everything was tested from scripts and by fetching the server HTML. Check:
+  - **`/withdraw`:** the form and its result, and the Withdrawals section in `/admin/inbox` with the refund dialog
+  - **Member area:** the two statutory links at the bottom of the desktop sidebar and on `/app/more`
   - **`/cancel`:** the form, its error messages and both results ("confirmed" when logged in, "We received your cancellation" when logged out), against the mockups LW13/LM14
   - **`/cancel/confirm`:** the confirm button and the confirmed state (LW14/LM15), and the "link no longer works" page
   - **Legal pages:** layout on phone and desktop; the processor table scrolls sideways on phones
@@ -235,7 +243,7 @@ The spec's full list, unticked items only. The ones already verified are in sect
 **Admin, emails, Spotlight**
 - [ ] The KPI cards match Stripe's counts (see the dev caveat in section 4).
 - [ ] Real delivery of the drop announcement and the Spotlight "featured" email (needs Resend). Sending once, the unsubscribe toggle and the featured email are verified with console emails (section 9).
-- [ ] The footer legal links and "Verträge hier kündigen" are on every page.
+- [ ] The footer legal links, "Cancel contracts here" and "Withdraw from contract here" are on every page *(checked in the server HTML for the public pages; the member area has them in the sidebar and on More; the admin area has none)*.
 
 ## 6. Dev data to clean up or replace
 
@@ -250,6 +258,8 @@ The spec's full list, unticked items only. The ones already verified are in sect
 - [ ] **October drop marked announced.** The announce test set `announced_at` on the October 2026 drop in dev, so `/admin/drops` won't offer "Send announcement" for it again. Clear `announced_at` to test again, or leave it.
 - [ ] **Test emails in `email_log`.** Phase 10 tests logged emails (welcome, cancellation confirmed for the test member's period ending 2026-11-08, drop announcement, Spotlight featured, cancellation receipts and a verify link). Because sending is deduplicated, the test member won't get another "cancellation confirmed" email for that period. Delete the rows (`delete from email_log`) before testing again.
 - [ ] **Test cancellation requests.** Three rows from the `/cancel` test: `stranger-e2e@example.com` (open in the admin inbox; close it with "Send no-match reply" or delete it), and two executed ones for the test member. The test member's subscription was set back to not cancelling afterwards.
+- [ ] **Test withdrawal requests.** Two closed rows from the `/withdraw` test: `stranger-w@example.com` (no match) and the test member's (declined, with a "withdrawal declined" email logged). The throwaway refund test (account, Stripe customer, subscription) was deleted again; its refunded $7.99 charge stays in the Stripe sandbox.
+- [ ] **Test member metadata.** The test subscription got the metadata key `synced_at` (used to trigger a webhook sync). Harmless.
 - [ ] **Placeholder PDF** at `ebooks/texturing-starter-guide.pdf` in the dev bucket. Replace it with the real e-book.
 - [ ] **No covers or item images** are uploaded yet. Cards show pastel placeholders until Phase 8 adds uploads.
 
@@ -267,7 +277,8 @@ The spec's full list, unticked items only. The ones already verified are in sect
 - [ ] **Failed emails aren't retried.** If Resend fails during the webhook (welcome, cancellation confirmed) or a Spotlight feature, the error is logged and the claim released, but nothing sends it again later. Drop announcements can be retried with "Retry sending".
 - [ ] **Failed cancellation receipts aren't flagged.** If the receipt email fails, the request has no `receipt_sent_at`, but the admin inbox doesn't show that. Show it there (the receipt is a legal requirement).
 - [ ] **Unconfirmed `/cancel` links** stay in the inbox as "Account found" requests. The admin should cancel them within 2 business days even without the click (see the legal check in section 1).
-- [ ] **Emails are English only.** The receipt and the verify link are in English like the rest of the app; adjust them if `/cancel` becomes German.
+- [ ] **Large drop announcements are slow.** Sending two at a time (Resend's rate limit) takes about a minute per 200 members, inside one Server Action. Fine for launch; past a few thousand members, switch to Resend's batch API or a background job.
+- [ ] **Withdrawal refunds only cover the last invoice.** Fine within 14 days (there's only one payment). If an admin accepts a late withdrawal, older payments must be refunded in the Stripe Dashboard.
 - [ ] **The "Revoke" confirmation** on `/admin/codes` uses the browser's `window.confirm`. Swap it for the app's Dialog (like Delete member) for a consistent look.
 - [ ] **The admin "due" date** for cancellation requests counts weekdays only, not German public holidays.
 - [ ] **The sections outline** in the list editor's left column is a jump list. Sections are reordered by dragging them in the middle column (or with Move up/down), not in the outline.
@@ -355,4 +366,13 @@ Verified in dev with Stripe test mode, 2026-10-08/09.
   - logged in: cancelled at once, whatever email was typed
   - empty name and invalid email are refused; the rate limit is unit-tested
 - [x] Delete member also clears `user_id` from the Stripe customer's metadata (the customer itself stays).
-- [x] The four legal pages render with the draft banner.
+- [x] The four legal pages render in English with the draft banner; every public page shows "Cancel contracts here" and "Withdraw from contract here" in the footer.
+- [x] Resend transport, unit-tested against a fake Resend API: request format, reply-to, retry on 429 and 5xx, no retry on errors such as an unverified sender.
+- [x] Withdrawal function, end to end against dev and the Stripe sandbox:
+  - logged out with a stranger's email: stored as a withdrawal and the receipt is sent at once; no account linked
+  - logged in: linked to the account and marked as verified, whatever email was typed
+  - the admin inbox lists both, with the waiver time the webhook now copies from Stripe
+  - "Decline" on the test member (waiver on record) emails the reason and leaves the subscription active
+  - "Decline" is refused within 14 days when there's no waiver
+  - "Refund & end now" on a throwaway sandbox subscription refunded $7.99, ended the subscription, sent the confirmation, and the webhook stored the end
+  - a handled request can't be handled again, and members get a 404 from the admin action
