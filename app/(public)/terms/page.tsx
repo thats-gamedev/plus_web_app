@@ -2,78 +2,79 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { LegalPage, LegalSection, Ph } from "@/components/legal/legal-page"
 
-export const metadata: Metadata = { title: "Allgemeine Geschäftsbedingungen" }
+export const metadata: Metadata = { title: "Terms" }
 
-// Linked from Stripe Checkout (terms of service consent). Draft outline only.
+// General terms (AGB) under German law, in English. Linked from Stripe
+// Checkout (terms of service consent). Draft outline only.
 export default function TermsPage() {
   return (
-    <LegalPage title="Allgemeine Geschäftsbedingungen">
-      <LegalSection title="§ 1 Geltungsbereich">
+    <LegalPage title="Terms">
+      <LegalSection title="1. Scope">
         <p>
-          Diese Bedingungen gelten für die Mitgliedschaft „That&apos;s Game Dev Plus“ zwischen <Ph>Anbieter, Anschrift</Ph>{" "}
-          und dir als Mitglied. <Ph>Rolle von Stripe Managed Payments als Verkäufer klären</Ph>
+          These terms apply to the “That&apos;s Game Dev Plus” membership between <Ph>provider, address</Ph> and you as
+          a member. <Ph>clarify Stripe Managed Payments&apos; role as seller</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 2 Leistungen">
+      <LegalSection title="2. What the membership includes">
         <p>
-          Die Mitgliedschaft gibt Zugang zum Mitgliederbereich mit Listen, Assets, Guides und E-Books, einem monatlichen
-          Drop neuer Inhalte, persönlichen Rabattcodes und der Möglichkeit, Projekte für Spotlight einzureichen. Ein
-          Anspruch auf bestimmte Inhalte oder auf eine Veröffentlichung im Spotlight besteht nicht. <Ph>prüfen</Ph>
+          The membership gives access to the member area with lists, assets, guides and e-books, a monthly drop of new
+          content, personal discount codes, and the option to submit projects for Spotlight. There is no claim to
+          specific content or to being featured in Spotlight. <Ph>check</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 3 Vertragsschluss">
+      <LegalSection title="3. Conclusion of the contract">
         <p>
-          Der Vertrag kommt zustande, wenn du im Checkout auf den Bestell-Button klickst und wir die Zahlung bestätigen.{" "}
-          <Ph>prüfen</Ph>
+          The contract is concluded when you click the order button in checkout and the payment is confirmed.{" "}
+          <Ph>check</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 4 Preise und Zahlung">
+      <LegalSection title="4. Prices and payment">
         <p>
-          Es gelten die beim Abschluss angezeigten Preise. Alle Preise enthalten die gesetzliche Umsatzsteuer. Die
-          Zahlung erfolgt im Voraus für den jeweiligen Abrechnungszeitraum (monatlich oder jährlich). Der
-          Gründungspreis bleibt erhalten, solange die Mitgliedschaft ohne Unterbrechung besteht.
+          The prices shown at checkout apply. All prices include VAT. Payment is made in advance for each billing period
+          (monthly or yearly). The founding price stays as long as the membership continues without a break.
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 5 Laufzeit und Kündigung">
+      <LegalSection title="5. Term and cancellation">
         <p>
-          Die Mitgliedschaft verlängert sich automatisch um den gewählten Zeitraum, wenn sie nicht gekündigt wird. Du
-          kannst jederzeit zum Ende des laufenden Zeitraums kündigen, im Konto oder über{" "}
-          <Link href="/cancel">Verträge hier kündigen</Link>. Bis dahin bleibt der Zugang bestehen.{" "}
-          <Ph>Verlängerung und Kündigungsfrist der Jahresmitgliedschaft nach § 309 Nr. 9 BGB prüfen</Ph>
+          The membership renews automatically for the chosen period unless it is cancelled. You can cancel at any time
+          to the end of the current period, in your account or with{" "}
+          <Link href="/cancel">Cancel contracts here</Link>. You keep access until then.{" "}
+          <Ph>check renewal and notice period of the yearly membership under § 309 No. 9 BGB</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 6 Widerrufsrecht">
+      <LegalSection title="6. Right of withdrawal">
         <p>
-          Verbraucher haben ein Widerrufsrecht nach der <Link href="/withdrawal">Widerrufsbelehrung</Link>.
+          Consumers have a right of withdrawal as described in the <Link href="/withdrawal">withdrawal policy</Link>.
+          You can declare it with <Link href="/withdraw">Withdraw from contract here</Link>.
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 7 Nutzung der Inhalte">
+      <LegalSection title="7. Use of the content">
         <p>
-          <Ph>Nutzungsrechte an Inhalten und Assets, Weitergabe von Zugangsdaten, Lizenzen Dritter</Ph>
+          <Ph>usage rights for content and assets, sharing of logins, third-party licences</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 8 Haftung">
+      <LegalSection title="8. Liability">
         <p>
-          <Ph>Haftungsregelung</Ph>
+          <Ph>liability clause</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="§ 9 Schlussbestimmungen">
+      <LegalSection title="9. Final provisions">
         <p>
-          Es gilt deutsches Recht. Zwingende Verbraucherschutzvorschriften des Staates, in dem du lebst, bleiben
-          unberührt. <Ph>prüfen</Ph>
+          German law applies. Mandatory consumer protection rules of the country where you live remain unaffected.{" "}
+          <Ph>check</Ph>
         </p>
       </LegalSection>
 
       <p className="text-sm text-muted-foreground">
-        Stand: <Ph>Datum</Ph>
+        Last updated: <Ph>date</Ph>
       </p>
     </LegalPage>
   )

@@ -1,47 +1,48 @@
 import type { Metadata } from "next"
 import { LegalPage, LegalSection, Ph } from "@/components/legal/legal-page"
 
-export const metadata: Metadata = { title: "Impressum" }
+export const metadata: Metadata = { title: "Imprint" }
 
+// Impressum under German law, written in English like the rest of the site.
 export default function ImprintPage() {
   return (
-    <LegalPage title="Impressum">
-      <LegalSection title="Angaben gemäß § 5 DDG">
+    <LegalPage title="Imprint">
+      <LegalSection title="Information under § 5 DDG (German Digital Services Act)">
         <p>
-          <Ph>Vor- und Nachname</Ph>
+          <Ph>First and last name</Ph>
           <br />
-          <Ph>Straße und Hausnummer</Ph>
+          <Ph>Street and number</Ph>
           <br />
-          <Ph>PLZ und Ort</Ph>
+          <Ph>Postcode and city</Ph>
           <br />
-          Deutschland
+          Germany
         </p>
       </LegalSection>
 
-      <LegalSection title="Kontakt">
+      <LegalSection title="Contact">
         <p>
-          E-Mail: <Ph>kontakt@…</Ph>
+          Email: <Ph>contact@…</Ph>
           <br />
-          Telefon: <Ph>Telefonnummer oder zweiter schneller Kontaktweg</Ph>
+          Phone: <Ph>phone number, or a second fast way to reach you</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="Umsatzsteuer">
+      <LegalSection title="VAT">
         <p>
-          Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: <Ph>USt-IdNr., oder Hinweis auf Kleinunternehmerregelung</Ph>
+          VAT identification number under § 27a UStG: <Ph>VAT ID, or a note on the small-business rule</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV">
+      <LegalSection title="Responsible for the content under § 18 (2) MStV">
         <p>
-          <Ph>Vor- und Nachname, Anschrift wie oben</Ph>
+          <Ph>First and last name, address as above</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="Verbraucherstreitbeilegung">
+      <LegalSection title="Consumer dispute resolution">
         <p>
-          Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer
-          Verbraucherschlichtungsstelle teilzunehmen. <Ph>prüfen</Ph>
+          We are neither willing nor obliged to take part in dispute resolution proceedings before a consumer
+          arbitration board. <Ph>check</Ph>
         </p>
       </LegalSection>
     </LegalPage>

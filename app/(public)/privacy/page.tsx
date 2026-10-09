@@ -1,106 +1,106 @@
 import type { Metadata } from "next"
 import { LegalPage, LegalSection, Ph } from "@/components/legal/legal-page"
 
-export const metadata: Metadata = { title: "Datenschutzerklärung" }
+export const metadata: Metadata = { title: "Privacy policy" }
 
 // Spec "Privacy": must list every processor with its region and name the
 // contact for deletion and export requests.
 const processors: { name: string; purpose: string; data: string; region: string }[] = [
   {
     name: "Vercel Inc.",
-    purpose: "Hosting der Website und der App",
-    data: "IP-Adresse, Zeitpunkt und Inhalt der Anfragen (Server-Logs)",
-    region: "USA / weltweites Netz; EU-US Data Privacy Framework bzw. Standardvertragsklauseln",
+    purpose: "Hosting the website and the app",
+    data: "IP address, time and content of requests (server logs)",
+    region: "USA / global network; EU-US Data Privacy Framework or standard contractual clauses",
   },
   {
     name: "Supabase Inc.",
-    purpose: "Benutzerkonten, Datenbank und Dateispeicher",
-    data: "E-Mail-Adresse, Anzeigename, Passwort (verschlüsselt), Mitgliedschaftsstatus, Spotlight-Einreichungen",
-    region: "Rechenzentrum in der EU (Frankfurt); Standardvertragsklauseln",
+    purpose: "Accounts, database and file storage",
+    data: "Email address, display name, password (hashed), membership status, Spotlight submissions",
+    region: "Data centre in the EU (Frankfurt); standard contractual clauses",
   },
   {
     name: "Stripe (Managed Payments)",
-    purpose: "Bezahlung, Rechnungen, Steuern, Verwaltung des Abos",
-    data: "Name, E-Mail-Adresse, Rechnungsadresse, Zahlungsdaten, Kaufhistorie",
-    region: "EU / USA; EU-US Data Privacy Framework bzw. Standardvertragsklauseln",
+    purpose: "Payment, invoices, taxes, managing the subscription",
+    data: "Name, email address, billing address, payment details, purchase history",
+    region: "EU / USA; EU-US Data Privacy Framework or standard contractual clauses",
   },
   {
     name: "Resend (Plus Five Five, Inc.)",
-    purpose: "Versand der E-Mails der App (Bestätigungen, Drop-Ankündigungen)",
-    data: "E-Mail-Adresse, Inhalt der E-Mail, Zustellstatus",
-    region: "USA; Standardvertragsklauseln",
+    purpose: "Sending the app's emails (confirmations, drop announcements)",
+    data: "Email address, email content, delivery status",
+    region: "USA; standard contractual clauses",
   },
   {
     name: "Cloudflare, Inc. (Turnstile)",
-    purpose: "Schutz der Registrierung und Anmeldung vor Bots",
-    data: "IP-Adresse, Browser- und Geräteinformationen",
-    region: "USA / weltweites Netz; EU-US Data Privacy Framework",
+    purpose: "Protecting sign-up and login against bots",
+    data: "IP address, browser and device information",
+    region: "USA / global network; EU-US Data Privacy Framework",
   },
   {
     name: "Fourthwall, Inc.",
-    purpose: "Merch-Shop und persönliche Rabattcodes für Mitglieder",
-    data: "Der Rabattcode; Bestellungen im Shop unterliegen der Datenschutzerklärung von Fourthwall",
-    region: "USA; Standardvertragsklauseln",
+    purpose: "Merch shop and personal member discount codes",
+    data: "The discount code; orders in the shop fall under Fourthwall's privacy policy",
+    region: "USA; standard contractual clauses",
   },
 ]
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Datenschutzerklärung">
-      <LegalSection title="1. Verantwortlicher">
+    <LegalPage title="Privacy policy">
+      <LegalSection title="1. Controller">
         <p>
-          <Ph>Vor- und Nachname, Anschrift</Ph>
+          <Ph>First and last name, address</Ph>
           <br />
-          E-Mail: <Ph>datenschutz@…</Ph>
+          Email: <Ph>privacy@…</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="2. Welche Daten wir verarbeiten und warum">
+      <LegalSection title="2. What data we process and why">
         <ul>
           <li>
-            <strong>Besuch der Website:</strong> technisch notwendige Daten wie IP-Adresse und Zeitpunkt, um die Seite
-            auszuliefern und abzusichern (Art. 6 Abs. 1 lit. f DSGVO).
+            <strong>Visiting the website:</strong> technically necessary data such as IP address and time, to deliver
+            and secure the site (Art. 6 (1) (f) GDPR).
           </li>
           <li>
-            <strong>Konto und Mitgliedschaft:</strong> E-Mail-Adresse, Anzeigename, Passwort und Mitgliedschaftsstatus,
-            um den Vertrag zu erfüllen (Art. 6 Abs. 1 lit. b DSGVO).
+            <strong>Account and membership:</strong> email address, display name, password and membership status, to
+            perform the contract (Art. 6 (1) (b) GDPR).
           </li>
           <li>
-            <strong>Bezahlung:</strong> Die Zahlung wickelt Stripe ab. Wir erhalten keine vollständigen Kartendaten
-            (Art. 6 Abs. 1 lit. b und c DSGVO).
+            <strong>Payment:</strong> Stripe handles payment. We never receive full card details (Art. 6 (1) (b) and
+            (c) GDPR).
           </li>
           <li>
-            <strong>E-Mails:</strong> Bestätigungen zu Konto, Zahlung und Kündigung (Art. 6 Abs. 1 lit. b und c
-            DSGVO). Drop-Ankündigungen an Mitglieder; abbestellbar über den Link in jeder E-Mail oder im Konto (Art. 6
-            Abs. 1 lit. b bzw. f DSGVO). <Ph>Rechtsgrundlage prüfen</Ph>
+            <strong>Emails:</strong> confirmations about your account, payment, cancellation and withdrawal (Art. 6
+            (1) (b) and (c) GDPR). Drop announcements to members; you can turn them off with the link in every email or
+            in your account (Art. 6 (1) (b) or (f) GDPR). <Ph>check legal basis</Ph>
           </li>
           <li>
-            <strong>Spotlight:</strong> Projekte, die Mitglieder einreichen, samt Bildern und angegebenen Handles, um
-            sie auszuwählen und mit Nennung zu veröffentlichen (Art. 6 Abs. 1 lit. a und b DSGVO).
+            <strong>Spotlight:</strong> projects members submit, with images and the handles they give, to select them
+            and publish them with credit (Art. 6 (1) (a) and (b) GDPR).
           </li>
           <li>
-            <strong>Kündigung über das Formular:</strong> Name, E-Mail-Adresse, Referenz sowie Datum und Uhrzeit, um
-            die Kündigung zu bearbeiten und nachzuweisen (Art. 6 Abs. 1 lit. c DSGVO, § 312k BGB).
+            <strong>Cancellation and withdrawal forms:</strong> name, email address, reference, and date and time, to
+            handle and prove your request (Art. 6 (1) (c) GDPR; § 312k and § 356a BGB).
           </li>
         </ul>
       </LegalSection>
 
       <LegalSection title="3. Cookies">
         <p>
-          Wir setzen nur technisch notwendige Cookies, die dich angemeldet halten (§ 25 Abs. 2 TDDDG). Es gibt keine
-          Analyse- oder Werbe-Cookies.
+          We only set technically necessary cookies that keep you logged in (§ 25 (2) TDDDG). There are no analytics or
+          advertising cookies.
         </p>
       </LegalSection>
 
-      <LegalSection title="4. Dienstleister (Auftragsverarbeiter)">
+      <LegalSection title="4. Service providers (processors)">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="border-b border-border text-muted-foreground">
               <tr>
-                <th className="py-2 pr-4 font-semibold">Anbieter</th>
-                <th className="py-2 pr-4 font-semibold">Zweck</th>
-                <th className="py-2 pr-4 font-semibold">Daten</th>
-                <th className="py-2 font-semibold">Ort und Garantien</th>
+                <th className="py-2 pr-4 font-semibold">Provider</th>
+                <th className="py-2 pr-4 font-semibold">Purpose</th>
+                <th className="py-2 pr-4 font-semibold">Data</th>
+                <th className="py-2 font-semibold">Location and safeguards</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border align-top">
@@ -116,35 +116,35 @@ export default function PrivacyPage() {
           </table>
         </div>
         <p className="mt-3">
-          <Ph>Regionen und Garantien je Anbieter mit den Auftragsverarbeitungsverträgen abgleichen</Ph>
+          <Ph>check each provider&apos;s region and safeguards against its data processing agreement</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Speicherdauer">
+      <LegalSection title="5. How long we keep data">
         <p>
-          Kontodaten speichern wir, solange das Konto besteht. Rechnungs- und Zahlungsdaten bewahren wir aufgrund
-          gesetzlicher Pflichten bis zu 10 Jahre auf (§ 147 AO, § 257 HGB). Kündigungsanfragen bewahren wir als Nachweis
-          auf. <Ph>Fristen festlegen</Ph>
+          We keep account data as long as the account exists. Invoice and payment records are kept for up to 10 years
+          because the law requires it (§ 147 AO, § 257 HGB); Stripe keeps its customer record for the same reason after
+          an account is deleted. Cancellation and withdrawal requests are kept as proof. <Ph>set retention periods</Ph>
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Deine Rechte">
+      <LegalSection title="6. Your rights">
         <p>
-          Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit
-          und Widerspruch (Art. 15 bis 21 DSGVO) sowie das Recht, eine Einwilligung jederzeit zu widerrufen.
+          You have the right to access, rectification, erasure, restriction of processing, data portability and
+          objection (Art. 15 to 21 GDPR), and you can withdraw any consent at any time.
         </p>
         <p>
-          <strong>Löschung oder Export deiner Daten:</strong> Schreib eine E-Mail an <Ph>datenschutz@…</Ph> von der
-          Adresse deines Kontos. Wir erledigen die Anfrage innerhalb eines Monats (Art. 12 Abs. 3 DSGVO).
+          <strong>Deleting or exporting your data:</strong> email <Ph>privacy@…</Ph> from your account&apos;s address.
+          We handle the request within one month (Art. 12 (3) GDPR).
         </p>
         <p>
-          Du kannst dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel bei der Behörde deines
-          Wohnorts oder bei <Ph>zuständige Landesbehörde</Ph>.
+          You can complain to a data protection supervisory authority, for example the one where you live or{" "}
+          <Ph>responsible state authority</Ph>.
         </p>
       </LegalSection>
 
       <p className="text-sm text-muted-foreground">
-        Stand: <Ph>Datum</Ph>
+        Last updated: <Ph>date</Ph>
       </p>
     </LegalPage>
   )

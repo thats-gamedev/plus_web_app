@@ -1,72 +1,72 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { LegalPage, LegalSection, Ph } from "@/components/legal/legal-page"
 
-export const metadata: Metadata = { title: "Widerrufsbelehrung" }
+export const metadata: Metadata = { title: "Withdrawal policy" }
 
-// Based on the statutory model (Anlage 1 zu Art. 246a § 1 Abs. 2 EGBGB) for
-// digital content and services. The pricing cards collect the consent that
-// ends the right early (§ 356 Abs. 5 BGB).
+// Based on the statutory model withdrawal notice (Annex I of Directive
+// 2011/83/EU; Anlage 1 zu Art. 246a § 1 Abs. 2 EGBGB) for digital content and
+// services, in English. The pricing cards collect the consent that ends the
+// right early (§ 356 (5) BGB).
 export default function WithdrawalPage() {
   return (
-    <LegalPage title="Widerrufsbelehrung">
-      <LegalSection title="Widerrufsrecht">
+    <LegalPage title="Withdrawal policy">
+      <LegalSection title="Right of withdrawal">
         <p>
-          Du hast das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die
-          Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.
+          You have the right to withdraw from this contract within 14 days without giving any reason. The withdrawal
+          period expires after 14 days from the day of the conclusion of the contract.
         </p>
         <p>
-          Um dein Widerrufsrecht auszuüben, musst du uns (<Ph>Name, Anschrift, E-Mail-Adresse</Ph>) mittels einer
-          eindeutigen Erklärung (z. B. eine E-Mail) über deinen Entschluss, diesen Vertrag zu widerrufen, informieren.
-          Du kannst dafür das unten stehende Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.
+          The easiest way to withdraw is our withdrawal function: <Link href="/withdraw">Withdraw from contract here</Link>
+          , linked at the bottom of every page. You can also inform us (<Ph>name, address, email address</Ph>) of your
+          decision to withdraw from this contract by an unequivocal statement (e.g. an email). You may use the model
+          withdrawal form below, but it is not obligatory.
         </p>
         <p>
-          Zur Wahrung der Widerrufsfrist reicht es aus, dass du die Mitteilung über die Ausübung des Widerrufsrechts
-          vor Ablauf der Widerrufsfrist absendest.
-        </p>
-        <p>
-          <Ph>Widerrufsbutton nach § 356a BGB (seit 19. Juni 2026) prüfen</Ph>
-        </p>
-      </LegalSection>
-
-      <LegalSection title="Folgen des Widerrufs">
-        <p>
-          Wenn du diesen Vertrag widerrufst, haben wir dir alle Zahlungen, die wir von dir erhalten haben, unverzüglich
-          und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über deinen Widerruf
-          dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das du
-          bei der ursprünglichen Transaktion eingesetzt hast, es sei denn, mit dir wurde ausdrücklich etwas anderes
-          vereinbart; in keinem Fall werden dir wegen dieser Rückzahlung Entgelte berechnet.
+          To meet the withdrawal deadline, it is sufficient for you to send your communication concerning your exercise
+          of the right of withdrawal before the withdrawal period has expired. We confirm receipt by email right away,
+          with the content and the date and time of your withdrawal.
         </p>
       </LegalSection>
 
-      <LegalSection title="Vorzeitiges Erlöschen des Widerrufsrechts">
+      <LegalSection title="Effects of withdrawal">
         <p>
-          Das Widerrufsrecht erlischt bei einem Vertrag über digitale Inhalte, wenn wir mit der Ausführung des Vertrags
-          begonnen haben, nachdem du ausdrücklich zugestimmt hast, dass wir vor Ablauf der Widerrufsfrist damit
-          beginnen, und du deine Kenntnis davon bestätigt hast, dass du durch deine Zustimmung mit Beginn der Ausführung
-          dein Widerrufsrecht verlierst, und wir dir eine Bestätigung des Vertrags zur Verfügung gestellt haben (§ 356
-          Abs. 5 BGB). Diese Zustimmung gibst du mit dem Häkchen auf der Preiskarte vor dem Kauf.{" "}
-          <Ph>Einordnung als digitale Inhalte oder digitale Dienstleistung prüfen</Ph>
+          If you withdraw from this contract, we shall reimburse to you all payments received from you without undue
+          delay and in any event not later than 14 days from the day on which we are informed about your decision to
+          withdraw from this contract. We will carry out such reimbursement using the same means of payment as you used
+          for the initial transaction, unless you have expressly agreed otherwise; in any event, you will not incur any
+          fees as a result of such reimbursement.
         </p>
       </LegalSection>
 
-      <LegalSection title="Muster-Widerrufsformular">
-        <p>(Wenn du den Vertrag widerrufen willst, dann fülle bitte dieses Formular aus und sende es zurück.)</p>
+      <LegalSection title="Early expiry of the right of withdrawal">
+        <p>
+          For a contract for digital content, the right of withdrawal expires when we have started performing the
+          contract after you expressly agreed that we start before the end of the withdrawal period, you acknowledged
+          that you lose your right of withdrawal once performance starts, and we have given you a confirmation of the
+          contract (§ 356 (5) BGB). You give this consent with the tick box on the pricing card before you buy.{" "}
+          <Ph>check whether the membership counts as digital content or a digital service</Ph>
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Model withdrawal form">
+        <p>(Complete and return this form only if you wish to withdraw from the contract.)</p>
         <div className="mt-3 rounded-card border border-border bg-card p-5">
           <p>
-            An <Ph>Name, Anschrift, E-Mail-Adresse</Ph>:
+            To <Ph>name, address, email address</Ph>:
           </p>
           <p>
-            Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über die Erbringung der
-            folgenden Dienstleistung (*) / die Bereitstellung der folgenden digitalen Inhalte (*):
+            I/We (*) hereby give notice that I/We (*) withdraw from my/our (*) contract for the supply of the following
+            digital content (*) / for the provision of the following service (*):
           </p>
           <ul>
-            <li>Bestellt am (*) / erhalten am (*)</li>
-            <li>Name des/der Verbraucher(s)</li>
-            <li>Anschrift des/der Verbraucher(s)</li>
-            <li>Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier)</li>
-            <li>Datum</li>
+            <li>Ordered on (*) / received on (*)</li>
+            <li>Name of consumer(s)</li>
+            <li>Address of consumer(s)</li>
+            <li>Signature of consumer(s) (only if this form is notified on paper)</li>
+            <li>Date</li>
           </ul>
-          <p className="text-sm text-muted-foreground">(*) Unzutreffendes streichen.</p>
+          <p className="text-sm text-muted-foreground">(*) Delete as appropriate.</p>
         </div>
       </LegalSection>
     </LegalPage>
