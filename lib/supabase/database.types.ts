@@ -315,12 +315,16 @@ export type Database = {
           admin_note: string | null
           consent_at: string
           created_at: string
+          credits: Json
           description: string
+          engine: string | null
           featured_post_url: string | null
           id: string
           instagram_handle: string | null
           media_paths: string[]
           month: string
+          project_type: string | null
+          project_url: string | null
           status: Database["public"]["Enums"]["spotlight_status"]
           title: string
           user_id: string
@@ -330,12 +334,16 @@ export type Database = {
           admin_note?: string | null
           consent_at: string
           created_at?: string
+          credits?: Json
           description: string
+          engine: string | null
           featured_post_url?: string | null
           id?: string
           instagram_handle?: string | null
           media_paths?: string[]
           month: string
+          project_type: string | null
+          project_url: string | null
           status?: Database["public"]["Enums"]["spotlight_status"]
           title: string
           user_id: string
@@ -345,12 +353,16 @@ export type Database = {
           admin_note?: string | null
           consent_at?: string
           created_at?: string
+          credits?: Json
           description?: string
+          engine?: string | null
           featured_post_url?: string | null
           id?: string
           instagram_handle?: string | null
           media_paths?: string[]
           month?: string
+          project_type?: string | null
+          project_url?: string | null
           status?: Database["public"]["Enums"]["spotlight_status"]
           title?: string
           user_id?: string
