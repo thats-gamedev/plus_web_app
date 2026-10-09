@@ -4,6 +4,8 @@
 // clients don't support CSS variables, so the brand colours are written out
 // here (same values as app/globals.css). Every dynamic value is escaped.
 
+import { requestNumber } from "@/lib/cancel/request-number"
+
 export type EmailContent = { subject: string; html: string; text: string }
 
 const C = { ink: "#1f1f1f", muted: "#6b6b6b", faint: "#9a9a9a", brand: "#e2622b", bg: "#f3f3f3", card: "#ffffff", border: "#e5e5e5" }
@@ -109,7 +111,7 @@ export function cancellationReceiptEmail(r: CancellationReceiptInput): EmailCont
     ["Reference", r.reference || "–"],
     ["Cancel", "At the earliest possible date"],
     ["Received", when],
-    ["Request", r.requestId.slice(0, 8).toUpperCase()],
+    ["Request", requestNumber(r.requestId)],
   ]
   const table = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;font-size:14px;line-height:22px">${rows
     .map(([k, v]) => `<tr><td style="padding:2px 16px 2px 0;color:${C.muted}">${k}</td><td style="color:${C.ink}">${escapeHtml(v)}</td></tr>`)
