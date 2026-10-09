@@ -520,6 +520,7 @@ export type Database = {
         | "cancellation_confirmed"
         | "cancellation_receipt"
         | "cancellation_verify"
+        | "cancellation_no_match"
         | "drop_announcement"
         | "spotlight_featured"
       list_kind: "tools" | "assets" | "creators" | "prompts"
@@ -673,6 +674,7 @@ export const Constants = {
         "cancellation_confirmed",
         "cancellation_receipt",
         "cancellation_verify",
+        "cancellation_no_match",
         "drop_announcement",
         "spotlight_featured",
       ],
