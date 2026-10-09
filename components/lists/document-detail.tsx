@@ -9,6 +9,7 @@ import { coverUrl } from "@/lib/content/covers"
 import { readingMinutes } from "@/lib/content/resources"
 import type { ResourceDetail } from "@/lib/dal/content"
 import { formatDay } from "@/lib/format"
+import { contactMailto } from "@/lib/site"
 
 // E-book (MW8 / MM9) and guide pages. Both use the cover card; the e-book
 // adds the download, the guide its Markdown body below. Guides have no
@@ -70,7 +71,11 @@ export function EbookDetail({ resource, downloadFailed }: { resource: ResourceDe
             </a>
           }
         >
-          The file may be missing or the link expired. If it keeps failing, let us know.
+          The file may be missing or the link expired. If it keeps failing,{" "}
+          <a href={contactMailto(`Download problem: ${resource.title}`)} className="font-semibold underline">
+            let us know
+          </a>
+          .
         </Banner>
       )}
       <HeaderCard
