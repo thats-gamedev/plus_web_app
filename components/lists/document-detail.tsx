@@ -4,10 +4,11 @@ import { DownloadIcon } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { Banner } from "@/components/ui/banner"
 import { MarkdownArticle } from "@/components/shared/markdown"
-import { formatDay, ResourceBadges, ResourceBreadcrumb } from "@/components/lists/resource-header"
+import { ResourceBadges, ResourceBreadcrumb } from "@/components/lists/resource-header"
 import { coverUrl } from "@/lib/content/covers"
 import { readingMinutes } from "@/lib/content/resources"
 import type { ResourceDetail } from "@/lib/dal/content"
+import { formatDay } from "@/lib/format"
 
 // E-book (MW8 / MM9) and guide pages. Both use the cover card; the e-book
 // adds the download, the guide its Markdown body below. Guides have no

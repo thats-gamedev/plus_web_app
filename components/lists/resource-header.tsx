@@ -5,6 +5,7 @@ import { dropMonthName } from "@/components/shared/drop-card"
 import { defaultFilters, libraryHref } from "@/lib/content/library-filters"
 import { categoryLabels, resourceTypeLabel } from "@/lib/content/resources"
 import type { ResourceDetail } from "@/lib/dal/content"
+import { formatDay } from "@/lib/format"
 
 const sectionNames = {
   tools: "Tools",
@@ -14,16 +15,6 @@ const sectionNames = {
   ebook: "E-books",
   guide: "Guides",
 } as const
-
-/** "1 Oct 2026" */
-export function formatDay(iso: string, month: "short" | "long" = "short") {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month,
-    year: "numeric",
-    timeZone: "Europe/Berlin",
-  })
-}
 
 /** "Library › Tools", linking back to the matching library filter. */
 export function ResourceBreadcrumb({ resource }: { resource: ResourceDetail }) {
