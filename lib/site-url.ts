@@ -2,6 +2,12 @@ import "server-only"
 import { headers } from "next/headers"
 
 /**
+ * The configured origin, for places without a request (metadata, sitemap,
+ * robots). Falls back to the dev server.
+ */
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, "")
+
+/**
  * Absolute origin for links in emails (password reset, email change).
  * NEXT_PUBLIC_SITE_URL wins; otherwise the request's own origin, which
  * covers Vercel preview deployments.
