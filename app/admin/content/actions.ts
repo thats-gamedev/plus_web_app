@@ -1,5 +1,6 @@
 "use server"
 
+import { refreshPublicContent } from "@/lib/content/public-cache"
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { type FormState, readFields } from "@/lib/auth/form-state"
@@ -85,6 +86,7 @@ export async function saveDocument(_prev: FormState, formData: FormData): Promis
   if (error) return { status: "error", message: `Couldn't save: ${error.message}`, values: raw }
 
   refresh()
+  refreshPublicContent()
   return { status: "success", message: "Saved." }
 }
 
@@ -109,6 +111,7 @@ export async function setDocumentStatus(id: string, status: "published" | "draft
   if (error) return { ok: false, message: `Couldn't update: ${error.message}` }
 
   refresh()
+  refreshPublicContent()
   return { ok: true, message: status === "published" ? "Published. Members can see it now." : "Unpublished. Members no longer see it." }
 }
 
@@ -126,5 +129,6 @@ export async function deleteResource(id: string): Promise<ContentActionResult> {
   if (resource.cover_path) await db.storage.from("covers").remove([resource.cover_path])
   if (resource.file_path) await db.storage.from("ebooks").remove([resource.file_path])
 
+  refreshPublicContent()
   redirect("/admin/content")
 }

@@ -1,5 +1,6 @@
 "use server"
 
+import { refreshPublicContent } from "@/lib/content/public-cache"
 import { refresh } from "next/cache"
 import { z } from "zod"
 import { dropAssignment } from "@/lib/admin/drop-position"
@@ -109,6 +110,7 @@ export async function saveListSettings(id: string, settings: unknown): Promise<L
     .eq("type", "list")
   if (error?.code === UNIQUE_VIOLATION) return { ok: false, message: "Another resource already uses this slug." }
   if (error) return { ok: false, message: `Couldn't save the settings: ${error.message}` }
+  refreshPublicContent()
   return { ok: true, message: "Settings saved." }
 }
 
@@ -152,6 +154,7 @@ export async function publishList(id: string, dropId: string | null): Promise<Pu
   if (error) return { ok: false, message: `Couldn't publish: ${error.message}` }
 
   refresh()
+  refreshPublicContent()
   return { ok: true, message: "Published. Members see this version now." }
 }
 
@@ -165,6 +168,7 @@ export async function discardListDraft(id: string): Promise<ListActionResult> {
   const { error } = await db.from("resources").update({ draft_content: null, draft_updated_at: null }).eq("id", id)
   if (error) return { ok: false, message: `Couldn't discard: ${error.message}` }
   refresh()
+  refreshPublicContent()
   return { ok: true, message: "Draft discarded." }
 }
 
@@ -174,5 +178,6 @@ export async function unpublishList(id: string): Promise<ListActionResult> {
   const { error } = await createAdminClient().from("resources").update({ status: "draft" }).eq("id", id).eq("type", "list")
   if (error) return { ok: false, message: `Couldn't unpublish: ${error.message}` }
   refresh()
+  refreshPublicContent()
   return { ok: true, message: "Unpublished. Members no longer see it." }
 }

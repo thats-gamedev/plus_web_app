@@ -1,5 +1,6 @@
 "use server"
 
+import { refreshPublicContent } from "@/lib/content/public-cache"
 import { refresh } from "next/cache"
 import { redirect } from "next/navigation"
 import { z } from "zod"
@@ -69,6 +70,7 @@ export async function saveDrop(_prev: FormState, formData: FormData): Promise<Fo
   if (error) return { status: "error", message: `Couldn't save: ${error.message}`, values: raw }
 
   refresh()
+  refreshPublicContent()
   return { status: "success", message: "Saved." }
 }
 
@@ -84,6 +86,7 @@ export async function setDropResource(dropId: string, resourceId: string, attach
     : await db.from("resources").update({ drop_id: null, drop_position: null }).eq("id", resourceId).eq("drop_id", dropId)
   if (error) return { ok: false, message: `Couldn't update: ${error.message}` }
   refresh()
+  refreshPublicContent()
   return { ok: true, message: attach ? "Added to the drop." : "Removed from the drop." }
 }
 
@@ -112,6 +115,7 @@ export async function reorderDropResources(dropId: string, orderedIds: string[])
   if (failed?.error) return { ok: false, message: `Couldn't save the order: ${failed.error.message}` }
 
   refresh()
+  refreshPublicContent()
   return { ok: true, message: "Order saved." }
 }
 
@@ -121,6 +125,7 @@ export async function publishDropNow(id: string): Promise<DropActionResult> {
   const { error } = await createAdminClient().from("drops").update({ published_at: new Date().toISOString() }).eq("id", id)
   if (error) return { ok: false, message: `Couldn't publish: ${error.message}` }
   refresh()
+  refreshPublicContent()
   return { ok: true, message: "The drop is live." }
 }
 
@@ -200,6 +205,7 @@ export async function announceDrop(id: string): Promise<DropActionResult> {
   // Announced once nothing failed; a retry sends only what's missing.
   if (failed === 0) await db.from("drops").update({ announced_at: now }).eq("id", id).is("announced_at", null)
   refresh()
+  refreshPublicContent()
   if (failed) return { ok: false, message: `${sent} sent, ${failed} failed${skipped ? `, ${skipped} already had it` : ""}. Run it again to retry the failed ones.` }
   return { ok: true, message: `Announced: ${sent} ${sent === 1 ? "email" : "emails"} sent${skipped ? `, ${skipped} already had it` : ""}.` }
 }
@@ -209,5 +215,6 @@ export async function deleteDrop(id: string): Promise<DropActionResult> {
   await requireAdmin()
   const { error } = await createAdminClient().from("drops").delete().eq("id", id)
   if (error) return { ok: false, message: `Couldn't delete: ${error.message}` }
+  refreshPublicContent()
   redirect("/admin/drops")
 }
