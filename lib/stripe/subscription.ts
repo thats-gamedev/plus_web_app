@@ -8,6 +8,12 @@ export type SubscriptionRow = TablesInsert<"subscriptions">
 const iso = (seconds: number | null | undefined) =>
   seconds == null ? null : new Date(seconds * 1000).toISOString()
 
+/** An ISO time from metadata, or null when missing or not a date. */
+const metadataTime = (value: string | undefined) => {
+  const time = value ? Date.parse(value) : Number.NaN
+  return Number.isNaN(time) ? null : new Date(time).toISOString()
+}
+
 /**
  * Maps a Stripe subscription (always freshly retrieved, never the event
  * payload) to its row in public.subscriptions. Pure, so the webhook logic is
@@ -46,6 +52,8 @@ export function toSubscriptionRow(
     created_at: iso(subscription.created)!,
     canceled_at: iso(subscription.canceled_at),
     ended_at: iso(subscription.ended_at),
+    // Set by checkout when the member ticked the waiver; needed to judge a withdrawal.
+    waiver_consent_at: metadataTime(subscription.metadata?.waiver_consent_at),
     updated_at: now.toISOString(),
   }
 }

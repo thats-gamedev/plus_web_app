@@ -16,7 +16,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/admin/members/[
     db.from("member_codes").select("kind, code, percent, status, created_at, revoked_at").eq("user_id", id),
     db.from("email_log").select("kind, ref_id, sent_at").eq("user_id", id),
     db.from("spotlight_submissions").select("month, title, description, media_paths, video_url, instagram_handle, status, featured_post_url, created_at").eq("user_id", id),
-    db.from("cancellation_requests").select("created_at, name, email, reference, status, verified_at, executed_at").eq("user_id", id),
+    db.from("cancellation_requests").select("created_at, kind, name, email, reference, status, verified_at, executed_at").eq("user_id", id),
   ])
   if (!profile.data) return new Response("Not found", { status: 404 })
 

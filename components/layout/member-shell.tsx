@@ -7,6 +7,7 @@ import { EllipsisIcon, SearchIcon } from "lucide-react"
 import { cn } from "cn"
 import { Logo } from "@/components/layout/logo"
 import {
+  contractLinks,
   isActive,
   memberMoreRoutes,
   memberNav,
@@ -55,6 +56,14 @@ export function MemberSidebar({ userSlot }: { userSlot: React.ReactNode }) {
         </Suspense>
       </nav>
       <div className="mx-2 border-t border-border px-2 py-4">{userSlot}</div>
+      {/* The statutory links must be reachable from every page (§ 312k, § 356a BGB). */}
+      <nav aria-label="Contract" className="flex flex-col gap-1 px-4 pb-4 text-xs text-muted-foreground">
+        {contractLinks.map((l) => (
+          <Link key={l.href} href={l.href} className="hover:text-foreground">
+            {l.label}
+          </Link>
+        ))}
+      </nav>
     </aside>
   )
 }

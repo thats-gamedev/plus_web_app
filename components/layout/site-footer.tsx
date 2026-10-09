@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { InstagramIcon } from "@/components/layout/icons"
-import { cancelLink, instagramUrl, legalLinks } from "@/components/layout/nav-config"
+import { contractLinks, instagramUrl, legalLinks } from "@/components/layout/nav-config"
 
 export function SiteFooter() {
   return (
@@ -12,9 +12,11 @@ export function SiteFooter() {
               {l.label}
             </Link>
           ))}
-          <Link href={cancelLink.href} className="font-medium text-foreground hover:text-brand">
-            {cancelLink.label}
-          </Link>
+          {contractLinks.map((l) => (
+            <Link key={l.href} href={l.href} className="font-medium text-foreground hover:text-brand">
+              {l.label}
+            </Link>
+          ))}
         </nav>
         <a
           href={instagramUrl}

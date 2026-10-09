@@ -2,16 +2,30 @@ import "server-only"
 import { cancelAtPeriodEnd } from "@/lib/billing/cancel"
 import { LIVE_STATUSES } from "@/lib/billing/status"
 import { sendEmailSafely } from "@/lib/email"
-import { cancellationReceiptEmail, cancellationVerifyEmail } from "@/lib/email/templates"
+import { cancellationReceiptEmail, cancellationVerifyEmail, withdrawalReceiptEmail } from "@/lib/email/templates"
 import { getSiteUrl } from "@/lib/site-url"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { TablesUpdate } from "@/lib/supabase/database.types"
 import type { CancelRequestDeps, ConfirmDeps, StoredRequest } from "./flow"
+import type { WithdrawalDeps } from "./withdrawal"
 
-// The real dependencies of lib/cancel/flow.ts. cancellation_requests has no
-// policies for visitors, so everything here uses the service role.
+// The real dependencies of lib/cancel/flow.ts and lib/cancel/withdrawal.ts.
+// cancellation_requests (both kinds) has no policies for visitors, so
+// everything here uses the service role.
 
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString()
+
+/** Requests of any kind, so cancellations and withdrawals share one limit. */
+function recentRequests(db: ReturnType<typeof createAdminClient>) {
+  return async (email: string) => {
+    const [same, all] = await Promise.all([
+      db.from("cancellation_requests").select("id").eq("email", email).gt("created_at", ago(3_600_000)),
+      db.from("cancellation_requests").select("id").gt("created_at", ago(60_000)),
+    ])
+    if (same.error || all.error) throw new Error("Couldn't check the rate limit.")
+    return { sameEmailLastHour: same.data.length, allLastMinute: all.data.length }
+  }
+}
 
 export function createCancelRequestDeps(): CancelRequestDeps {
   const db = createAdminClient()
@@ -23,14 +37,7 @@ export function createCancelRequestDeps(): CancelRequestDeps {
   return {
     now: () => new Date(),
 
-    async recentRequests(email) {
-      const [same, all] = await Promise.all([
-        db.from("cancellation_requests").select("id").eq("email", email).gt("created_at", ago(3_600_000)),
-        db.from("cancellation_requests").select("id").gt("created_at", ago(60_000)),
-      ])
-      if (same.error || all.error) throw new Error("Couldn't check the rate limit.")
-      return { sameEmailLastHour: same.data.length, allLastMinute: all.data.length }
-    },
+    recentRequests: recentRequests(db),
 
     async insertRequest(row) {
       const { data, error } = await db.from("cancellation_requests").insert(row).select("id, created_at").single()
@@ -83,6 +90,41 @@ export function createCancelRequestDeps(): CancelRequestDeps {
   }
 }
 
+export function createWithdrawalDeps(): WithdrawalDeps {
+  const db = createAdminClient()
+  return {
+    recentRequests: recentRequests(db),
+
+    async findAccount(email) {
+      const { data } = await db.from("profiles").select("id").eq("email", email).maybeSingle()
+      return data ? { userId: data.id } : null
+    },
+
+    async insertWithdrawal({ name, email, reference, userId, verified }) {
+      const { data, error } = await db
+        .from("cancellation_requests")
+        .insert({ kind: "withdrawal", name, email, reference, user_id: userId, verified_at: verified ? new Date().toISOString() : null })
+        .select("id, created_at")
+        .single()
+      if (error) throw new Error(`Couldn't store the withdrawal: ${error.message}`)
+      return { id: data.id, createdAt: data.created_at }
+    },
+
+    async sendReceipt(row) {
+      const result = await sendEmailSafely({
+        to: row.email,
+        userId: null,
+        kind: "withdrawal_receipt",
+        refId: row.id,
+        content: withdrawalReceiptEmail({ requestId: row.id, name: row.name, email: row.email, reference: row.reference, receivedAt: row.createdAt }),
+      })
+      if (result === "sent") {
+        await db.from("cancellation_requests").update({ receipt_sent_at: new Date().toISOString() }).eq("id", row.id)
+      }
+    },
+  }
+}
+
 export function createConfirmDeps(): ConfirmDeps {
   const db = createAdminClient()
   return {
@@ -93,6 +135,7 @@ export function createConfirmDeps(): ConfirmDeps {
         .from("cancellation_requests")
         .select("id, user_id, status, token_expires_at, executed_at, created_at")
         .eq("token_hash", hash)
+        .eq("kind", "cancellation")
         .maybeSingle()
       if (!data) return null
       return {

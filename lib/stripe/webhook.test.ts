@@ -44,8 +44,16 @@ describe("toSubscriptionRow", () => {
       created_at: "2026-09-21T14:13:20.000Z",
       canceled_at: null,
       ended_at: null,
+      waiver_consent_at: null,
       updated_at: "2026-10-06T12:00:00.000Z",
     })
+  })
+
+  it("copies the waiver time from the metadata, ignoring junk", () => {
+    const row = (metadata: Record<string, string>) =>
+      toSubscriptionRow(subscription({ metadata }), { userId: "user-1", planForPrice }).waiver_consent_at
+    expect(row({ waiver_consent_at: "2026-10-01T08:00:00.000Z" })).toBe("2026-10-01T08:00:00.000Z")
+    expect(row({ waiver_consent_at: "yes" })).toBeNull()
   })
 
   it.each([

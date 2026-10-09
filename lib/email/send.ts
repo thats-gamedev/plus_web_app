@@ -14,6 +14,9 @@ export type EmailKind =
   | "cancellation_no_match"
   | "drop_announcement"
   | "spotlight_featured"
+  | "withdrawal_receipt"
+  | "withdrawal_confirmed"
+  | "withdrawal_declined"
 
 export type EmailLogStore = {
   /** Inserts the log row; "duplicate" if this email was already sent. */

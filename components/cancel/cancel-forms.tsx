@@ -3,6 +3,7 @@
 import { CheckIcon, MailIcon } from "lucide-react"
 import { useActionState } from "react"
 import { type CancelState, type ConfirmState, confirmCancellationAction, submitCancellation } from "@/app/cancel/actions"
+import { type WithdrawState, submitWithdrawal } from "@/app/withdraw/actions"
 import { FormField } from "@/components/auth/form-field"
 import { Banner } from "@/components/ui/banner"
 import { Button } from "@/components/ui/button"
@@ -164,6 +165,71 @@ export function ConfirmCancelForm({ token }: { token: string }) {
       {message && <Banner variant="danger">{message}</Banner>}
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? "Cancelling…" : "Confirm cancellation"}
+      </Button>
+    </form>
+  )
+}
+
+/** /withdraw (withdrawal function): the confirmation step with its "Confirm withdrawal" button. */
+export function WithdrawForm() {
+  const [state, action, pending] = useActionState<WithdrawState, FormData>(submitWithdrawal, { status: "idle" })
+  const errors = state.fieldErrors ?? {}
+
+  if (state.status === "success" && state.result) {
+    const r = state.result
+    return (
+      <CancelOutcome
+        icon="mail"
+        title="We received your withdrawal."
+        requestId={r.requestId}
+        receivedAt={r.receivedAt}
+        note="Didn't get an email within a few minutes? Check your spam folder, or reply to the receipt."
+      >
+        <p>
+          We sent a receipt with the content, date and time of your withdrawal to <strong>{r.email}</strong>. We&apos;ll
+          check it and reply within 2 business days. If it&apos;s valid, we end the membership and refund your payment
+          within 14 days.
+        </p>
+      </CancelOutcome>
+    )
+  }
+
+  return (
+    <form action={action} className="space-y-5" noValidate>
+      <FormField
+        name="name"
+        label="Name"
+        placeholder="First and last name"
+        autoComplete="name"
+        maxLength={120}
+        required
+        defaultValue={state.values?.name}
+        error={errors.name}
+      />
+      <FormField
+        name="email"
+        type="email"
+        label="Email"
+        placeholder="you@studio.com"
+        autoComplete="email"
+        required
+        hint="We send the receipt here. Use the email of your account if you can."
+        defaultValue={state.values?.email}
+        error={errors.email}
+      />
+      <FormField
+        name="reference"
+        label="Contract (optional)"
+        placeholder="e.g. invoice number"
+        className="[&_input]:font-mono"
+        maxLength={120}
+        hint="Leave empty for your That's Game Dev Plus membership."
+        defaultValue={state.values?.reference}
+        error={errors.reference}
+      />
+      {state.message && <Banner variant="danger">{state.message}</Banner>}
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
+        {pending ? "Sending…" : "Confirm withdrawal"}
       </Button>
     </form>
   )

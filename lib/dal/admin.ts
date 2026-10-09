@@ -3,7 +3,7 @@ import { cache } from "react"
 import type { MemberRow } from "@/lib/admin/members"
 import type { SubscriptionFacts } from "@/lib/admin/metrics"
 import { requireAdmin } from "@/lib/dal/auth"
-import type { Json } from "@/lib/supabase/database.types"
+import type { Enums, Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 
 // Data Access Layer for the admin area. Every function checks the admin role
@@ -184,7 +184,7 @@ export type CancellationRequest = {
   createdAt: string
   name: string
   email: string
-  status: "received" | "verified" | "executed" | "no_match"
+  status: Enums<"cancellation_status">
   userId: string | null
 }
 
@@ -195,6 +195,7 @@ export const getOpenCancellationRequests = cache(async (): Promise<CancellationR
   const { data, error } = await supabase
     .from("cancellation_requests")
     .select("id, created_at, name, email, status, user_id")
+    .eq("kind", "cancellation")
     .in("status", ["received", "verified"])
     .order("created_at", { ascending: true })
   if (error) throw new Error(`cancellation_requests read: ${error.message}`)
@@ -206,6 +207,54 @@ export const getOpenCancellationRequests = cache(async (): Promise<CancellationR
     status: row.status,
     userId: row.user_id,
   }))
+})
+
+export type WithdrawalRequest = CancellationRequest & {
+  reference: string | null
+  /** Sent while logged in to the linked account. */
+  verified: boolean
+  /** The member's latest subscription, to judge the 14 days and the waiver. */
+  subscription: { startedAt: string; waiverConsentAt: string | null; status: string; endedAt: string | null } | null
+}
+
+/** Withdrawal requests that still need the admin. */
+export const getOpenWithdrawalRequests = cache(async (): Promise<WithdrawalRequest[]> => {
+  await requireAdmin()
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("cancellation_requests")
+    .select("id, created_at, name, email, status, user_id, reference, verified_at")
+    .eq("kind", "withdrawal")
+    .in("status", ["received", "verified"])
+    .order("created_at", { ascending: true })
+  if (error) throw new Error(`withdrawal requests read: ${error.message}`)
+
+  const userIds = [...new Set(data.map((r) => r.user_id).filter((id): id is string => Boolean(id)))]
+  const { data: subs, error: subsError } = userIds.length
+    ? await supabase
+        .from("subscriptions")
+        .select("user_id, created_at, waiver_consent_at, status, ended_at")
+        .in("user_id", userIds)
+        .order("created_at", { ascending: false })
+    : { data: [], error: null }
+  if (subsError) throw new Error(`subscriptions read: ${subsError.message}`)
+
+  return data.map((row) => {
+    const sub = subs.find((s) => s.user_id === row.user_id)
+    return {
+      id: row.id,
+      createdAt: row.created_at,
+      name: row.name,
+      email: row.email,
+      status: row.status,
+      userId: row.user_id,
+      reference: row.reference,
+      verified: Boolean(row.verified_at),
+      subscription: sub
+        ? { startedAt: sub.created_at, waiverConsentAt: sub.waiver_consent_at, status: sub.status, endedAt: sub.ended_at }
+        : null,
+    }
+  })
 })
 
 export type WebhookEvent = {

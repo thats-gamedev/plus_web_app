@@ -51,8 +51,14 @@ export const legalLinks = [
   { href: "/withdrawal", label: "Withdrawal policy" },
 ]
 
-/** § 312k BGB: must be reachable from every page. */
-export const cancelLink = { href: "/cancel", label: "Verträge hier kündigen" }
+/** § 312k BGB cancellation button: must be reachable from every page. */
+export const cancelLink = { href: "/cancel", label: "Cancel contracts here" }
+
+/** § 356a BGB / Art. 11a CRD withdrawal function: just as reachable. */
+export const withdrawLink = { href: "/withdraw", label: "Withdraw from contract here" }
+
+/** Both statutory links, in the footer and the member area. */
+export const contractLinks = [cancelLink, withdrawLink]
 
 export const instagramUrl = "https://instagram.com/thats_gamedev"
 

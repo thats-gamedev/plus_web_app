@@ -1,12 +1,26 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { RefreshCwIcon, UserCheckIcon, UserXIcon } from "lucide-react"
+import { RefreshCwIcon, Undo2Icon, UserCheckIcon, UserXIcon } from "lucide-react"
 import { cn } from "cn"
-import { ReplayButton, ResolveRequestButton } from "@/components/admin/inbox-actions"
+import {
+  DeclineWithdrawalButton,
+  RefundWithdrawalButton,
+  ReplayButton,
+  ResolveRequestButton,
+  WithdrawalNoMatchButton,
+} from "@/components/admin/inbox-actions"
 import { PageHeader } from "@/components/layout/page-header"
 import { Badge } from "@/components/ui/badge"
 import { addBusinessDays, describeEventType } from "@/lib/admin/inbox"
-import { type WebhookEvent, getFailedWebhookEvents, getOpenCancellationRequests, getWebhookLog } from "@/lib/dal/admin"
+import { withdrawalAssessment } from "@/lib/cancel/withdrawal"
+import {
+  type WebhookEvent,
+  type WithdrawalRequest,
+  getFailedWebhookEvents,
+  getOpenCancellationRequests,
+  getOpenWithdrawalRequests,
+  getWebhookLog,
+} from "@/lib/dal/admin"
 import { TIME_ZONE } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Inbox" }
@@ -21,8 +35,12 @@ const day = (date: Date) =>
 export default async function InboxPage({ searchParams }: PageProps<"/admin/inbox">) {
   const { tab } = await searchParams
   const showLog = tab === "log"
-  const [requests, failed] = await Promise.all([getOpenCancellationRequests(), getFailedWebhookEvents()])
-  const open = requests.length + failed.length
+  const [requests, withdrawals, failed] = await Promise.all([
+    getOpenCancellationRequests(),
+    getOpenWithdrawalRequests(),
+    getFailedWebhookEvents(),
+  ])
+  const open = requests.length + withdrawals.length + failed.length
 
   return (
     <>
@@ -51,20 +69,24 @@ export default async function InboxPage({ searchParams }: PageProps<"/admin/inbo
         ))}
       </nav>
 
-      {showLog ? <WebhookLog /> : <OpenItems requests={requests} failed={failed} />}
+      {showLog ? <WebhookLog /> : <OpenItems requests={requests} withdrawals={withdrawals} failed={failed} />}
     </>
   )
 }
 
 function OpenItems({
   requests,
+  withdrawals,
   failed,
 }: {
   requests: Awaited<ReturnType<typeof getOpenCancellationRequests>>
+  withdrawals: WithdrawalRequest[]
   failed: WebhookEvent[]
 }) {
   return (
     <div className="max-w-4xl space-y-10">
+      {withdrawals.length > 0 && <Withdrawals withdrawals={withdrawals} />}
+
       <section aria-labelledby="cancellations">
         <h2 id="cancellations" className="text-2xl font-bold">
           Cancellation requests
@@ -155,6 +177,78 @@ function OpenItems({
         )}
       </section>
     </div>
+  )
+}
+
+const ASSESSMENT = {
+  within_period: { text: "Within 14 days, no waiver on record: accept it and refund.", tone: "text-danger" },
+  waived: { text: "Waiver given at checkout, so the right has probably expired. Decline, unless the waiver looks wrong.", tone: "" },
+  too_late: { text: "More than 14 days after the start. Decline.", tone: "" },
+  no_subscription: { text: "This account has no subscription.", tone: "" },
+} as const
+
+function Withdrawals({ withdrawals }: { withdrawals: WithdrawalRequest[] }) {
+  return (
+    <section aria-labelledby="withdrawals">
+      <h2 id="withdrawals" className="text-2xl font-bold">
+        Withdrawals
+      </h2>
+      <p className="mb-4 text-muted-foreground">
+        Sent through “Withdraw from contract here”. Check each one and reply within 2 business days; an accepted
+        withdrawal must be refunded within 14 days.
+      </p>
+      <ul className="space-y-3">
+        {withdrawals.map((w) => {
+          const assessment = withdrawalAssessment({
+            startedAt: w.subscription?.startedAt ?? null,
+            waiverConsentAt: w.subscription?.waiverConsentAt ?? null,
+            receivedAt: w.createdAt,
+          })
+          return (
+            <li key={w.id} className="flex flex-wrap items-center gap-4 rounded-card border border-border bg-card p-5">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-warning-soft">
+                <Undo2Icon aria-hidden className="size-5" />
+              </span>
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <p>
+                  <span className="font-semibold">{w.name}</span> <span className="text-muted-foreground">{w.email}</span>
+                  {w.reference && <span className="font-mono text-xs text-muted-foreground"> · {w.reference}</span>}
+                </p>
+                <p className="text-sm">
+                  {!w.userId
+                    ? "No account uses this email. Reply so they can send the email they signed up with."
+                    : w.verified
+                      ? "Sent while logged in to the account."
+                      : "Sent logged out; the email matches an account. If in doubt, confirm with the member first."}
+                </p>
+                {w.userId && <p className={cn("text-sm", ASSESSMENT[assessment].tone)}>{ASSESSMENT[assessment].text}</p>}
+                <p className="font-mono text-xs text-muted-foreground">
+                  Received {stamp(w.createdAt)} · due {day(addBusinessDays(w.createdAt, 2))}
+                  {w.subscription && ` · member since ${stamp(w.subscription.startedAt)}`}
+                  {w.subscription?.waiverConsentAt && ` · waiver ${stamp(w.subscription.waiverConsentAt)}`}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {!w.userId ? (
+                  <WithdrawalNoMatchButton requestId={w.id} />
+                ) : (
+                  <>
+                    <Link href={`/admin/members?member=${w.userId}`} className="self-center text-sm font-semibold text-brand hover:underline">
+                      Open member
+                    </Link>
+                    {(assessment === "waived" || assessment === "too_late") && (
+                      <DeclineWithdrawalButton requestId={w.id} label="Decline" />
+                    )}
+                    {assessment !== "no_subscription" && <RefundWithdrawalButton requestId={w.id} name={w.name} />}
+                    {assessment === "no_subscription" && <WithdrawalNoMatchButton requestId={w.id} />}
+                  </>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 

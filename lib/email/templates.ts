@@ -33,6 +33,12 @@ function layout({ preheader, body, footer }: { preheader: string; body: string; 
 </table></td></tr></table></body></html>`
 }
 
+/** Label/value rows, as in the receipts. */
+const detailsTable = (rows: [string, string][]) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;font-size:14px;line-height:22px">${rows
+    .map(([k, v]) => `<tr><td style="padding:2px 16px 2px 0;color:${C.muted}">${k}</td><td style="color:${C.ink}">${escapeHtml(v)}</td></tr>`)
+    .join("")}</table>`
+
 const heading = (text: string) => `<h1 style="margin:0 0 16px;font-size:24px;line-height:30px;color:${C.ink}">${escapeHtml(text)}</h1>`
 
 /** "12 October 2026" in German time. */
@@ -69,7 +75,7 @@ export function welcomeEmail({ name, siteUrl, dropTitle }: { name: string; siteU
         button(`${siteUrl}/app`, "Open your dashboard") +
         p(`Your member codes for the merch shop and promotions are on the ${link(`${siteUrl}/app/perks`, "Perks page")}.`) +
         small(
-          `You can cancel any time under ${link(`${siteUrl}/app/account`, "Account")} or with the link “Verträge hier kündigen” at the bottom of every page. You keep access until the end of the period you paid for.`
+          `You can cancel any time under ${link(`${siteUrl}/app/account`, "Account")} or with the link “Cancel contracts here” at the bottom of every page. You keep access until the end of the period you paid for.`
         ),
     }),
     text: `${hey} your membership is active.\n\n${dropTitle ? `This month's drop is live: ${dropTitle}.\n\n` : ""}Open your dashboard: ${siteUrl}/app\nYour member codes: ${siteUrl}/app/perks\n\nCancel any time under Account (${siteUrl}/app/account) or at ${siteUrl}/cancel. You keep access until the end of the period you paid for.`,
@@ -113,9 +119,7 @@ export function cancellationReceiptEmail(r: CancellationReceiptInput): EmailCont
     ["Received", when],
     ["Request", requestNumber(r.requestId)],
   ]
-  const table = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;font-size:14px;line-height:22px">${rows
-    .map(([k, v]) => `<tr><td style="padding:2px 16px 2px 0;color:${C.muted}">${k}</td><td style="color:${C.ink}">${escapeHtml(v)}</td></tr>`)
-    .join("")}</table>`
+  const table = detailsTable(rows)
   return {
     subject: "We received your cancellation",
     html: layout({
@@ -146,18 +150,100 @@ export function cancellationVerifyEmail({ confirmUrl, expiresAt }: { confirmUrl:
   }
 }
 
-export function cancellationNoMatchEmail({ email, siteUrl }: { email: string; siteUrl: string }): EmailContent {
+export function cancellationNoMatchEmail({
+  email,
+  siteUrl,
+  kind = "cancellation",
+}: {
+  email: string
+  siteUrl: string
+  kind?: "cancellation" | "withdrawal"
+}): EmailContent {
+  const path = kind === "withdrawal" ? "/withdraw" : "/cancel"
   return {
-    subject: "About your cancellation request",
+    subject: `About your ${kind} request`,
     html: layout({
       preheader: "We couldn't find a membership for this address.",
       body:
         heading("We couldn't find your membership") +
-        p(`We received your cancellation request, but no membership uses <strong>${escapeHtml(email)}</strong>.`) +
+        p(`We received your ${kind} request, but no membership uses <strong>${escapeHtml(email)}</strong>.`) +
         p("Please reply with the email address you signed up with, or send the request again from that address:") +
-        button(`${siteUrl}/cancel`, "Cancellation page"),
+        button(`${siteUrl}${path}`, kind === "withdrawal" ? "Withdrawal page" : "Cancellation page"),
     }),
-    text: `We received your cancellation request, but no membership uses ${email}.\nPlease reply with the email address you signed up with, or send the request again from that address: ${siteUrl}/cancel`,
+    text: `We received your ${kind} request, but no membership uses ${email}.\nPlease reply with the email address you signed up with, or send the request again from that address: ${siteUrl}${path}`,
+  }
+}
+
+/** The statutory receipt for a withdrawal (Art. 11a CRD): content, date and time. Sent immediately. */
+export function withdrawalReceiptEmail(r: CancellationReceiptInput): EmailContent {
+  const when = stamp(r.receivedAt)
+  const rows: [string, string][] = [
+    ["Name", r.name],
+    ["Email", r.email],
+    ["Contract", r.reference || "That's Game Dev Plus membership"],
+    ["Declaration", "I withdraw from the contract"],
+    ["Received", when],
+    ["Request", requestNumber(r.requestId)],
+  ]
+  return {
+    subject: "We received your withdrawal",
+    html: layout({
+      preheader: `Received ${when}.`,
+      body:
+        heading("We received your withdrawal") +
+        p("This is your receipt. We received the following withdrawal:") +
+        detailsTable(rows) +
+        p("We'll check it and reply within 2 business days. If the withdrawal is valid, we end the membership and refund your payment within 14 days. If you didn't send this, reply to this email."),
+    }),
+    text: `We received your withdrawal.\n\n${rows.map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nWe'll check it and reply within 2 business days. If the withdrawal is valid, we end the membership and refund your payment within 14 days. If you didn't send this, reply to this email.`,
+  }
+}
+
+export function withdrawalConfirmedEmail({ name, refund }: { name: string; refund: string | null }): EmailContent {
+  const hey = name ? `Hi ${name},` : "Hi,"
+  const money = refund
+    ? `We refunded <strong>${escapeHtml(refund)}</strong> to your original payment method. Depending on your bank it shows up within 5–10 days.`
+    : "There was no payment to refund."
+  return {
+    subject: "Your withdrawal is confirmed",
+    html: layout({
+      preheader: "Your membership has ended.",
+      body: heading("Your withdrawal is confirmed") + p(`${escapeHtml(hey)} we accepted your withdrawal and ended your membership.`) + p(money),
+    }),
+    text: `${hey} we accepted your withdrawal and ended your membership.\n${money.replace(/<[^>]+>/g, "")}`,
+  }
+}
+
+export function withdrawalDeclinedEmail({
+  name,
+  reason,
+  waiverAt,
+  startedAt,
+  siteUrl,
+}: {
+  name: string
+  reason: "waived" | "too_late"
+  waiverAt: string | null
+  startedAt: string | null
+  siteUrl: string
+}): EmailContent {
+  const hey = name ? `Hi ${name},` : "Hi,"
+  const why =
+    reason === "waived" && waiverAt
+      ? `When you joined on ${stamp(waiverAt)}, you asked for access to start right away and confirmed that the 14-day withdrawal right ends once access starts (§ 356 (5) BGB). Access started straight after payment, so the right to withdraw has ended.`
+      : `The 14-day withdrawal period ${startedAt ? `started on ${emailDate(startedAt)} and ` : ""}had already ended when we received your request.`
+  return {
+    subject: "About your withdrawal request",
+    html: layout({
+      preheader: "Your membership continues; you can cancel it any time.",
+      body:
+        heading("We can't accept the withdrawal") +
+        p(`${escapeHtml(hey)} thanks for your request. ${escapeHtml(why)}`) +
+        p("Your membership continues. You can still cancel it any time; it then ends at the end of the period you paid for:") +
+        button(`${siteUrl}/cancel`, "Cancel membership") +
+        small("If you think we got this wrong, reply to this email."),
+    }),
+    text: `${hey} thanks for your request. ${why}\n\nYour membership continues. You can still cancel it any time; it then ends at the end of the period you paid for: ${siteUrl}/cancel\n\nIf you think we got this wrong, reply to this email.`,
   }
 }
 

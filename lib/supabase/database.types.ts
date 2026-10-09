@@ -20,6 +20,7 @@ export type Database = {
           email: string
           executed_at: string | null
           id: string
+          kind: Database["public"]["Enums"]["contract_request_kind"]
           name: string
           receipt_sent_at: string | null
           reference: string | null
@@ -34,6 +35,7 @@ export type Database = {
           email: string
           executed_at?: string | null
           id?: string
+          kind?: Database["public"]["Enums"]["contract_request_kind"]
           name: string
           receipt_sent_at?: string | null
           reference?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           email?: string
           executed_at?: string | null
           id?: string
+          kind?: Database["public"]["Enums"]["contract_request_kind"]
           name?: string
           receipt_sent_at?: string | null
           reference?: string | null
@@ -392,6 +395,7 @@ export type Database = {
           stripe_subscription_id: string
           updated_at: string
           user_id: string | null
+          waiver_consent_at: string | null
         }
         Insert: {
           cancel_at_period_end?: boolean
@@ -406,6 +410,7 @@ export type Database = {
           stripe_subscription_id: string
           updated_at?: string
           user_id?: string | null
+          waiver_consent_at?: string | null
         }
         Update: {
           cancel_at_period_end?: boolean
@@ -420,6 +425,7 @@ export type Database = {
           stripe_subscription_id?: string
           updated_at?: string
           user_id?: string | null
+          waiver_consent_at?: string | null
         }
         Relationships: [
           {
@@ -512,8 +518,9 @@ export type Database = {
       is_plus: { Args: { uid: string }; Returns: boolean }
     }
     Enums: {
-      cancellation_status: "received" | "verified" | "executed" | "no_match"
+      cancellation_status: "received" | "verified" | "executed" | "no_match" | "declined"
       code_kind: "merch" | "promotion"
+      contract_request_kind: "cancellation" | "withdrawal"
       code_status: "active" | "pending_sync" | "revoked"
       email_kind:
         | "welcome"
@@ -523,6 +530,9 @@ export type Database = {
         | "cancellation_no_match"
         | "drop_announcement"
         | "spotlight_featured"
+        | "withdrawal_receipt"
+        | "withdrawal_confirmed"
+        | "withdrawal_declined"
       list_kind: "tools" | "assets" | "creators" | "prompts"
       resource_category: "gamedev" | "3d" | "business" | "ai"
       resource_status: "draft" | "published"
@@ -666,8 +676,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      cancellation_status: ["received", "verified", "executed", "no_match"],
+      cancellation_status: ["received", "verified", "executed", "no_match", "declined"],
       code_kind: ["merch", "promotion"],
+      contract_request_kind: ["cancellation", "withdrawal"],
       code_status: ["active", "pending_sync", "revoked"],
       email_kind: [
         "welcome",
@@ -677,6 +688,9 @@ export const Constants = {
         "cancellation_no_match",
         "drop_announcement",
         "spotlight_featured",
+        "withdrawal_receipt",
+        "withdrawal_confirmed",
+        "withdrawal_declined",
       ],
       list_kind: ["tools", "assets", "creators", "prompts"],
       resource_category: ["gamedev", "3d", "business", "ai"],
