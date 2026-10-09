@@ -41,6 +41,7 @@ import {
   promptToolLabels,
 } from "@/lib/lists/display"
 import type { ListDocument } from "@/lib/lists/schema"
+import { CsvDialog } from "./csv-dialog"
 import { ops, useEditor, useEditorStore } from "./store"
 
 type Section = ListDocument["sections"][number]
@@ -295,6 +296,7 @@ function SectionCard({
           <PlusIcon aria-hidden className="size-3.5" />
           Item
         </button>
+        <CsvDialog sectionId={section.id} />
       </div>
     </section>
   )
