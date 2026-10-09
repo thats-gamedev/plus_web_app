@@ -5,14 +5,14 @@ import { ChevronRightIcon, LogOutIcon, MailIcon, StarIcon, UserIcon } from "luci
 import { PageHeader } from "@/components/layout/page-header"
 import { LogoutButton, UserEmail } from "@/components/layout/member-user"
 import { legalLinks } from "@/components/layout/nav-config"
+import { contactMailto } from "@/lib/site"
 
 export const metadata: Metadata = { title: "More" }
 
 const items = [
   { href: "/app/spotlight", icon: StarIcon, title: "Spotlight", sub: "Submit your project this month" },
   { href: "/app/account", icon: UserIcon, title: "Account", sub: "Plan, billing, email settings" },
-  // TODO: replace with the real contact address from the Datenschutzerklärung.
-  { href: "mailto:hello@example.com", icon: MailIcon, title: "Contact us", sub: "Questions, data export or deletion" },
+  { href: contactMailto(), icon: MailIcon, title: "Contact us", sub: "Questions, data export or deletion" },
 ]
 
 // Mobile-only menu behind the "More" tab (members mobile 16).

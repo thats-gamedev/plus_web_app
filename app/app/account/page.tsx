@@ -1,53 +1,68 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
-import { ComingInPhase, PageHeader } from "@/components/layout/page-header"
-import { Button } from "@/components/ui/button"
+import { MembershipCard, PastDueBanner } from "@/components/account/membership-card"
+import { SettingsList } from "@/components/account/settings-list"
+import { PageHeader } from "@/components/layout/page-header"
+import { LogoutButton } from "@/components/layout/member-user"
 import { Skeleton } from "@/components/ui/skeleton"
-import { openBillingPortal } from "@/lib/billing/actions"
-import { isLiveStatus } from "@/lib/billing/status"
+import { membershipState } from "@/lib/billing/membership"
 import { getMembership, getProfile, requireUser } from "@/lib/dal/auth"
-import { PLANS } from "@/lib/plans"
+import { getActiveCodeCount } from "@/lib/dal/perks"
+import { contactMailto } from "@/lib/site"
 
 export const metadata: Metadata = { title: "Account" }
 
+// Open to every signed-in user, not only members: people whose membership
+// ended still need billing history, settings and "See plans".
 export default function AccountPage() {
   return (
-    <>
+    <div className="max-w-3xl">
       <PageHeader title="Account" />
-      <Suspense fallback={<Skeleton className="mb-8 h-32 w-full rounded-card" />}>
-        <Billing />
+      <Suspense fallback={<AccountSkeleton />}>
+        <Account />
       </Suspense>
-      <ComingInPhase phase={5}>
-        Membership states, email and password settings, drop emails and data requests.
-      </ComingInPhase>
+    </div>
+  )
+}
+
+async function Account() {
+  const user = await requireUser()
+  const [profile, membership, activeCodes] = await Promise.all([
+    getProfile(),
+    getMembership(),
+    getActiveCodeCount(),
+  ])
+  const hasCustomer = Boolean(profile?.stripeCustomerId)
+
+  return (
+    <>
+      {membershipState(membership) === "past_due" && <PastDueBanner canUpdate={hasCustomer} />}
+      <MembershipCard membership={membership} hasCustomer={hasCustomer} />
+
+      <div className="mt-5">
+        <SettingsList
+          displayName={profile?.displayName ?? ""}
+          email={user.email}
+          activeCodes={activeCodes}
+          dropEmails={profile?.dropEmails ?? true}
+        />
+      </div>
+
+      <div className="mt-5 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+        <a href={contactMailto("Data export or deletion request")} className="text-brand hover:underline">
+          Request data export or deletion
+        </a>
+        <LogoutButton className="font-semibold hover:underline">Log out</LogoutButton>
+      </div>
     </>
   )
 }
 
-const dateFormat = new Intl.DateTimeFormat("en", { day: "numeric", month: "long", year: "numeric" })
-
-// Minimal billing block so Phase 4 can be tested end to end; Phase 5 builds
-// the full account page (MW11–13).
-async function Billing() {
-  await requireUser()
-  const [profile, membership] = await Promise.all([getProfile(), getMembership()])
-  const live = membership && isLiveStatus(membership.status)
-  const periodEnd = membership?.currentPeriodEnd ? dateFormat.format(new Date(membership.currentPeriodEnd)) : null
-
+function AccountSkeleton() {
   return (
-    <section className="mb-8 rounded-card border border-border bg-card p-5 md:p-6">
-      <h2 className="font-semibold">Membership</h2>
-      <p className="mt-1 text-muted-foreground">
-        {live ? PLANS[membership.plan].name : "No active membership"}
-        {live && periodEnd && (membership.cancelAtPeriodEnd ? ` · access ends ${periodEnd}` : ` · renews ${periodEnd}`)}
-      </p>
-      {profile?.stripeCustomerId && (
-        <form action={openBillingPortal} className="mt-4">
-          <Button type="submit" variant="outline">
-            Manage billing
-          </Button>
-        </form>
-      )}
-    </section>
+    <div aria-hidden className="space-y-5">
+      <Skeleton className="h-44 w-full rounded-card" />
+      <Skeleton className="h-96 w-full rounded-card" />
+    </div>
   )
 }

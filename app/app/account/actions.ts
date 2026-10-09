@@ -12,7 +12,7 @@ import { requireUser } from "@/lib/dal/auth"
 import { authCallbackUrl } from "@/lib/site-url"
 import { createClient } from "@/lib/supabase/server"
 
-// Account settings Server Actions. The /app/account UI arrives in Phase 5.
+// Account settings Server Actions for /app/account.
 
 const UNEXPECTED: FormState = {
   status: "error",
@@ -40,6 +40,19 @@ export async function changeDisplayName(
 
   refresh()
   return { status: "success", message: "Display name saved." }
+}
+
+/** Drop-announcement emails on or off. Returns the saved value. */
+export async function setDropEmails(enabled: boolean): Promise<{ ok: boolean; enabled: boolean }> {
+  const user = await requireUser()
+  if (typeof enabled !== "boolean") return { ok: false, enabled: false }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from("profiles").update({ drop_emails: enabled }).eq("id", user.id)
+  if (error) return { ok: false, enabled: !enabled }
+
+  refresh()
+  return { ok: true, enabled }
 }
 
 export async function changeEmail(_prev: FormState, formData: FormData): Promise<FormState> {
