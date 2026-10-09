@@ -12,13 +12,13 @@ Sources (details live there, every open task lives here):
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-09 (Phases 1–10 built, plus the withdrawal function; Phase 6 waits on Fourthwall credentials, emails wait on Resend; next up: Phase 11)_
+_Last updated: 2026-10-09 (Phases 1–11 built; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check; next up: Phase 12, i.e. section 1)_
 
 **Contents**
 1. Before deployment and launch (the checklist)
 2. Decisions, legal and paperwork (you)
 3. Accounts and setup (you)
-4. Still to build (Phases 11–12)
+4. Still to build (Phase 11 leftovers, Phase 12)
 5. Testing and verification
 6. Launch QA checklist (from the spec)
 7. Dev data to clean up or replace
@@ -44,7 +44,7 @@ Everything that has to be true, in order. Details for each step are in the secti
 
 ### B. Before going public
 
-- [ ] **Phase 11 built** (landing page, `/lists/[slug]`, SEO), section 4.
+- [ ] **Phase 11 checked** on a real phone and desktop against the mockups, with the Join flow end to end (section 4).
 - [ ] **Final legal texts** replace the drafts, and the "Draft" banner is removed (section 2).
 - [ ] **Legal check** of the statutory flows done, and the Managed Payments questions answered (section 2).
 - [ ] **Contact address** chosen and set as `NEXT_PUBLIC_CONTACT_EMAIL` (section 2).
@@ -83,7 +83,7 @@ Everything that has to be true, in order. Details for each step are in the secti
   - whether the membership counts as digital content or a digital service for the withdrawal text
 - [ ] **Contact address.** Pick the address for questions and GDPR requests (it must match the privacy policy) and set `NEXT_PUBLIC_CONTACT_EMAIL` in `.env.local` and on Vercel. Until then, "Contact us" and "Request data export or deletion" use the placeholder `hello@example.com`.
 - [ ] **Price of the post-launch annual plan**, alongside $12.99 monthly (spec open decision).
-- [ ] **Real follower and reach numbers** for the landing page stats strip (the mockups say "XXX followers"). Get them from Instagram Insights.
+- [ ] **Real follower number** for the landing page stats strip: set `INSTAGRAM_FOLLOWERS` (e.g. `48K`) in `.env.local` and on Vercel. While it's empty the strip leaves the followers item out (real numbers only). It's read at build time, so redeploy after changing it.
 - [ ] **"Book a promotion" target.** It's an email to the contact address with the code in the subject for now. Point it elsewhere (Instagram DM, a booking form) if wanted.
 
 ## 3. Accounts and setup (you)
@@ -140,34 +140,27 @@ Without `RESEND_API_KEY` every app email is printed to the dev server console an
 - [ ] **Env vars on Vercel.** Everything from `.env.example`, with production values:
   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (prod project)
   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_FOUNDING_MONTHLY`, `STRIPE_PRICE_FOUNDING_ANNUAL` (live)
-  - `NEXT_PUBLIC_SITE_URL` (the real domain), `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+  - `NEXT_PUBLIC_SITE_URL` (the real domain; the sitemap, robots and share links use it), `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+  - `INSTAGRAM_FOLLOWERS`
   - `CRON_SECRET`, `UNSUBSCRIBE_SECRET` (new values for production)
   - `RESEND_API_KEY`, `EMAIL_FROM`, optional `EMAIL_REPLY_TO`
   - the Fourthwall credentials, once available
 - [ ] **Vercel Cron enabled** for both jobs in `vercel.json`.
 
-## 4. Still to build (Phases 11–12)
+## 4. Still to build (Phase 11 leftovers, Phase 12)
 
-From `docs/Implementation_Plan.md`; see there for mockup references and details. Phases 1–10 are built; their leftovers are in sections 5 and 8.
+From `docs/Implementation_Plan.md`. Phases 1–11 are built; their leftovers are here and in sections 5 and 8.
 
-### Phase 11: Landing page and public teasers
+### Phase 11: what's left
 
-- [ ] Landing sections:
-  1. header
-  2. hero with tilted cards
-  3. dark stats strip (real numbers only)
-  4. What's inside + Get featured
-  5. this month's drop (blurred)
-  6. free list teaser from `public_teaser_items`
-  7. Code Your Hero "coming soon"
-  8. pricing with `PlanCard`
-  9. FAQ accordion
-  10. CTA band
-  11. footer
-- [ ] `/lists/[slug]`: public teaser with `LockedBlurRows`, a sticky price card on desktop and a join card on mobile.
-- [ ] SEO: metadata, OG image, sitemap and robots (exclude `/app`, `/admin`, `/cancel/confirm`).
-- [ ] Performance: images through `next/image`, the landing page static or cached, and a Lighthouse mobile check.
-- [ ] *Done when:* it matches the mockups on a real phone, and Join → sign-up → Checkout → `/app` works.
+The landing page (all 11 sections), `/lists/[slug]`, the sitemap, robots and the share image are built and checked in the server HTML (`docs/Verified.md`). Still open:
+
+- [ ] **Browser check against the mockups** (the Chrome extension timed out again): the landing page LW1–6 / LM1–7 and `/lists/[slug]` LW12 / LM13, on desktop and on a real phone. Look especially at the tilted hero cards, the stats strip, the blurred drop rows, the locked rows with "Unlock all", the FAQ's +/− and the sticky join card.
+- [ ] **Join flow from the landing page:** "Join" → pricing → tick the waiver → sign-up → email confirmation → Checkout → `/app`, on a real phone.
+- [ ] **Lighthouse mobile check** of `/` and one `/lists/[slug]` on a production build.
+- [ ] **"Get featured" pictures.** The dark card shows three dashed "member work" boxes as in the mockup. Replace them with real featured Spotlight work (with the member's consent; the images are in the private `spotlight` bucket), or keep them as decoration.
+- [ ] **Hero and "What's inside" use real content:** the newest published resources outside the current drop, and real list, prompts and e-book titles. With an empty production database the hero shows no cards and the example chips stay empty; publish content before launch (section 1).
+- [ ] **Share image font.** `app/opengraph-image.tsx` uses the default sans-serif; load Space Grotesk into `ImageResponse` if the brand font matters for shares.
 
 ### Phase 12: QA and launch
 
@@ -248,8 +241,7 @@ The spec's list, open items only (the verified ones are in `docs/Verified.md`).
 
 **Content and data**
 - [ ] The public views return only teaser fields, and logged-out users can't read `resources`.
-- [ ] `/lists/[slug]` renders title, summary and teaser items while logged out.
-- [ ] A list of each kind (tools, assets, creators, prompts) renders correctly for members *(done on desktop)* and as a public teaser.
+- [ ] A list of each kind (tools, assets, creators, prompts) renders correctly in the browser for members *(done on desktop)* and as a public teaser *(the four teasers render in the server HTML; the layout is unchecked)*.
 - [ ] The list editor: drag items within and between sections, reorder sections, keyboard drag (the browser check in section 5).
 
 **Perks and shop**
@@ -299,6 +291,8 @@ None of this exists in production as long as the seed isn't run there; it's abou
 - [ ] **The sections outline** in the list editor's left column is a jump list. Sections are reordered by dragging them in the middle column (or with Move up/down), not in the outline.
 - [ ] **List settings are live at once.** Title, slug, category and cover of a published list save straight to the row, not with "Publish". A slug change breaks shared links right away.
 - [ ] **Orphaned uploads.** Replacing a cover, PDF or item image leaves the old file in Storage. Delete only cleans up a resource's current cover and PDF, not item images. Add a cleanup if storage grows.
+- [ ] **Unknown `/lists/…` slugs answer 200**, not 404. The page streams (the slug is request data), so `notFound()` inside `<Suspense>` renders the not-found page with `noindex` after the status is sent. Search engines treat it as a soft 404, which is fine; switch to `generateStaticParams` with a fallback if a real 404 status is wanted (it must return at least one slug, which an empty production database can't).
+- [ ] **Public pages update stale-while-revalidate.** After a publish, the first visitor still gets the old landing page or list teaser while it rebuilds; the next one gets the new version. Timed drops show up within the hour.
 - [ ] **Spotlight `admin_note` is readable by the member.** Members can select every column of their own submission, including `admin_note`. Nothing writes or shows it yet, but don't put private notes there, or revoke the column for members.
 - [ ] **Spotlight images removed before submitting** stay in the member's Storage folder (members have no delete permission). Harmless, but they count toward storage.
 - [ ] **Spotlight months are UTC.** A submission at 00:30 Berlin time on the 1st still counts for the previous month (the database's `now()` is UTC).

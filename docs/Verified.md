@@ -67,3 +67,10 @@ In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were
 
 **Pages**
 - The four legal pages render in English with the draft banner; every public page shows "Cancel contracts here" and "Withdraw from contract here" in the footer (server HTML).
+
+**Landing page and public teasers (Phase 11, server HTML and production build, 2026-10-09)**
+- The landing page renders all sections from real dev data (hero cards, stats, What's inside, the October drop with blurred "Members only" rows, the free list with locked rows, Code Your Hero, pricing, FAQ, CTA band); the production build prerenders it as static, revalidated hourly.
+- The drop teaser sends only the kinds of the drop's resources, never their titles; the locked rows contain no member content.
+- `/lists/[slug]` renders the teaser items of all four list kinds with "N of M shown free" and "Unlock all M"; an unknown slug gets the not-found page with `noindex`.
+- `sitemap.xml` lists the home page, every list teaser and the legal and contract pages; `robots.txt` excludes `/app`, `/admin`, `/api`, `/auth`, `/welcome`, `/cancel/confirm`, `/reset-password` and `/styleguide`; the share image renders (1200×630) and the Open Graph tags are set.
+- Renaming a published list in the admin shows up on its public page on the next request after the stale one (cache tag refreshed by the admin actions).

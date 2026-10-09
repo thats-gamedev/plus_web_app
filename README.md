@@ -112,7 +112,7 @@ German law, English wording. Both links are in every footer and in the member ar
 
 | Area | Routes |
 | --- | --- |
-| Public | `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`, `/cancel`, `/cancel/confirm`, `/withdraw`, `/imprint`, `/privacy`, `/terms`, `/withdrawal` |
+| Public | `/`, `/lists/[slug]`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/auth/callback`, `/cancel`, `/cancel/confirm`, `/withdraw`, `/imprint`, `/privacy`, `/terms`, `/withdrawal` |
 | Members | `/welcome`, `/app` (paywall for non-members), `/app/library`, `/app/shop`, `/app/perks`, `/app/spotlight`, `/app/account`, `/app/more` |
 | Admin | `/admin`, `/admin/members`, `/admin/content`, `/admin/drops`, `/admin/codes`, `/admin/spotlight`, `/admin/inbox` |
 | Dev | `/styleguide` (404 in production) |
