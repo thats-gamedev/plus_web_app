@@ -1,5 +1,6 @@
 import "server-only"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createResendTransport } from "./resend"
 import { type EmailLogStore, type EmailTransport, type SendEmailInput, type SendResult, sendEmailWith } from "./send"
 
 // Real wiring for sendEmail(): email_log in Supabase, Resend for delivery.
@@ -26,20 +27,13 @@ function createEmailLogStore(): EmailLogStore {
   }
 }
 
-const resendTransport: EmailTransport = {
-  async send({ to, subject, html, text, headers }) {
-    const from = process.env.EMAIL_FROM
-    if (!from) throw new Error("EMAIL_FROM is not set")
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to, subject, html, text, headers }),
-      signal: AbortSignal.timeout(10_000),
-    })
-    const body = (await response.json().catch(() => ({}))) as { id?: string; message?: string }
-    if (!response.ok || !body.id) throw new Error(`Resend answered ${response.status}: ${body.message ?? "no id"}`)
-    return { id: body.id }
-  },
+/** Resend when RESEND_API_KEY is set, else the console stand-in. */
+function transport(): EmailTransport {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) return consoleTransport
+  const from = process.env.EMAIL_FROM
+  if (!from) throw new Error("RESEND_API_KEY is set but EMAIL_FROM is not")
+  return createResendTransport({ apiKey, from, replyTo: process.env.EMAIL_REPLY_TO || undefined })
 }
 
 /** Development stand-in: prints the email instead of sending it. */
@@ -54,7 +48,7 @@ const consoleTransport: EmailTransport = {
 export function sendEmail(input: SendEmailInput): Promise<SendResult> {
   return sendEmailWith(input, {
     store: createEmailLogStore(),
-    transport: process.env.RESEND_API_KEY ? resendTransport : consoleTransport,
+    transport: transport(),
   })
 }
 

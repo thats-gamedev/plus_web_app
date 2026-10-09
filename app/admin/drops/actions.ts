@@ -124,7 +124,8 @@ export async function publishDropNow(id: string): Promise<DropActionResult> {
   return { ok: true, message: "The drop is live." }
 }
 
-const SEND_CONCURRENCY = 8
+// Resend allows only a few requests per second; its transport retries 429s.
+const SEND_CONCURRENCY = 2
 
 /**
  * "Publish & announce" (spec): makes the drop live if it isn't yet and
