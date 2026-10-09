@@ -8,12 +8,12 @@ Sources this list is built from (details live there, every open task lives here)
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-09 (Phases 1–8 built; Phase 6 waits on Fourthwall credentials; next up: Phase 9)_
+_Last updated: 2026-10-09 (Phases 1–9 built; Phase 6 waits on Fourthwall credentials; next up: Phase 10)_
 
 **Contents**
 1. Decisions and paperwork (you)
 2. Accounts and setup (you)
-3. Still to build (Phases 9–12)
+3. Still to build (Phases 10–12)
 4. Testing and verification
 5. Launch QA checklist (from the spec)
 6. Dev data to clean up or replace
@@ -88,21 +88,9 @@ The code is built and works without Fourthwall: members get their promotion code
   - later: `RESEND_API_KEY`, `EMAIL_FROM`, `UNSUBSCRIBE_SECRET`
 - [ ] **Vercel Cron enabled.** `vercel.json` registers `/api/cron/sync-codes` daily at 03:15 UTC; Phase 7 adds `/api/cron/snapshot`.
 
-## 3. Still to build (Phases 9–12)
+## 3. Still to build (Phases 10–12)
 
-From `docs/Implementation_Plan.md`; see there for mockup references and details. Phases 1–8 are built; their leftovers are in sections 4 and 7.
-
-### Phase 9: Spotlight
-
-- [ ] `/app/spotlight` form:
-  - title, type/engine and description (300 chars)
-  - up to 3 images into `spotlight/{uid}/`
-  - video link, project link, credit platforms and handles
-  - an ownership checkbox
-  - after submitting: this month's status card and past submissions
-- [ ] Migration for the extra mockup fields: `project_type`, `engine`, `project_url`, `credits jsonb` (with column grants).
-- [ ] `/admin/spotlight`: month selector, status chips, "x of 3–5 featured", Shortlist / Feature (asks for the post URL) / Decline / Download media.
-- [ ] *Done when:* a member can submit only once per month, and the admin can feature the submission.
+From `docs/Implementation_Plan.md`; see there for mockup references and details. Phases 1–9 are built; their leftovers are in sections 4 and 7.
 
 ### Phase 10: Emails, legal pages, statutory cancellation
 
@@ -162,7 +150,12 @@ From `docs/Implementation_Plan.md`; see there for mockup references and details.
 
 ## 4. Testing and verification
 
-### Still to check from Phases 4–8
+### Still to check from Phases 4–9
+
+- [ ] **Spotlight in the browser (Phase 9).** Its actions and the image upload were tested end to end from a script; the pages weren't clicked through. Check:
+  - **Member form:** adding and removing images, the credit chips with their handle fields, and that Submit stays disabled until the box is ticked
+  - **After submitting:** the status card and past submissions
+  - **Admin queue:** the Feature dialog, Download media, and the month selector
 
 - [ ] **The admin editors in the browser (Phase 8).** All their Server Actions were tested end to end, but nothing was clicked through, because the Chrome extension kept disconnecting. Check:
   - **List editor, drag and drop:** items within and across sections, into an empty section, sections among themselves, by mouse and by keyboard (Space, arrows, Space)
@@ -240,13 +233,14 @@ The spec's full list, unticked items only. The ones already verified are in sect
 **Admin, emails, Spotlight**
 - [ ] The KPI cards match Stripe's counts (see the dev caveat in section 4).
 - [ ] A drop announcement is sent once and respects the unsubscribe toggle.
-- [ ] Spotlight: one submission per month, images upload, the admin can feature it and the member gets the email.
+- [ ] Spotlight: the member gets the "featured" email *(Phase 10)*. One submission per month, image upload and featuring are verified (section 9).
 - [ ] The footer legal links and "Verträge hier kündigen" are on every page.
 
 ## 6. Dev data to clean up or replace
 
 - [ ] **Test member** `stripe-e2e-…@example.com` in the dev Supabase project. It has an active test subscription and the display name "Mara Test". Keep it as a member account, or delete it (auth user and Stripe test customer).
 - [ ] **Dev member codes.** The test member and the seed's `member@example.com` each have codes in the dev database (merch pending, promotion active). They're harmless, but they'll sync to Fourthwall once credentials are set.
+- [ ] **Test Spotlight submission.** "Moss golem, stylized" from the test member, October 2026, marked featured with the fake post link `instagram.com/p/TEST123`, plus its 1×1 test image in the `spotlight` bucket. It will show up as "Featured last month" in November. Delete it, or reset it in `/admin/spotlight`.
 - [ ] **"Test creators list"** in the dev database: an unpublished list with one creator, left there for trying the list editor. Delete it from `/admin/content` when done.
 - [ ] **Disposable Stripe test data** from the Delete member test: customer `cus_VPQKJUOZoVCVAk` with a cancelled test subscription, plus its anonymised subscription row in dev. These are harmless test-mode leftovers; delete them in the Stripe Dashboard if wanted.
 - [ ] **Revoked seed code.** `member@example.com`'s promotion code was rotated in the revoke test (`TGD-PROMO-6XAJ4S` revoked, `TGD-PROMO-JTNXHT` active).
@@ -270,6 +264,9 @@ The spec's full list, unticked items only. The ones already verified are in sect
 - [ ] **The sections outline** in the list editor's left column is a jump list. Sections are reordered by dragging them in the middle column (or with Move up/down), not in the outline.
 - [ ] **List settings are live at once.** Title, slug, category and cover of a published list save straight to the row, not with "Publish". A slug change breaks shared links right away.
 - [ ] **Orphaned uploads.** Replacing a cover, PDF or item image leaves the old file in Storage. Delete only cleans up a resource's current cover and PDF, not item images. Add a cleanup if storage grows.
+- [ ] **Spotlight `admin_note` is readable by the member.** Members can select every column of their own submission, including `admin_note`. Nothing writes or shows it yet, but don't put private notes there, or revoke the column for members.
+- [ ] **Spotlight images removed before submitting** stay in the member's Storage folder (members have no delete permission). Harmless, but they count toward storage.
+- [ ] **Spotlight months are UTC.** A submission at 00:30 Berlin time on the 1st still counts for the previous month (the database's `now()` is UTC).
 - [ ] **`shadcn` in `dependencies`.** It's a CLI and pulls in packages with 7 high-severity `npm audit` findings (in `braces` via `ts-morph`). Nothing reaches the app bundle, but moving it to `devDependencies` would clear the production audit.
 - [ ] **Implementation plan checkboxes** were never ticked. This file is the record of what's open; tick the plan too, or leave it as the original plan.
 
@@ -327,3 +324,10 @@ Verified in dev with Stripe test mode, 2026-10-08/09.
   - an order that's out of date (an item missing, or a foreign item) is refused
   - newly attached content goes to the end, and detaching clears the position
   - existing drops kept their order through the migration
+- [x] Spotlight:
+  - a member can upload images to their own folder but not to another member's
+  - submissions with a foreign image path or without consent are refused
+  - the first submission of the month works and a second one is refused
+  - the page then shows the status card with a signed image link
+  - in the admin queue, Feature without an https post link is refused, Shortlist and Feature work, and the member sees "Featured" with the post link
+  - members get a 404 from the admin action
