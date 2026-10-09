@@ -13,7 +13,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 /**
  * Deletes a member (spec, "Data protection"): cancel their subscriptions in
- * Stripe now, end the Fourthwall merch promotion, then delete the auth user.
+ * Stripe now, unlink the Stripe customer, end the Fourthwall merch promotion,
+ * then delete the auth user.
  * The profile, codes and email log go with it; subscription rows stay with
  * user_id = null for the KPIs. Admin accounts can't be deleted here.
  */
@@ -22,7 +23,7 @@ export async function deleteMember(_prev: FormState, formData: FormData): Promis
   const { memberId, confirmEmail } = readFields(formData, ["memberId", "confirmEmail"])
   const db = createAdminClient()
 
-  const { data: profile, error } = await db.from("profiles").select("id, email, role").eq("id", memberId).maybeSingle()
+  const { data: profile, error } = await db.from("profiles").select("id, email, role, stripe_customer_id").eq("id", memberId).maybeSingle()
   if (error) return { status: "error", message: `Couldn't load the member: ${error.message}` }
   if (!profile) return { status: "error", message: "This member no longer exists." }
   if (profile.role === "admin") return { status: "error", message: "Admin accounts can't be deleted here." }
@@ -48,7 +49,20 @@ export async function deleteMember(_prev: FormState, formData: FormData): Promis
     }
   }
 
-  // 2. End the merch promotion first: once the rows are gone we'd lose its id,
+  // 2. Unlink the Stripe customer, so nothing there points at the deleted
+  //    account. Stripe keeps the customer for its own records (invoices, tax).
+  if (profile.stripe_customer_id) {
+    try {
+      await getStripe().customers.update(profile.stripe_customer_id, { metadata: { user_id: "" } })
+    } catch (stripeError) {
+      return {
+        status: "error",
+        message: `Billing is cancelled, but Stripe couldn't unlink the customer (${String(stripeError)}). Try again; the member wasn't deleted yet.`,
+      }
+    }
+  }
+
+  // 3. End the merch promotion first: once the rows are gone we'd lose its id,
   //    and the discount would keep working at Fourthwall.
   const { data: codes } = await db
     .from("member_codes")
@@ -67,7 +81,7 @@ export async function deleteMember(_prev: FormState, formData: FormData): Promis
     }
   }
 
-  // 3. Delete the account; profiles, member_codes and email_log cascade.
+  // 4. Delete the account; profiles, member_codes and email_log cascade.
   const { error: deleteError } = await db.auth.admin.deleteUser(profile.id)
   if (deleteError) return { status: "error", message: `Couldn't delete the account: ${deleteError.message}` }
 
