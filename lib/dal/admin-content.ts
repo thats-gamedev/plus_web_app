@@ -99,6 +99,39 @@ export async function getEditableResource(id: string): Promise<EditableResource 
   }
 }
 
+export type AdminDrop = {
+  id: string
+  month: string
+  title: string
+  theme: string | null
+  introMd: string | null
+  publishedAt: string | null
+  announcedAt: string | null
+  resources: { id: string; title: string; type: ResourceType; listKind: ResourceListKind | null; status: "draft" | "published" }[]
+}
+
+/** Every drop with its attached content, newest month first. */
+export async function getAdminDrops(): Promise<AdminDrop[]> {
+  await requireAdmin()
+  const { data, error } = await createAdminClient()
+    .from("drops")
+    .select("id, month, title, theme, intro_md, published_at, announced_at, resources (id, title, type, list_kind, status)")
+    .order("month", { ascending: false })
+  if (error) throw new Error(`drops read: ${error.message}`)
+  return data.map((d) => ({
+    id: d.id,
+    month: d.month,
+    title: d.title,
+    theme: d.theme,
+    introMd: d.intro_md,
+    publishedAt: d.published_at,
+    announcedAt: d.announced_at,
+    resources: d.resources
+      .map((r) => ({ id: r.id, title: r.title, type: r.type, listKind: r.list_kind, status: r.status }))
+      .sort((a, b) => a.title.localeCompare(b.title)),
+  }))
+}
+
 export type DropOption = { id: string; month: string; title: string }
 
 /** Drops for "Add to drop", newest month first. */
