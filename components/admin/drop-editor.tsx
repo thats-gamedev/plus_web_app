@@ -23,6 +23,7 @@ import { CalendarClockIcon, GripVerticalIcon, PlusIcon, Trash2Icon, XIcon } from
 import { toast } from "sonner"
 import { cn } from "cn"
 import {
+  announceDrop,
   deleteDrop,
   type DropActionResult,
   publishDropNow,
@@ -154,14 +155,27 @@ export function DropEditor({
           {state === "planned"
             ? `Members see it on ${zoned.date}. Nothing is sent yet.`
             : state === "published"
-              ? "Live for members. The announcement email comes with Phase 10."
-              : "Live and announced."}
+              ? "Live for members. The announcement email hasn't been sent."
+              : "Live and announced. Sending again only reaches members who didn't get it."}
         </p>
-        {state === "planned" && (
-          <Button disabled={pending} onClick={() => run(() => publishDropNow(drop.id))}>
-            Publish now
+        <div className="flex flex-wrap gap-2">
+          {state === "planned" && (
+            <Button variant="outline" disabled={pending} onClick={() => run(() => publishDropNow(drop.id))}>
+              Publish now
+            </Button>
+          )}
+          <Button
+            variant={state === "announced" ? "ghost" : "default"}
+            disabled={pending}
+            onClick={() => {
+              if (state === "announced" || window.confirm("Email this drop to every member with drop emails on? Each member gets it once.")) {
+                run(() => announceDrop(drop.id))
+              }
+            }}
+          >
+            {state === "planned" ? "Publish & announce" : state === "published" ? "Send announcement" : "Retry sending"}
           </Button>
-        )}
+        </div>
       </div>
     </div>
   )

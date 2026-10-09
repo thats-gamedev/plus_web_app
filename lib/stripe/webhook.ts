@@ -30,6 +30,10 @@ export type WebhookDeps = {
    * codes. It must be idempotent: Stripe sends several events per change.
    */
   onMembershipChange?(userId: string): Promise<void>
+  /** After checkout.session.completed with a known user (the welcome email). */
+  onCheckoutCompleted?(userId: string, subscriptionId: string): Promise<void>
+  /** After every subscription upsert (e.g. the cancellation confirmation). */
+  onSubscriptionSaved?(row: SubscriptionRow): Promise<void>
 }
 
 export type WebhookResult = { status: number; body: string }
@@ -79,7 +83,9 @@ export async function processEvent(event: Stripe.Event, deps: WebhookDeps): Prom
     // so /welcome unlocks as early as possible.
     const subscription = session.subscription
     if (subscription) {
-      await syncSubscription(typeof subscription === "string" ? subscription : subscription.id, deps, userId)
+      const subscriptionId = typeof subscription === "string" ? subscription : subscription.id
+      await syncSubscription(subscriptionId, deps, userId)
+      if (userId) await deps.onCheckoutCompleted?.(userId, subscriptionId)
     }
     return
   }
@@ -101,8 +107,8 @@ async function syncSubscription(id: string, deps: WebhookDeps, knownUserId: stri
     knownUserId ||
     (customer ? await deps.store.findUserIdByCustomer(customer) : null)
 
-  await deps.store.upsertSubscription(
-    toSubscriptionRow(subscription, { userId, planForPrice: deps.planForPrice }),
-  )
+  const row = toSubscriptionRow(subscription, { userId, planForPrice: deps.planForPrice })
+  await deps.store.upsertSubscription(row)
   if (userId) await deps.onMembershipChange?.(userId)
+  await deps.onSubscriptionSaved?.(row)
 }

@@ -88,6 +88,8 @@ function fakes() {
   const customers = new Map<string, string>() // userId -> customerId
   const remote = new Map<string, Stripe.Subscription>() // what the Stripe API returns now
   const membershipChanges: string[] = []
+  const welcomes: string[] = []
+  const saved: SubscriptionRow[] = []
   let retrieveCalls = 0
 
   const store: WebhookStore = {
@@ -129,9 +131,15 @@ function fakes() {
     onMembershipChange: async (userId) => {
       membershipChanges.push(userId)
     },
+    onCheckoutCompleted: async (userId, subscriptionId) => {
+      welcomes.push(`${userId}:${subscriptionId}`)
+    },
+    onSubscriptionSaved: async (row) => {
+      saved.push(row)
+    },
   }
 
-  return { deps, events, subscriptions, customers, remote, membershipChanges, retrieves: () => retrieveCalls }
+  return { deps, events, subscriptions, customers, remote, membershipChanges, welcomes, saved, retrieves: () => retrieveCalls }
 }
 
 let counter = 0
@@ -252,6 +260,31 @@ describe("handleStripeWebhook", () => {
     const { payload, header } = signedEvent("customer.subscription.updated", { id: "sub_1" })
 
     expect(await handleStripeWebhook(payload, header, f.deps)).toMatchObject({ status: 500 })
+  })
+
+  it("reports a completed checkout (welcome email) and the saved row", async () => {
+    f.remote.set("sub_1", subscription())
+    const { payload, header } = signedEvent("checkout.session.completed", {
+      id: "cs_1",
+      mode: "subscription",
+      client_reference_id: "user-1",
+      customer: "cus_1",
+      subscription: "sub_1",
+      metadata: {},
+    })
+
+    await handleStripeWebhook(payload, header, f.deps)
+    expect(f.welcomes).toEqual(["user-1:sub_1"])
+    expect(f.saved.map((r) => r.stripe_subscription_id)).toEqual(["sub_1"])
+  })
+
+  it("passes the cancel flag to onSubscriptionSaved (cancellation email)", async () => {
+    f.remote.set("sub_1", subscription({ cancel_at_period_end: true }))
+    const { payload, header } = signedEvent("customer.subscription.updated", { id: "sub_1" })
+
+    await handleStripeWebhook(payload, header, f.deps)
+    expect(f.saved[0]).toMatchObject({ cancel_at_period_end: true, status: "active" })
+    expect(f.welcomes).toEqual([])
   })
 
   it("ignores unrelated event types", async () => {

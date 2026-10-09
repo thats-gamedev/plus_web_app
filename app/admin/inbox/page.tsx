@@ -95,7 +95,7 @@ function OpenItems({
                     </p>
                     <p className="text-sm">
                       {found
-                        ? "Account found. Cancel the subscription in Stripe (member drawer → Open in Stripe), then mark it done."
+                        ? "Account found. “Cancel membership” ends it at period end in Stripe and emails the member the confirmation."
                         : "No account uses this email. Reply so they can send the email they signed up with."}
                     </p>
                     <p className="font-mono text-xs text-muted-foreground">
@@ -110,12 +110,12 @@ function OpenItems({
                         </Link>
                       )}
                       <ResolveRequestButton requestId={r.id} outcome="executed">
-                        Mark as cancelled
+                        Cancel membership
                       </ResolveRequestButton>
                     </div>
                   ) : (
                     <ResolveRequestButton requestId={r.id} outcome="no_match">
-                      Mark as no match
+                      Send no-match reply
                     </ResolveRequestButton>
                   )}
                 </li>
