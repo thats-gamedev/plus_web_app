@@ -276,7 +276,6 @@ None of this exists in production as long as the seed isn't run there; it's abou
 
 - [ ] **Failed emails aren't retried.** If Resend fails during the webhook (welcome, cancellation confirmed), a Spotlight feature or an inbox action, the error is logged and the claim released, but nothing sends it again later. Drop announcements can be retried with "Retry sending".
 - [ ] **Unused index migration not applied.** The advisor reports `cancellation_requests_status_idx` and `cancellation_requests_kind_status_idx` as unused; one index on `(kind, status, created_at)` would replace both. The Supabase connector's migration tool failed ("Invalid or expired requestState") when this was tried, so nothing was changed. Apply it once the connector works again (reconnect it), as a migration file plus `apply_migration`. Harmless until then.
-- [ ] **Restart the dev server.** Moving `shadcn` to the dev dependencies briefly removed it, and the running `next dev` cached the failed `shadcn/tailwind.css` lookup (every page answers 500). Stop and start `npm run dev`; the production build compiles fine.
 - [ ] **Unconfirmed `/cancel` links** stay in the inbox as "Account found" requests. The admin should cancel them within 2 business days even without the click (see the legal check in section 2).
 - [ ] **Personal data left after Delete member** (GDPR):
   - `webhook_events.payload` keeps the raw Stripe events, which contain the member's email and name. Decide whether to scrub them on delete or prune events after a retention period (e.g. 90 days).
@@ -310,4 +309,5 @@ Not tasks, but things to remember while building.
 - **Members read `resources` by column list.** Every new column needs a `grant select (…)` (see `supabase/migrations/20261008221422_resource_counts.sql`).
 - **New migrations only reach the dev project.** Production needs all of `supabase/migrations/` applied when it's set up (section 1).
 - **`"use cache"` caches results, not errors.** Throw on failure inside a cached function (see `lib/fourthwall/storefront.ts`), or the failure is served for the whole cache lifetime.
+- **Don't change packages while `next dev` runs.** Turbopack keeps failed module lookups in its disk cache (`.next/dev/cache`), so a package that was briefly missing stays "Can't resolve" even after a restart. Stop the dev server, delete `.next/dev`, start it again.
 - **Edit files with the editor tool, not PowerShell `Get-Content`/`WriteAllText`.** PowerShell 5.1 reads UTF-8 as ANSI and mangles `€` and `·`.
