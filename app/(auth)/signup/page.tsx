@@ -20,7 +20,7 @@ export default function SignUpPage() {
       <Suspense>
         <PlanBar />
       </Suspense>
-      <AuthHeading title="Create your account" />
+      <AuthHeading compact title="Create your account" />
       <Suspense fallback={<FormSkeleton fields={4} />}>
         <SignUpForm />
       </Suspense>

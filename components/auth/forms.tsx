@@ -30,15 +30,17 @@ function FormMessage({ state }: { state: { status: string; message?: string } })
 
 // The auth pages don't scroll (AuthShell bare): in a short window only the
 // fields scroll, while the heading above and the button below stay put.
-const formLayout = "flex min-h-0 flex-1 flex-col"
+// The form only takes the height it needs (so the shell can centre it) and
+// shrinks in a short window, where FormFields scrolls.
+const formLayout = "flex min-h-0 flex-col"
 
 function FormFields({ children }: { children: React.ReactNode }) {
   // The small inset keeps the fields' focus rings from being clipped.
-  return <div className="-mx-1 min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-1 py-1 [scrollbar-width:thin]">{children}</div>
+  return <div className="-mx-1 min-h-0 space-y-4 overflow-y-auto overscroll-contain px-1 py-1 [scrollbar-width:thin]">{children}</div>
 }
 
 function FormActions({ children }: { children: React.ReactNode }) {
-  return <div className="shrink-0 space-y-4 pt-5">{children}</div>
+  return <div className="shrink-0 space-y-3 pt-5">{children}</div>
 }
 
 function SwitchLink({ text, href, label }: { text: string; href: string; label: string }) {
@@ -137,7 +139,7 @@ export function SignUpForm() {
       </FormFields>
       <FormActions>
         <FormMessage state={state} />
-        <Button type="submit" size="lg" className="w-full" disabled={pending}>
+        <Button type="submit" size="lg" className="h-11 w-full" disabled={pending}>
           {pending ? "Creating account…" : "Create account"}
         </Button>
         <SwitchLink text="Already have an account?" href={loginHref} label="Log in" />
@@ -200,7 +202,7 @@ export function LoginForm() {
         </FormFields>
         <FormActions>
           <Turnstile resetKey={state} appearance="interaction-only" />
-          <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
+          <Button type="submit" variant="dark" size="lg" className="h-11 w-full" disabled={pending}>
             {pending ? "Logging in…" : "Log in"}
           </Button>
           <SwitchLink
@@ -240,7 +242,7 @@ export function ForgotPasswordForm() {
       </FormFields>
       <FormActions>
         <Turnstile resetKey={state} appearance="interaction-only" />
-        <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
+        <Button type="submit" variant="dark" size="lg" className="h-11 w-full" disabled={pending}>
           {pending ? "Sending…" : "Send reset link"}
         </Button>
         <FormMessage state={state} />
@@ -280,7 +282,7 @@ export function ResetPasswordForm() {
       </FormFields>
       <FormActions>
         <FormMessage state={state} />
-        <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
+        <Button type="submit" variant="dark" size="lg" className="h-11 w-full" disabled={pending}>
           {pending ? "Saving…" : "Save and log in"}
         </Button>
       </FormActions>

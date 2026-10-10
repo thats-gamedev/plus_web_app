@@ -25,12 +25,13 @@ export function AuthShell({
   if (bare) {
     return (
       <main className="grid h-dvh min-h-0 shrink-0 grid-rows-1 overflow-hidden lg:grid-cols-2">
-        <div className="flex min-h-0 flex-col px-4 py-6 sm:px-6 lg:px-16 lg:py-10">
-          <Logo className="shrink-0" />
-          <div className="flex min-h-0 flex-1 flex-col justify-center py-6 lg:py-10">
-            <div className="flex min-h-0 w-full max-w-[500px] flex-col">{children}</div>
+        <div className="flex min-h-0 flex-col px-4 py-6 sm:px-6 lg:px-12 lg:py-10">
+          {/* One centred column: logo, form and legal line share its edges. */}
+          <div className="mx-auto flex min-h-0 w-full max-w-[420px] flex-1 flex-col">
+            <Logo className="shrink-0" />
+            <div className="flex min-h-0 flex-1 flex-col justify-center py-6 lg:py-8">{children}</div>
+            <LegalLinks className="shrink-0 gap-x-4 text-xs text-muted-foreground" />
           </div>
-          <LegalLinks className="shrink-0 gap-x-4 text-xs text-muted-foreground" />
         </div>
         <aside className="hidden bg-ink-2 text-white lg:block">{aside}</aside>
       </main>
@@ -60,7 +61,16 @@ export function AuthShell({
   )
 }
 
-export function AuthHeading({ title, lead }: { title: string; lead?: string }) {
+/** `compact` for the bare auth pages, where the form column is narrower. */
+export function AuthHeading({ title, lead, compact = false }: { title: string; lead?: string; compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="mb-5 shrink-0">
+        <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">{title}</h1>
+        {lead && <p className="mt-2 text-muted-foreground">{lead}</p>}
+      </div>
+    )
+  }
   return (
     <div className="mb-6">
       <h1 className="text-4xl font-bold tracking-tight lg:text-5xl">{title}</h1>

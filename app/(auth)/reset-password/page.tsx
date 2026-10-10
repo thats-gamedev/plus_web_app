@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Set a new password" }
 export default function ResetPasswordPage() {
   return (
     <AuthShell bare aside={<RenderPanel />}>
-      <AuthHeading title="Set a new password" lead="This signs you out on all other devices." />
+      <AuthHeading compact title="Set a new password" lead="This signs you out on all other devices." />
       <Suspense fallback={<FormSkeleton fields={2} />}>
         <ResetPasswordGate />
       </Suspense>

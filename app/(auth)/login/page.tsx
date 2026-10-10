@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Log in" }
 export default function LoginPage() {
   return (
     <AuthShell bare aside={<RenderPanel />}>
-      <AuthHeading title="Welcome back" lead="Good to see you again." />
+      <AuthHeading compact title="Welcome back" lead="Good to see you again." />
       <Suspense fallback={<FormSkeleton fields={2} />}>
         <LoginForm />
       </Suspense>
