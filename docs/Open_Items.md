@@ -121,6 +121,7 @@ Everything that has to be true, in order. Details for each step are in the secti
 The code is built and works without Fourthwall: members get their promotion code right away, and the merch code waits as `pending_sync`. `/app/shop` says "The shop opens soon", and the home page's "New merch" row stays hidden. Once these are in place, the daily cron (or the next webhook) activates the pending merch codes.
 
 - [ ] **Shop** open, with at least a couple of products.
+- [ ] **Turn off the shop preview** once Fourthwall is connected: `SHOP_PREVIEW=1` in `.env.local` shows sample products in dev (`lib/fourthwall/preview.ts`). It switches itself off when the storefront token is set and is ignored in production, so this is only tidying up.
 - [ ] **Credentials** in `.env.local` and on Vercel (see `.env.example`):
   - `FOURTHWALL_STOREFRONT_TOKEN` and `FOURTHWALL_SHOP_URL` (Settings → For Developers)
   - `FOURTHWALL_API_USERNAME` / `FOURTHWALL_API_PASSWORD` (create an "Open API User")

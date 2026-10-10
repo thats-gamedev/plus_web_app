@@ -1,5 +1,6 @@
 import "server-only"
 import { cacheLife, cacheTag } from "next/cache"
+import { PREVIEW_PRODUCTS, PREVIEW_SHOP_URL, shopPreviewEnabled } from "./preview"
 import { productPageSchema, type ShopProduct, toShopProduct } from "./products"
 
 // Fourthwall Storefront API: the public product catalog for /app/shop and
@@ -14,6 +15,7 @@ export type ShopConfig = { shopUrl: string; collection: string }
 
 /** Shop settings, or null while Fourthwall isn't set up. */
 export function shopConfig(): ShopConfig | null {
+  if (shopPreviewEnabled()) return { shopUrl: PREVIEW_SHOP_URL, collection: "preview" }
   const shopUrl = process.env.FOURTHWALL_SHOP_URL
   if (!process.env.FOURTHWALL_STOREFRONT_TOKEN || !shopUrl) return null
   return { shopUrl, collection: process.env.FOURTHWALL_COLLECTION || "all" }
@@ -21,6 +23,11 @@ export function shopConfig(): ShopConfig | null {
 
 /** Products of a collection, in Fourthwall's order (newest first in "all"). */
 export async function getShopProducts(collection: string): Promise<ShopProduct[]> {
+  if (shopPreviewEnabled()) return PREVIEW_PRODUCTS
+  return getFourthwallProducts(collection)
+}
+
+async function getFourthwallProducts(collection: string): Promise<ShopProduct[]> {
   "use cache"
   cacheLife("hours")
   cacheTag("fourthwall-products")
