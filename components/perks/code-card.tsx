@@ -47,14 +47,14 @@ export function CodeCard({ kind, code }: { kind: CodeKind; code: MemberCode | un
       <div className="flex items-center justify-between gap-3">
         <Icon aria-hidden className="hidden size-6 md:block" strokeWidth={1.75} />
         <h2 className="text-lg font-semibold md:hidden">{title}</h2>
-        <p className="font-mono text-lg font-semibold text-brand">{percent}% off</p>
+        <p className="font-mono text-base font-semibold text-brand">{percent}% off</p>
       </div>
       <h2 className="mt-4 hidden text-lg font-semibold md:block">{title}</h2>
       <p className="hidden text-sm text-muted-foreground md:block">{text}</p>
 
       {ready ? (
         <>
-          <p className="mt-4 rounded-xl bg-muted px-4 py-4 text-center font-mono text-xl tracking-wider select-all">
+          <p className="mt-4 rounded-xl bg-muted px-4 py-3 text-center font-mono text-base tracking-wide select-all">
             {code.code}
           </p>
           <div className="mt-4 flex gap-2">
