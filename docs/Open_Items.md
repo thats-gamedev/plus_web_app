@@ -74,6 +74,7 @@ Everything that has to be true, in order. Details for each step are in the secti
   - **Withdrawals are judged by hand.** Nothing happens automatically; the admin refunds or declines within 2 business days. "Decline" is only offered when the waiver is on record or 14 days have passed. Check the decline email's wording, and that the § 356 (5) BGB waiver at checkout (with the contract confirmation email) is enough to decline.
   - **Refund amount.** "Refund & end now" refunds the whole last payment. The law may allow keeping a share for the days used; we don't.
   - **The rate limit.** At most 3 requests per email per hour and 30 per minute overall, shared by cancellations and withdrawals. A flood of fake requests could briefly block real ones.
+  - **Contract links in the member area only on Account** (and on `/app/more` on phones), not on every member page (owner's decision, 2026-10-10). Ask whether one click away is enough.
   - **No legal links on login, sign-up and the password pages** (owner's decision, 2026-10-10). Ask whether the imprint and the cancel and withdraw links must appear there too; if so, add them back as one small line (`LegalLinks` in `components/layout/site-footer.tsx`).
   - **The sign-up checkbox wording:** "I agree to the Terms and have read the Privacy policy", required, with the acceptance time stored (`terms_accepted_at` in the user metadata). Stripe Checkout asks for the terms again at purchase.
 - [ ] **Final legal texts** (in English, under German law). `/imprint`, `/privacy`, `/terms` and `/withdrawal` are English drafts with a "Draft" banner; every missing value is highlighted in `[…]`. Replace them with generated or lawyer-reviewed texts and remove the banner (`components/legal/legal-page.tsx`). Generators such as eRecht24 or IT-Recht Kanzlei offer English versions. Points the drafts leave open:
@@ -175,7 +176,7 @@ Phase 12 is section 1 of this file: work through it from top to bottom.
   - **`/cancel`:** the form, its error messages and both results ("confirmed" when logged in, "We received your cancellation" when logged out), against the mockups LW13/LM14
   - **`/cancel/confirm`:** the confirm button and the confirmed state (LW14/LM15), and the "link no longer works" page
   - **`/withdraw`:** the form and its result, and the Withdrawals section in `/admin/inbox` with the refund dialog
-  - **Member area:** the two statutory links at the bottom of the desktop sidebar and on `/app/more`
+  - **Member area on phones:** the two statutory links on `/app/more` (on desktop they're in the "Contract & legal" section on Account, checked)
   - **Legal pages:** layout on phone and desktop; the processor table scrolls sideways on phones
   - **`/admin/drops`:** the "Publish & announce", "Send announcement" and "Retry sending" buttons, and their toasts
   - **The unsubscribe page** opened from a real email (`/api/email/unsubscribe?token=…`)
@@ -256,7 +257,7 @@ The spec's list, open items only (the verified ones are in `docs/Verified.md`).
 **Admin, emails, Spotlight**
 - [ ] The KPI cards match Stripe's counts (see the dev caveat in section 5).
 - [ ] Real delivery of the drop announcement and the Spotlight "featured" email (needs Resend).
-- [ ] The legal links, "Cancel contracts here" and "Withdraw from contract here" are on every page in the browser *(public pages checked in the server HTML; the member area has them in the sidebar and on More; the admin area has none, which is fine for the owner)*.
+- [ ] The legal links, "Cancel contracts here" and "Withdraw from contract here" are on every page in the browser *(public pages checked in the server HTML; the member area has them on Account → "Contract & legal" and on More; the auth pages have none, by decision; the admin area has none, which is fine for the owner)*.
 
 ## 7. Dev data to clean up or replace
 
