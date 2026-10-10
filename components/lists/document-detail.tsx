@@ -17,9 +17,9 @@ import { contactMailto } from "@/lib/site"
 
 function Cover({ resource }: { resource: ResourceDetail }) {
   return (
-    <div className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden rounded-xl border border-border bg-pastel-cream md:w-64 lg:w-72">
+    <div className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden rounded-xl border border-border bg-pastel-cream md:w-52 lg:w-60">
       {resource.coverPath && (
-        <Image src={coverUrl(resource.coverPath)} alt="" fill sizes="(min-width: 768px) 288px, 96px" className="object-cover" />
+        <Image src={coverUrl(resource.coverPath)} alt="" fill sizes="(min-width: 768px) 240px, 96px" className="object-cover" />
       )}
     </div>
   )
@@ -37,7 +37,7 @@ function HeaderCard({
   children?: React.ReactNode
 }) {
   return (
-    <div className="rounded-panel border border-border bg-card p-5 md:p-7">
+    <div className="rounded-panel border border-border bg-card p-5 md:p-6">
       {/* Desktop: the text starts at the top next to the cover, the actions
           sit at the bottom right, level with the cover's bottom edge. */}
       <div className="flex gap-4 md:gap-10">
