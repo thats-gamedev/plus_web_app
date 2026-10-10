@@ -27,7 +27,7 @@ function SidebarLinks({ pathname }: { pathname: string | null }) {
         href={item.href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex h-10 items-center gap-3 rounded-lg px-3 font-medium transition-colors [&_svg]:size-[18px]",
+          "flex h-11 items-center gap-3 rounded-lg px-3 font-medium transition-colors [&_svg]:size-[18px]",
           active ? "bg-ink text-white" : "text-foreground hover:bg-muted"
         )}
       >
@@ -46,18 +46,18 @@ function ActiveSidebarLinks() {
 // <Suspense>, so the rest of the shell stays in the static shell.
 export function MemberSidebar({ userSlot }: { userSlot: React.ReactNode }) {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-border bg-card md:flex">
-      <div className="px-4 pt-6 pb-6">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
+      <div className="px-6 pt-6 pb-7">
         <Logo href="/app" className="text-base" />
       </div>
-      <nav aria-label="Member" className="flex flex-1 flex-col gap-1 px-2">
+      <nav aria-label="Member" className="flex flex-1 flex-col gap-1 px-3">
         <Suspense fallback={<SidebarLinks pathname={null} />}>
           <ActiveSidebarLinks />
         </Suspense>
       </nav>
-      <div className="mx-2 border-t border-border px-2 py-4">{userSlot}</div>
+      <div className="mx-3 border-t border-border px-3 py-4">{userSlot}</div>
       {/* The statutory links must be reachable from every page (§ 312k, § 356a BGB). */}
-      <nav aria-label="Contract" className="flex flex-col gap-1 px-4 pb-4 text-xs text-muted-foreground">
+      <nav aria-label="Contract" className="flex flex-col gap-1 px-6 pb-5 text-xs text-muted-foreground">
         {contractLinks.map((l) => (
           <Link key={l.href} href={l.href} className="hover:text-foreground">
             {l.label}

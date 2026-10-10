@@ -54,7 +54,7 @@ export async function SidebarUser() {
       <Avatar name={user.displayName} />
       <div className="min-w-0 flex-1 text-sm">
         <p className="truncate font-semibold">{user.displayName}</p>
-        <p className="truncate text-muted-foreground">{user.planLabel}</p>
+        <p className="truncate text-xs text-muted-foreground">{user.planLabel}</p>
       </div>
       <LogoutButton className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
         <LogOutIcon aria-hidden className="size-4" />
