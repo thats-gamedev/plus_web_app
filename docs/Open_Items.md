@@ -219,7 +219,7 @@ Phase 12 is section 1 of this file: work through it from top to bottom.
   - whether Fourthwall supports a link that pre-applies the promo code; if so, Buy should use it
   - what happens when a code already exists: a promotion created at Fourthwall but not saved here would fail on retry
   - one full run: a new test member gets both codes within a minute, and the merch code works at Fourthwall checkout
-- [ ] **Early clicks lost in dev.** Clicks right after a page loads in dev were sometimes lost (the login form came back empty, the waiver checkbox stayed unticked). This is probably just slow dev hydration. Re-check on a production build.
+- [ ] **The dev server is slow on this drive.** `next dev` warns about a slow filesystem (E:). Two effects: clicks right after a page loads are sometimes lost (the page isn't interactive yet), and the first visit to a route compiles it first, so e.g. "Logging in…" can hang until `/app` is compiled (reloading then shows you logged in). Neither happens on a production build (login → `/app` in about 1 s, see `docs/Verified.md`). If it gets annoying, move the project to a faster local drive.
 
 ## 6. Launch QA checklist (from the spec)
 

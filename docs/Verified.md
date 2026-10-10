@@ -78,6 +78,9 @@ In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were
 - A cancellation or withdrawal whose receipt failed shows up under "Receipts not sent" (open or closed, after 2 minutes) and in the sidebar count; "Send receipt" sends it once, members get a 404, and a second click is refused.
 - Revoke, Discard draft and the drop announcement ask in the app's dialog instead of the browser's confirm box.
 
+**Login (2026-10-10)**
+- On a production build (`next build` + `next start`), logging in goes from the form to `/app` in about 1.2 s. The server answers a login with the redirect to `/app` and the session cookie, both from React (JavaScript) and as a plain form post before the page is interactive (303 to `/app`). A "Logging in…" that hangs in dev is the dev server compiling `/app` on its first visit.
+
 **Sign-up form (2026-10-10, in the browser)**
 - One password field (it has Show), so the form fits a ~600px-high window without scrolling.
 - The terms checkbox sits in a bordered row; a click anywhere on the row ticks it, a click on the box toggles it once.
