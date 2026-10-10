@@ -282,6 +282,7 @@ None of this exists in production as long as the seed isn't run there; it's abou
 - [ ] **Personal data left after Delete member** (GDPR):
   - `webhook_events.payload` keeps the raw Stripe events, which contain the member's email and name. Decide whether to scrub them on delete or prune events after a retention period (e.g. 90 days).
   - `cancellation_requests` (cancellations and withdrawals) keep the name and email (their `user_id` is set to null). They're the legal proof; set a retention period.
+- [ ] **The auth picture is loaded from Unsplash.** Login, sign-up and the password pages show a free Unsplash photo by Micke Lindström (`components/auth/auth-art.tsx`), loaded from `images.unsplash.com` as Unsplash's guidelines ask. If the photographer ever removes it, the panel turns plain dark. Swap in your own render there when you have one (and drop the credit).
 - [ ] **Large drop announcements are slow.** Sending two at a time (Resend's rate limit) takes about a minute per 200 members, inside one Server Action. Fine for launch; past a few thousand members, switch to Resend's batch API or a background job.
 - [ ] **Withdrawal refunds only cover the last invoice.** Fine within 14 days (there's only one payment). If an admin accepts a late withdrawal, older payments must be refunded in the Stripe Dashboard.
 - [ ] **The admin "due" date** for cancellation and withdrawal requests counts weekdays only, not German public holidays.

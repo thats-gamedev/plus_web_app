@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { AuthArt } from "@/components/auth/auth-art"
 import { Logo } from "@/components/layout/logo"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { Button } from "@/components/ui/button"
@@ -78,13 +79,11 @@ export function AuthHeading({ title, lead, compact = false }: { title: string; l
   )
 }
 
-/** Dark placeholder panel with the render credit (login, reset pages). */
+/** The right-hand picture with its credit (login, password pages). */
 export function RenderPanel() {
   return (
-    <div className="relative flex h-full min-h-[480px] items-end p-8">
-      <span className="absolute right-8 bottom-8 rounded-full bg-ink px-3 py-1.5 font-mono text-xs text-white/80">
-        render by @thats_gamedev
-      </span>
+    <div className="relative h-full min-h-[480px]">
+      <AuthArt />
     </div>
   )
 }

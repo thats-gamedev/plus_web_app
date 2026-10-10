@@ -6,10 +6,14 @@ const nextConfig: NextConfig = {
   // such as the Fourthwall catalog with "use cache" + cacheLife.
   cacheComponents: true,
   images: {
-    // Library covers come from the public `covers` storage bucket.
-    remotePatterns: process.env.NEXT_PUBLIC_SUPABASE_URL
-      ? [new URL(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/covers/**`)]
-      : [],
+    remotePatterns: [
+      // Library covers come from the public `covers` storage bucket.
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? [new URL(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/covers/**`)]
+        : []),
+      // The auth pages' picture (components/auth/auth-art.tsx).
+      new URL("https://images.unsplash.com/**"),
+    ],
   },
 };
 

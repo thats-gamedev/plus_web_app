@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { AuthArt } from "@/components/auth/auth-art"
 import { useSearchParams } from "next/navigation"
 import { CheckIcon } from "lucide-react"
 import { Eyebrow } from "@/components/ui/typography"
@@ -15,30 +16,34 @@ function usePlan() {
 export function PlanPanel() {
   const plan = usePlan()
 
+  // The plan sits on a dark card over the auth picture (sign-up).
   return (
-    <div className="px-16 py-20">
-      <Eyebrow>Your plan</Eyebrow>
-      <div className="mt-6 flex items-baseline justify-between gap-4">
-        <h2 className="text-3xl font-bold">{plan.name}</h2>
-        <p className="text-3xl font-bold">
-          {plan.price}
-          <span className="ml-1 text-base font-normal text-white/70">{plan.interval}</span>
+    <div className="relative h-full min-h-[480px]">
+      <AuthArt />
+      <div className="absolute inset-x-10 top-10 rounded-card bg-ink/85 p-8 backdrop-blur-md xl:inset-x-16 xl:top-16">
+        <Eyebrow>Your plan</Eyebrow>
+        <div className="mt-6 flex items-baseline justify-between gap-4">
+          <h2 className="text-3xl font-bold">{plan.name}</h2>
+          <p className="text-3xl font-bold">
+            {plan.price}
+            <span className="ml-1 text-base font-normal text-white/70">{plan.interval}</span>
+          </p>
+        </div>
+        <p className="mt-6 text-white/70">
+          Price locked as long as you stay.{" "}
+          <Link href="/#pricing" className="font-semibold text-brand hover:underline">
+            Change plan
+          </Link>
         </p>
+        <ul className="mt-6 space-y-5 border-t border-white/15 pt-6">
+          {PLAN_BENEFITS.map((benefit) => (
+            <li key={benefit} className="flex items-center gap-3">
+              <CheckIcon aria-hidden className="size-4 text-brand" />
+              {benefit}
+            </li>
+          ))}
+        </ul>
       </div>
-      <p className="mt-6 text-white/70">
-        Price locked as long as you stay.{" "}
-        <Link href="/#pricing" className="font-semibold text-brand hover:underline">
-          Change plan
-        </Link>
-      </p>
-      <ul className="mt-6 space-y-5 border-t border-white/15 pt-6">
-        {PLAN_BENEFITS.map((benefit) => (
-          <li key={benefit} className="flex items-center gap-3">
-            <CheckIcon aria-hidden className="size-4 text-brand" />
-            {benefit}
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }

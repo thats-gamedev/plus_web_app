@@ -12,6 +12,8 @@ What has been checked, and decisions that were made, so they don't have to be re
 - **2026-10-08: Stripe Managed Payments.** Stripe is the merchant of record and handles VAT; prices are tax-inclusive with the tax code `txcd_10701401`.
 - **Fourthwall API answers** (from the docs): a plain discount code is a promotion of type `SHOP_SINGLE` with a `PERCENTAGE` discount; a promotion is deactivated with `PUT /promotions/{id}` and `status: "ENDED"`.
 
+- **2026-10-10: auth picture from Unsplash.** The placeholder panel on the auth pages shows "A computer generated image of red and white shapes" by Micke Lindström (unsplash.com/photos/6REIcx1yeuI), free to use under the Unsplash License, with a "Photo by … on Unsplash" credit.
+
 ## Verified
 
 In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were checked with console delivery (no Resend yet).
