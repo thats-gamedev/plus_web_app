@@ -46,11 +46,10 @@ export function Faq() {
             <AccordionItem key={q} value={q} className="border-b border-border">
               <AccordionTrigger className="py-5 text-base font-semibold hover:no-underline md:text-lg **:data-[slot=accordion-trigger-icon]:hidden">
                 {q}
-                <span aria-hidden className="ml-4 font-mono text-xl leading-none text-brand group-aria-expanded/accordion-trigger:hidden">
-                  +
-                </span>
-                <span aria-hidden className="ml-4 hidden font-mono text-xl leading-none text-brand group-aria-expanded/accordion-trigger:inline">
-                  −
+                {/* A plus whose vertical bar folds away into a minus when open. */}
+                <span aria-hidden className="relative ml-4 size-3.5 shrink-0 self-center text-brand">
+                  <span className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current" />
+                  <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 group-aria-expanded/accordion-trigger:scale-y-0" />
                 </span>
               </AccordionTrigger>
               <AccordionContent className="pb-5 text-base text-muted-foreground">{a}</AccordionContent>

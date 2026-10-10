@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { cn } from "cn"
 import { InstagramIcon } from "@/components/layout/icons"
+import { HeroCard, Reveal, Stagger, StaggerItem } from "@/components/landing/motion"
 import { LockedBlurRows } from "@/components/lists/locked-rows"
 import { ResourceIcon } from "@/components/shared/resource-icon"
 import { Badge } from "@/components/ui/badge"
@@ -27,7 +28,7 @@ import { teaserItemCount } from "@/lib/lists/teaser"
 import { PLANS } from "@/lib/plans"
 
 // The landing page sections (LW1–6 / LM1–7). Server components; the data
-// comes from lib/dal/public.ts.
+// comes from lib/dal/public.ts, the animations from ./motion.
 
 const monthly = PLANS.founding_monthly.price
 
@@ -35,29 +36,42 @@ export function Hero({ cards }: { cards: PublicResource[] }) {
   return (
     <section className="overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-2 lg:gap-12 lg:px-10 lg:py-20">
-        <div>
-          <Badge variant="new" className="h-6 px-2.5 text-xs">
-            Founding price · {monthly}/mo
-          </Badge>
-          <h1 className="mt-4 text-4xl leading-[1.05] font-bold tracking-tight md:text-5xl lg:text-6xl">
-            The toolkit we&rsquo;d hand a friend.
-          </h1>
-          <p className="mt-4 max-w-lg text-lg text-muted-foreground md:text-xl">
-            Curated tools, assets, prompts and guides. Updated every month. From the team behind @thats_gamedev.
-          </p>
-          <Link href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full sm:w-auto")}>
-            <span className="sm:hidden">Join · {monthly}/month</span>
-            <span className="hidden sm:inline">Join as a founding member · {monthly}/mo</span>
-          </Link>
-        </div>
+        <Stagger when="mount" stagger={0.1}>
+          <StaggerItem>
+            <Badge variant="new" className="h-6 px-2.5 text-xs">
+              Founding price · {monthly}/mo
+            </Badge>
+          </StaggerItem>
+          <StaggerItem variant="riseOnly">
+            <h1 className="mt-4 text-4xl leading-[1.05] font-bold tracking-tight md:text-5xl lg:text-6xl">
+              The toolkit we&rsquo;d hand a friend.
+            </h1>
+          </StaggerItem>
+          <StaggerItem>
+            <p className="mt-4 max-w-lg text-lg text-muted-foreground md:text-xl">
+              Curated tools, assets, prompts and guides. Updated every month. From the team behind @thats_gamedev.
+            </p>
+          </StaggerItem>
+          <StaggerItem>
+            <Link href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full sm:w-auto")}>
+              <span className="sm:hidden">Join · {monthly}/month</span>
+              <span className="hidden sm:inline">Join as a founding member · {monthly}/mo</span>
+            </Link>
+          </StaggerItem>
+        </Stagger>
         {cards.length > 0 && <HeroCards cards={cards} />}
       </div>
     </section>
   )
 }
 
-// Tilted on desktop (LW1), a plain stack on phones (LM1).
-const tilts = ["lg:rotate-[1.5deg] lg:ml-8", "lg:-rotate-1 lg:mr-8", "lg:rotate-[0.75deg] lg:ml-4 lg:mr-2"]
+// Tilted and staggered on desktop (LW1), a plain stack on phones (LM1). The
+// tilt is animated by HeroCard, so it's a number here, not a class.
+const layout = [
+  { tilt: 1.5, className: "lg:ml-8" },
+  { tilt: -1, className: "lg:mr-8" },
+  { tilt: 0.75, className: "lg:ml-4 lg:mr-2" },
+]
 
 function HeroCards({ cards }: { cards: PublicResource[] }) {
   return (
@@ -66,11 +80,13 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
         // "Tools list · October drop" for drop content, else "Tools list · 32 items" (LW1).
         const detail = card.dropMonth ? `${monthName(card.dropMonth)} drop` : resourceSize(card)
         return (
-          <li
+          <HeroCard
             key={card.title}
+            index={i}
+            tilt={layout[i]?.tilt ?? 0}
             className={cn(
               "flex items-center gap-4 rounded-card border border-border bg-card p-3 lg:p-4 lg:shadow-[0_8px_24px_-12px_rgb(0_0_0/0.18)]",
-              tilts[i]
+              layout[i]?.className
             )}
           >
             {card.coverPath ? (
@@ -94,7 +110,7 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
                 {[resourceTypeLabel(card), detail].filter(Boolean).join(" · ")}
               </p>
             </div>
-          </li>
+          </HeroCard>
         )
       })}
     </ul>
@@ -105,23 +121,27 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
 export function StatsStrip({ followers }: { followers: string | null }) {
   return (
     <section aria-label="At a glance" className="bg-ink text-white">
-      <ul className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 font-semibold sm:px-6 md:flex-row md:flex-wrap md:items-center md:gap-x-12 md:py-6 lg:px-10">
+      <Stagger
+        as="ul"
+        stagger={0.12}
+        className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 font-semibold sm:px-6 md:flex-row md:flex-wrap md:items-center md:gap-x-12 md:py-6 lg:px-10"
+      >
         {followers && (
-          <li className="flex items-center gap-3">
+          <StaggerItem as="li" className="flex items-center gap-3">
             <InstagramIcon aria-hidden className="hidden size-5 text-brand md:block" />
             <span className="rounded-md border border-dashed border-brand px-2 py-0.5">{followers}</span> followers on
             @thats_gamedev
-          </li>
+          </StaggerItem>
         )}
-        <li className="flex items-center gap-3">
+        <StaggerItem as="li" className="flex items-center gap-3">
           <CalendarDaysIcon aria-hidden className="hidden size-5 text-brand md:block" />
           New drop every month
-        </li>
-        <li className="flex items-center gap-3">
+        </StaggerItem>
+        <StaggerItem as="li" className="flex items-center gap-3">
           <BoxIcon aria-hidden className="hidden size-5 text-brand md:block" />
           Unity · Unreal · Blender · Maya
-        </li>
-      </ul>
+        </StaggerItem>
+      </Stagger>
     </section>
   )
 }
@@ -138,12 +158,12 @@ function InsideCard({
   example: string | null
 }) {
   return (
-    <div className="rounded-card border border-border bg-card p-6 md:p-7">
+    <StaggerItem className="h-full rounded-card border border-border bg-card p-6 transition-[translate,border-color] duration-300 hover:-translate-y-1 hover:border-ink/30 md:p-7">
       <Icon aria-hidden className="size-7" strokeWidth={1.75} />
       <h3 className="mt-4 text-2xl font-bold">{title}</h3>
       <p className="mt-2 text-muted-foreground">{text}</p>
       {example && <p className="mt-4 truncate rounded-lg bg-muted px-4 py-2.5 font-mono text-sm">{example}</p>}
-    </div>
+    </StaggerItem>
   )
 }
 
@@ -152,8 +172,10 @@ const withCount = (r: PublicResource | null) => (r ? (r.itemCount ? `${r.title} 
 export function WhatsInside({ examples }: { examples: LandingData["examples"] }) {
   return (
     <section id="inside" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-14 sm:px-6 md:py-24 lg:px-10">
-      <h2 className="text-4xl font-bold tracking-tight md:text-5xl">What&rsquo;s inside</h2>
-      <div className="mt-8 grid gap-4 md:grid-cols-2 md:gap-5">
+      <Reveal>
+        <h2 className="text-4xl font-bold tracking-tight md:text-5xl">What&rsquo;s inside</h2>
+      </Reveal>
+      <Stagger stagger={0.1} className="mt-8 grid gap-4 md:grid-cols-2 md:gap-5">
         <InsideCard
           icon={ListChecksIcon}
           title="Curated lists"
@@ -178,8 +200,8 @@ export function WhatsInside({ examples }: { examples: LandingData["examples"] })
           text="15% off thats_gamedev clothing and 10% off page promotions."
           example="TGD-MERCH-7K4Q9X"
         />
-      </div>
-      <div className="mt-4 flex flex-col gap-6 rounded-card bg-ink p-6 text-white md:mt-5 md:flex-row md:items-center md:p-7">
+      </Stagger>
+      <Reveal className="mt-4 flex flex-col gap-6 rounded-card bg-ink p-6 text-white md:mt-5 md:flex-row md:items-center md:p-7">
         <div className="flex-1">
           <h3 className="flex items-center gap-2 text-2xl font-bold">
             Get featured on @thats_gamedev <RocketIcon aria-hidden className="size-6 text-brand" />
@@ -198,7 +220,7 @@ export function WhatsInside({ examples }: { examples: LandingData["examples"] })
             </li>
           ))}
         </ul>
-      </div>
+      </Reveal>
     </section>
   )
 }
@@ -207,7 +229,7 @@ export function DropTeaser({ drop }: { drop: NonNullable<LandingData["drop"]> })
   const summary = dropSummary(drop.kinds)
   return (
     <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
-      <div className="grid gap-8 rounded-[28px] bg-ink p-6 text-white md:grid-cols-2 md:items-center md:p-11">
+      <Reveal className="grid gap-8 rounded-[28px] bg-ink p-6 text-white md:grid-cols-2 md:items-center md:p-11">
         <div>
           <p className="text-sm font-semibold text-brand">This month&rsquo;s drop</p>
           <h2 className="mt-2 text-4xl leading-tight font-bold md:text-5xl">{dropHeading(drop)}</h2>
@@ -216,9 +238,9 @@ export function DropTeaser({ drop }: { drop: NonNullable<LandingData["drop"]> })
           </p>
         </div>
         {drop.kinds.length > 0 && (
-          <ul className="space-y-3">
+          <Stagger as="ul" stagger={0.12} delay={0.2} className="space-y-3">
             {drop.kinds.slice(0, 4).map((kind, i) => (
-              <li key={i} className="flex items-center gap-4 rounded-2xl border border-ink-border bg-ink-2 px-5 py-4">
+              <StaggerItem as="li" key={i} className="flex items-center gap-4 rounded-2xl border border-ink-border bg-ink-2 px-5 py-4">
                 <ResourceIcon type={kind.type} listKind={kind.listKind} className="size-5 shrink-0 text-white/60" />
                 {/* A blurred stand-in, not the real title: the content stays members-only. */}
                 <span aria-hidden className="h-3 flex-1 rounded-full bg-white/25 blur-[3px]" />
@@ -227,11 +249,11 @@ export function DropTeaser({ drop }: { drop: NonNullable<LandingData["drop"]> })
                   Members only
                   <span className="sr-only">: {resourceTypeLabel(kind)}</span>
                 </span>
-              </li>
+              </StaggerItem>
             ))}
-          </ul>
+          </Stagger>
         )}
-      </div>
+      </Reveal>
     </section>
   )
 }
@@ -243,7 +265,7 @@ export function FreeList({ list }: { list: PublicList }) {
   return (
     <section className="bg-card">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:py-24 lg:grid-cols-[1fr_1.6fr] lg:gap-14 lg:px-10">
-        <div>
+        <Reveal>
           <p className="text-sm font-semibold text-muted-foreground">Free list</p>
           <h2 className="mt-2 text-4xl leading-tight font-bold tracking-tight md:text-5xl">{list.title}</h2>
           <p className="mt-3 text-muted-foreground">
@@ -253,13 +275,13 @@ export function FreeList({ list }: { list: PublicList }) {
           <Link href={`/lists/${list.slug}`} className="mt-4 inline-block font-semibold text-brand hover:underline">
             Open the free list
           </Link>
-        </div>
+        </Reveal>
         <div>
-          <ol className="space-y-3">
+          <Stagger as="ol" stagger={0.1} className="space-y-3">
             {items.map((item, i) => {
               const url = "url" in item ? item.url : null
               return (
-                <li key={item.id} className="flex items-center gap-4 rounded-card border border-border bg-card px-5 py-4">
+                <StaggerItem as="li" key={item.id} className="flex items-center gap-4 rounded-card border border-border bg-card px-5 py-4">
                   <span className="font-mono text-sm text-brand">{String(i + 1).padStart(2, "0")}</span>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{item.name}</p>
@@ -275,11 +297,15 @@ export function FreeList({ list }: { list: PublicList }) {
                       Open
                     </a>
                   )}
-                </li>
+                </StaggerItem>
               )
             })}
-          </ol>
-          {list.itemCount > free && <LockedBlurRows total={list.itemCount} tone="muted" className="mt-3" />}
+          </Stagger>
+          {list.itemCount > free && (
+            <Reveal>
+              <LockedBlurRows total={list.itemCount} tone="muted" className="mt-3" />
+            </Reveal>
+          )}
         </div>
       </div>
     </section>
@@ -289,7 +315,7 @@ export function FreeList({ list }: { list: PublicList }) {
 export function CodeYourHero() {
   return (
     <section className="mx-auto max-w-6xl px-4 pt-14 sm:px-6 md:pt-24 lg:px-10">
-      <div className="flex flex-col gap-6 rounded-[28px] border border-ink bg-card p-6 md:flex-row md:items-center md:p-9">
+      <Reveal className="flex flex-col gap-6 rounded-[28px] border border-ink bg-card p-6 md:flex-row md:items-center md:p-9">
         <div className="flex-1">
           <Badge variant="info" className="h-6 px-2.5 text-xs">
             In development
@@ -312,7 +338,7 @@ export function CodeYourHero() {
           <span className="text-brand">SetInvulnerable</span>(<span className="text-emerald-300">0.2f</span>);
           {"\n}"}
         </pre>
-      </div>
+      </Reveal>
     </section>
   )
 }
@@ -320,12 +346,12 @@ export function CodeYourHero() {
 export function CtaBand() {
   return (
     <section className="bg-ink text-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between md:py-20 lg:px-10">
+      <Reveal className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between md:py-20 lg:px-10">
         <h2 className="max-w-xl text-4xl leading-tight font-bold md:text-5xl">Support the page, level up your work.</h2>
         <Link href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "w-full md:w-auto")}>
           Join as a founding member · {monthly}/mo
         </Link>
-      </div>
+      </Reveal>
     </section>
   )
 }
