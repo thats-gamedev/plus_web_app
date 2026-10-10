@@ -47,7 +47,9 @@ function HeaderCard({
         {cover && <Cover resource={resource} />}
         <div className="flex min-w-0 flex-1 flex-col">
           <ResourceBadges resource={resource} />
-          <h1 className="mt-3 text-xl leading-tight font-bold md:text-4xl">{resource.title}</h1>
+          {/* One step below the free-standing page titles (text-4xl): inside a card the
+              same size reads larger. */}
+          <h1 className="mt-3 text-2xl leading-tight font-bold md:text-3xl">{resource.title}</h1>
           <p className="mt-2 font-mono text-xs text-muted-foreground md:mt-3 md:text-sm">{meta}</p>
           <div className={cover ? "mt-4 hidden text-muted-foreground md:block" : "mt-4 text-muted-foreground"}>{description}</div>
           {children && <div className="mt-auto hidden justify-end pt-6 md:flex">{children}</div>}
