@@ -77,7 +77,7 @@ export function CreatorsList({ doc, now }: { doc: ListDocumentOf<"creators">; no
         {sections.map((section) => (
           <section key={section.id} aria-label={section.title}>
             {showTitles && <h2 className="mb-3 text-xl font-bold md:text-2xl">{section.title}</h2>}
-            <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <ul className="grid gap-3 md:grid-cols-2 md:gap-4 2xl:grid-cols-3">
               {section.items.map((item) => (
                 <li key={item.id}>
                   <CreatorCard item={item} isNew={isNewItem(item.addedAt, new Date(now))} />
@@ -96,11 +96,11 @@ function CreatorCard({ item, isNew }: { item: CreatorItem; isNew: boolean }) {
   const others = item.links.filter((link) => link.platform !== item.primaryPlatform)
 
   return (
-    <article className="flex h-full flex-col rounded-card border border-border bg-card p-4">
+    <article className="flex h-full flex-col rounded-card border border-border bg-card p-4 md:p-[18px]">
       <div className="flex items-center gap-3">
-        <ItemImage path={item.imagePath} sizes="48px" rounded="rounded-full" className="size-11 bg-pastel-mint md:size-12" />
+        <ItemImage path={item.imagePath} sizes="56px" rounded="rounded-full" className="size-12 bg-pastel-mint md:size-14" />
         <div className="min-w-0">
-          <h3 className="flex flex-wrap items-center gap-2 text-base font-semibold">
+          <h3 className="flex flex-wrap items-center gap-2 text-base font-semibold md:text-[17px]">
             {item.name}
             {isNew && <Badge variant="new">New</Badge>}
             {item.isAffiliate && <Badge variant="affiliate">Affiliate</Badge>}
@@ -116,7 +116,7 @@ function CreatorCard({ item, isNew }: { item: CreatorItem; isNew: boolean }) {
         </div>
       </div>
 
-      <p className="mt-3 text-sm text-muted-foreground">{item.why}</p>
+      <p className="mt-3 text-sm text-muted-foreground md:text-[15px]">{item.why}</p>
       {item.startHereUrl && (
         <a
           {...externalLinkProps(item.startHereUrl)}
@@ -127,7 +127,7 @@ function CreatorCard({ item, isNew }: { item: CreatorItem; isNew: boolean }) {
         </a>
       )}
 
-      <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
+      <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
         <a {...externalLinkProps(item.url, item.isAffiliate)} className={buttonVariants({ variant: "dark", size: "sm" })}>
           Open on {socialPlatformLabels[item.primaryPlatform]}
         </a>
