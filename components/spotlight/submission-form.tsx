@@ -11,6 +11,7 @@ import { Chip } from "@/components/ui/chip"
 import { CountedTextarea } from "@/components/ui/counted-textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { idleState } from "@/lib/auth/form-state"
 import {
   CREDIT_PLATFORMS,
@@ -36,6 +37,10 @@ export function SubmissionForm({ userId, monthLabel }: { userId: string; monthLa
   const fileInput = useRef<HTMLInputElement>(null)
   const errors = state.fieldErrors ?? {}
   const values = state.values
+  // The app's dropdowns instead of the browser's; the values travel in hidden
+  // inputs, so they survive React's form reset after a failed submit.
+  const [projectType, setProjectType] = useState(values?.projectType ?? "")
+  const [engine, setEngine] = useState(values?.engine ?? "")
 
   async function upload(files: FileList) {
     setUploadError(null)
@@ -82,36 +87,40 @@ export function SubmissionForm({ userId, monthLabel }: { userId: string; monthLa
           <Label htmlFor="projectType" className="font-semibold">
             What is it?
           </Label>
-          <select
-            id="projectType"
-            name="projectType"
-            defaultValue={values?.projectType ?? ""}
-            aria-invalid={errors.projectType ? true : undefined}
-            className="h-11 w-full rounded-lg border border-input bg-card px-3 text-sm"
-          >
-            <option value="" disabled>
-              Pick one
-            </option>
-            {Object.entries(PROJECT_TYPES).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <input type="hidden" name="projectType" value={projectType} />
+          <Select value={projectType} onValueChange={setProjectType}>
+            <SelectTrigger id="projectType" aria-invalid={errors.projectType ? true : undefined} className="w-full">
+              <SelectValue placeholder="Pick one" />
+            </SelectTrigger>
+            <SelectContent position="popper" align="start">
+              {Object.entries(PROJECT_TYPES).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.projectType && <p className="text-xs text-danger">{errors.projectType}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="engine" className="font-semibold">
             Made with (optional)
           </Label>
-          <select id="engine" name="engine" defaultValue={values?.engine ?? ""} className="h-11 w-full rounded-lg border border-input bg-card px-3 text-sm">
-            <option value="">–</option>
-            {ENGINES.map((e) => (
-              <option key={e} value={e}>
-                {e}
-              </option>
-            ))}
-          </select>
+          <input type="hidden" name="engine" value={engine} />
+          {/* "none" stands for no engine: Radix items can't use an empty value. */}
+          <Select value={engine || "none"} onValueChange={(next) => setEngine(next === "none" ? "" : next)}>
+            <SelectTrigger id="engine" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" align="start">
+              <SelectItem value="none">–</SelectItem>
+              {ENGINES.map((e) => (
+                <SelectItem key={e} value={e}>
+                  {e}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

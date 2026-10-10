@@ -151,7 +151,7 @@ function FilterMenu<T extends string>({
         {label}: {current?.label ?? "All"}
         <ChevronDownIcon aria-hidden className="size-3.5" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-40">
+      <DropdownMenuContent align="start" sideOffset={6}>
         <DropdownMenuRadioGroup
           value={value ?? ALL}
           onValueChange={(next) => onChange(next === ALL ? null : (next as T))}
