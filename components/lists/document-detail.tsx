@@ -114,8 +114,9 @@ export function GuideDetail({ resource }: { resource: ResourceDetail }) {
         description={resource.summary}
       />
       {resource.bodyMd ? (
-        <article className="mt-6 rounded-panel border border-border bg-card px-5 py-6 md:mt-8 md:px-12 md:py-10">
-          <MarkdownArticle className="mx-auto max-w-prose">{resource.bodyMd}</MarkdownArticle>
+        <article className="mt-6 rounded-panel border border-border bg-card p-5 md:mt-8 md:p-8">
+          {/* Left-aligned with the header card above; the reading width stays limited. */}
+          <MarkdownArticle className="max-w-prose">{resource.bodyMd}</MarkdownArticle>
         </article>
       ) : (
         <p className="mt-6 text-muted-foreground">This guide is still being written.</p>
