@@ -4,7 +4,8 @@ import { cn } from "cn"
 import { Slot } from "radix-ui"
 
 // "Chunky" buttons from the mockups: solid fill plus a darker 3px bottom
-// shadow that collapses when pressed.
+// shadow that collapses when pressed. Outline buttons have a 2px border and
+// a 2px shadow, so their bottom edge is as thick as the others'.
 const buttonStyles = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent font-semibold whitespace-nowrap transition-[transform,box-shadow,background-color] outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/40 active:not-aria-[haspopup]:translate-y-[2px] disabled:pointer-events-none disabled:border-transparent disabled:bg-muted disabled:text-faint disabled:shadow-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
@@ -15,11 +16,11 @@ const buttonStyles = cva(
         dark:
           "bg-ink text-white shadow-[0_3px_0_#000] hover:bg-ink-2 active:shadow-[0_1px_0_#000]",
         outline:
-          "border-ink bg-card text-foreground shadow-[0_3px_0_var(--ink)] hover:bg-muted/60 active:shadow-[0_1px_0_var(--ink)]",
+          "border-2 border-ink bg-card text-foreground shadow-[0_2px_0_var(--ink)] hover:bg-muted/60 active:shadow-none",
         destructive:
           "bg-danger text-white shadow-[0_3px_0_#a8322c] hover:brightness-105 active:shadow-[0_1px_0_#a8322c]",
         "destructive-outline":
-          "border-danger bg-card text-danger shadow-[0_3px_0_var(--danger)] hover:bg-danger-soft active:shadow-[0_1px_0_var(--danger)]",
+          "border-2 border-danger bg-card text-danger shadow-[0_2px_0_var(--danger)] hover:bg-danger-soft active:shadow-none",
         secondary: "bg-muted text-foreground hover:bg-border active:translate-y-0",
         ghost: "text-foreground hover:bg-muted active:translate-y-0",
         link: "h-auto px-0 text-brand underline-offset-4 hover:underline active:translate-y-0",
