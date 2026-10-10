@@ -77,160 +77,178 @@ export function SubmissionForm({ userId, monthLabel }: { userId: string; monthLa
   const creditList = Object.entries(credits).map(([platform, handle]) => ({ platform, handle: handle ?? "" }))
 
   return (
-    <form action={action} className="space-y-5 rounded-card border border-border bg-card p-5 md:p-6" noValidate>
-      <p className="hidden text-xs font-semibold text-muted-foreground md:block">{monthLabel} submission</p>
-      <input type="hidden" name="mediaPaths" value={JSON.stringify(uploads.map((u) => u.path))} />
-      <input type="hidden" name="credits" value={JSON.stringify(creditList)} />
+    // On desktop the card is as tall as the window allows: the fields scroll,
+    // the footer with consent and Submit stays at the bottom. Phones scroll
+    // the page as usual.
+    <form
+      action={action}
+      className="flex flex-col rounded-card border border-border bg-card lg:max-h-[calc(100dvh-10rem)]"
+      noValidate
+    >
+      <div className="min-h-0 flex-1 space-y-4 p-5 [scrollbar-width:thin] lg:overflow-y-auto lg:overscroll-contain md:p-6">
+        <p className="hidden text-xs font-semibold text-muted-foreground md:block">{monthLabel} submission</p>
+        <input type="hidden" name="mediaPaths" value={JSON.stringify(uploads.map((u) => u.path))} />
+        <input type="hidden" name="credits" value={JSON.stringify(creditList)} />
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label htmlFor="projectType" className="font-semibold">
-            What is it?
-          </Label>
-          <input type="hidden" name="projectType" value={projectType} />
-          <Select value={projectType} onValueChange={setProjectType}>
-            <SelectTrigger id="projectType" aria-invalid={errors.projectType ? true : undefined} className="w-full">
-              <SelectValue placeholder="Pick one" />
-            </SelectTrigger>
-            <SelectContent position="popper" align="start">
-              {Object.entries(PROJECT_TYPES).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.projectType && <p className="text-xs text-danger">{errors.projectType}</p>}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="projectType" className="font-semibold">
+              What is it?
+            </Label>
+            <input type="hidden" name="projectType" value={projectType} />
+            <Select value={projectType} onValueChange={setProjectType}>
+              <SelectTrigger id="projectType" aria-invalid={errors.projectType ? true : undefined} className="w-full">
+                <SelectValue placeholder="Pick one" />
+              </SelectTrigger>
+              <SelectContent position="popper" align="start">
+                {Object.entries(PROJECT_TYPES).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.projectType && <p className="text-xs text-danger">{errors.projectType}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="engine" className="font-semibold">
+              Made with (optional)
+            </Label>
+            <input type="hidden" name="engine" value={engine} />
+            {/* "none" stands for no engine: Radix items can't use an empty value. */}
+            <Select value={engine || "none"} onValueChange={(next) => setEngine(next === "none" ? "" : next)}>
+              <SelectTrigger id="engine" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" align="start">
+                <SelectItem value="none">–</SelectItem>
+                {ENGINES.map((e) => (
+                  <SelectItem key={e} value={e}>
+                    {e}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        <FormField name="title" label="Project title" maxLength={80} defaultValue={values?.title} error={errors.title} />
         <div className="space-y-2">
-          <Label htmlFor="engine" className="font-semibold">
-            Made with (optional)
+          <Label htmlFor="description" className="font-semibold">
+            Short description
           </Label>
-          <input type="hidden" name="engine" value={engine} />
-          {/* "none" stands for no engine: Radix items can't use an empty value. */}
-          <Select value={engine || "none"} onValueChange={(next) => setEngine(next === "none" ? "" : next)}>
-            <SelectTrigger id="engine" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent position="popper" align="start">
-              <SelectItem value="none">–</SelectItem>
-              {ENGINES.map((e) => (
-                <SelectItem key={e} value={e}>
-                  {e}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CountedTextarea
+            id="description"
+            name="description"
+            rows={2}
+            maxLength={SPOTLIGHT_LIMITS.description}
+            defaultValue={values?.description}
+            aria-invalid={errors.description ? true : undefined}
+          />
+          {errors.description && <p className="text-xs text-danger">{errors.description}</p>}
         </div>
-      </div>
 
-      <FormField name="title" label="Project title" maxLength={80} defaultValue={values?.title} error={errors.title} />
-      <div className="space-y-2">
-        <Label htmlFor="description" className="font-semibold">
-          Short description
-        </Label>
-        <CountedTextarea
-          id="description"
-          name="description"
-          rows={2}
-          maxLength={SPOTLIGHT_LIMITS.description}
-          defaultValue={values?.description}
-          aria-invalid={errors.description ? true : undefined}
-        />
-        {errors.description && <p className="text-xs text-danger">{errors.description}</p>}
-      </div>
-
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold">Images · up to 3, 10 MB each</legend>
-        <div className="grid grid-cols-3 gap-3">
-          {uploads.map((u) => (
-            <div key={u.path} className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-pastel-mint">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local preview of the member's own file */}
-              <img src={u.preview} alt="" className="size-full object-cover" />
-              <span className="absolute inset-x-0 bottom-0 truncate bg-ink/60 px-2 py-1 font-mono text-[10px] text-white">{u.name}</span>
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-semibold">Images · up to 3, 10 MB each</legend>
+          <div className="grid grid-cols-3 gap-3">
+            {uploads.map((u) => (
+              <div key={u.path} className="group relative aspect-[16/10] overflow-hidden rounded-xl bg-pastel-mint">
+                {/* eslint-disable-next-line @next/next/no-img-element -- local preview of the member's own file */}
+                <img src={u.preview} alt="" className="size-full object-cover" />
+                <span className="absolute inset-x-0 bottom-0 truncate bg-ink/60 px-2 py-1 font-mono text-[10px] text-white">{u.name}</span>
+                <button
+                  type="button"
+                  aria-label={`Remove ${u.name}`}
+                  onClick={() => setUploads((all) => all.filter((x) => x.path !== u.path))}
+                  className="absolute top-1.5 right-1.5 rounded-full bg-card/90 p-1 shadow-sm hover:bg-card"
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              </div>
+            ))}
+            {uploads.length < SPOTLIGHT_LIMITS.images && (
               <button
                 type="button"
-                aria-label={`Remove ${u.name}`}
-                onClick={() => setUploads((all) => all.filter((x) => x.path !== u.path))}
-                className="absolute top-1.5 right-1.5 rounded-full bg-card/90 p-1 shadow-sm hover:bg-card"
+                onClick={() => fileInput.current?.click()}
+                disabled={uploading}
+                className="flex aspect-[16/10] flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-ink/30 hover:text-foreground"
               >
-                <XIcon className="size-3.5" />
+                <ImagePlusIcon aria-hidden className="size-5" />
+                <span className="hidden sm:inline">{uploading ? "Uploading…" : "Add image"}</span>
               </button>
+            )}
+          </div>
+          <input
+            ref={fileInput}
+            type="file"
+            accept={ACCEPT}
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            onChange={(e) => {
+              if (e.target.files?.length) void upload(e.target.files)
+              e.target.value = ""
+            }}
+          />
+          {(uploadError || errors.mediaPaths) && (
+            <p role="alert" className="text-xs text-danger">
+              {uploadError ?? errors.mediaPaths}
+            </p>
+          )}
+        </fieldset>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <FormField name="videoUrl" label="Or a video link" placeholder="youtube.com/…" defaultValue={values?.videoUrl} error={errors.videoUrl} />
+          <FormField name="projectUrl" label="Project link (optional)" placeholder="artstation.com/…" defaultValue={values?.projectUrl} error={errors.projectUrl} />
+        </div>
+
+        <fieldset className="space-y-3 border-t border-border pt-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <legend className="text-sm font-semibold">Credit me on</legend>
+            <span className="text-xs text-faint">Pick any. We tag what fits the post.</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(CREDIT_PLATFORMS) as CreditPlatform[]).map((p) => (
+              <Chip key={p} active={p in credits} onClick={() => togglePlatform(p)}>
+                {CREDIT_PLATFORMS[p]}
+              </Chip>
+            ))}
+          </div>
+          {(Object.keys(credits) as CreditPlatform[]).map((p) => (
+            <div key={p} className="space-y-1.5">
+              <Label htmlFor={`credit-${p}`}>{p === "website" ? "Website" : `${CREDIT_PLATFORMS[p]} handle`}</Label>
+              <Input
+                id={`credit-${p}`}
+                value={credits[p] ?? ""}
+                placeholder={p === "website" ? "https://…" : "@yourname"}
+                className="font-mono"
+                onChange={(e) => setCredits((c) => ({ ...c, [p]: e.target.value }))}
+              />
             </div>
           ))}
-          {uploads.length < SPOTLIGHT_LIMITS.images && (
-            <button
-              type="button"
-              onClick={() => fileInput.current?.click()}
-              disabled={uploading}
-              className="flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground hover:border-ink/30 hover:text-foreground"
-            >
-              <ImagePlusIcon aria-hidden className="size-5" />
-              <span className="hidden sm:inline">{uploading ? "Uploading…" : "Add image"}</span>
-            </button>
-          )}
-        </div>
-        <input
-          ref={fileInput}
-          type="file"
-          accept={ACCEPT}
-          multiple
-          className="sr-only"
-          tabIndex={-1}
-          onChange={(e) => {
-            if (e.target.files?.length) void upload(e.target.files)
-            e.target.value = ""
-          }}
-        />
-        {(uploadError || errors.mediaPaths) && (
-          <p role="alert" className="text-xs text-danger">
-            {uploadError ?? errors.mediaPaths}
-          </p>
-        )}
-      </fieldset>
+          {errors.credits && <p className="text-xs text-danger">{errors.credits}</p>}
+        </fieldset>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <FormField name="videoUrl" label="Or a video link" placeholder="youtube.com/…" defaultValue={values?.videoUrl} error={errors.videoUrl} />
-        <FormField name="projectUrl" label="Project link (optional)" placeholder="artstation.com/…" defaultValue={values?.projectUrl} error={errors.projectUrl} />
       </div>
 
-      <fieldset className="space-y-3 border-t border-border pt-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <legend className="text-sm font-semibold">Credit me on</legend>
-          <span className="text-xs text-faint">Pick any. We tag what fits the post.</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {(Object.keys(CREDIT_PLATFORMS) as CreditPlatform[]).map((p) => (
-            <Chip key={p} active={p in credits} onClick={() => togglePlatform(p)}>
-              {CREDIT_PLATFORMS[p]}
-            </Chip>
-          ))}
-        </div>
-        {(Object.keys(credits) as CreditPlatform[]).map((p) => (
-          <div key={p} className="space-y-1.5">
-            <Label htmlFor={`credit-${p}`}>{p === "website" ? "Website" : `${CREDIT_PLATFORMS[p]} handle`}</Label>
-            <Input
-              id={`credit-${p}`}
-              value={credits[p] ?? ""}
-              placeholder={p === "website" ? "https://…" : "@yourname"}
-              className="font-mono"
-              onChange={(e) => setCredits((c) => ({ ...c, [p]: e.target.value }))}
-            />
-          </div>
-        ))}
-        {errors.credits && <p className="text-xs text-danger">{errors.credits}</p>}
-      </fieldset>
-
-      <label className="flex items-start gap-3">
-        <Checkbox name="consent" checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
-        <span className="text-sm">I own this work and allow @thats_gamedev to post it with credit.</span>
-      </label>
-      {errors.consent && <p className="text-xs text-danger">{errors.consent}</p>}
-
-      {state.status === "error" && state.message && <Banner variant="danger">{state.message}</Banner>}
-      <Button type="submit" size="lg" className="w-full" disabled={pending || uploading || !consent}>
-        {pending ? "Submitting…" : "Submit project"}
-      </Button>
+      <div className="shrink-0 space-y-3 border-t border-border p-4 md:px-6">
+        {/* Toggled on clicks only and sent in the hidden input: Radix would
+            untick it on the form reset React fires after every submit. */}
+        <input type="hidden" name="consent" value={consent ? "on" : ""} />
+        <label className="flex cursor-pointer items-start gap-3">
+          <Checkbox
+            checked={consent}
+            onClick={() => setConsent(!consent)}
+            className="mt-px size-5 rounded-[5px] border-[1.5px] border-ink/70 bg-card data-checked:border-brand data-checked:bg-brand [&_svg]:size-3.5"
+          />
+          <span className="text-sm">I own this work and allow @thats_gamedev to post it with credit.</span>
+        </label>
+        {errors.consent && <p className="text-xs text-danger">{errors.consent}</p>}
+        {state.status === "error" && state.message && <Banner variant="danger">{state.message}</Banner>}
+        <Button type="submit" size="lg" className="h-11 w-full" disabled={pending || uploading || !consent}>
+          {pending ? "Submitting…" : "Submit project"}
+        </Button>
+      </div>
     </form>
   )
 }
