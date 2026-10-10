@@ -34,18 +34,18 @@ const monthly = PLANS.founding_monthly.price
 export function Hero({ cards }: { cards: PublicResource[] }) {
   return (
     <section className="overflow-hidden">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-[1.1fr_1fr] lg:gap-6 lg:px-10 lg:py-28">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1.1fr_1fr] lg:gap-10 lg:px-10 lg:py-20">
         <div>
-          <Badge variant="new" className="h-7 px-3 text-sm">
+          <Badge variant="new" className="h-6 px-2.5 text-xs">
             Founding price · {monthly}/mo
           </Badge>
-          <h1 className="mt-5 text-5xl leading-[1.02] font-bold tracking-tight md:text-7xl">
+          <h1 className="mt-4 text-4xl leading-[1.05] font-bold tracking-tight md:text-5xl lg:text-6xl">
             The toolkit we&rsquo;d hand a friend.
           </h1>
-          <p className="mt-5 max-w-xl text-lg text-muted-foreground md:text-2xl">
+          <p className="mt-4 max-w-lg text-lg text-muted-foreground md:text-xl">
             Curated tools, assets, prompts and guides. Updated every month. From the team behind @thats_gamedev.
           </p>
-          <Link href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "mt-7 w-full sm:w-auto")}>
+          <Link href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full sm:w-auto")}>
             <span className="sm:hidden">Join · {monthly}/month</span>
             <span className="hidden sm:inline">Join as a founding member · {monthly}/mo</span>
           </Link>
@@ -57,11 +57,11 @@ export function Hero({ cards }: { cards: PublicResource[] }) {
 }
 
 // Tilted on desktop (LW1), a plain stack on phones (LM1).
-const tilts = ["lg:rotate-[2deg] lg:translate-x-10", "lg:-rotate-[1.5deg]", "lg:rotate-[1deg] lg:translate-x-6"]
+const tilts = ["lg:rotate-[1.5deg] lg:translate-x-6", "lg:-rotate-1", "lg:rotate-[0.75deg] lg:translate-x-4"]
 
 function HeroCards({ cards }: { cards: PublicResource[] }) {
   return (
-    <ul aria-label="Recently added" className="space-y-3 lg:space-y-0 lg:[&>li+li]:-mt-3">
+    <ul aria-label="Recently added" className="space-y-3 lg:mx-auto lg:max-w-md lg:space-y-0 lg:[&>li+li]:-mt-2">
       {cards.map((card, i) => {
         // "Tools list · October drop" for drop content, else "Tools list · 32 items" (LW1).
         const detail = card.dropMonth ? `${monthName(card.dropMonth)} drop` : resourceSize(card)
@@ -69,28 +69,28 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
           <li
             key={card.title}
             className={cn(
-              "flex items-center gap-4 rounded-card border border-border bg-card p-4 lg:p-5 lg:shadow-[0_8px_24px_-12px_rgb(0_0_0/0.18)]",
+              "flex items-center gap-3.5 rounded-card border border-border bg-card p-3 lg:p-3.5 lg:shadow-[0_8px_24px_-12px_rgb(0_0_0/0.18)]",
               tilts[i]
             )}
           >
             {card.coverPath ? (
-              <div className="relative size-16 shrink-0 overflow-hidden rounded-xl lg:size-24">
-                <Image src={coverUrl(card.coverPath)} alt="" fill sizes="96px" priority={i === 0} className="object-cover" />
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl lg:size-16">
+                <Image src={coverUrl(card.coverPath)} alt="" fill sizes="64px" priority={i === 0} className="object-cover" />
               </div>
             ) : (
-              <PlaceholderCover tone={categoryTones[card.category]} className="size-16 lg:size-24">
+              <PlaceholderCover tone={categoryTones[card.category]} className="size-14 lg:size-16">
                 <ResourceIcon type={card.type} listKind={card.listKind} />
               </PlaceholderCover>
             )}
             <div className="min-w-0">
-              <p className="text-sm text-muted-foreground lg:hidden">
+              <p className="text-xs text-muted-foreground lg:hidden">
                 {[categoryLabels[card.category], resourceTypeLabel(card), detail].filter(Boolean).join(" · ")}
               </p>
               <Badge variant={card.category} className="hidden lg:inline-flex">
                 {categoryLabels[card.category]}
               </Badge>
-              <p className="mt-0.5 text-lg leading-snug font-semibold lg:mt-2 lg:text-xl">{card.title}</p>
-              <p className="mt-1 hidden font-mono text-sm text-muted-foreground lg:block">
+              <p className="mt-0.5 leading-snug font-semibold lg:mt-1.5">{card.title}</p>
+              <p className="mt-0.5 hidden font-mono text-xs text-muted-foreground lg:block">
                 {[resourceTypeLabel(card), detail].filter(Boolean).join(" · ")}
               </p>
             </div>
