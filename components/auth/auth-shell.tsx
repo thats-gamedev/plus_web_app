@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 // - Default: slim header and the site footer (/cancel, /withdraw).
 // - `bare` (login, sign-up, password reset): no header or footer bar, just the
 //   logo above the form and the legal links as a quiet line below it, since
-//   the law wants them reachable from every page.
+//   the law wants them reachable from every page. The page is exactly one
+//   window high and never scrolls; in a short window the form's fields
+//   scroll instead (see FormFields in ./forms).
 export function AuthShell({
   headerAction,
   aside,
@@ -22,13 +24,13 @@ export function AuthShell({
 }) {
   if (bare) {
     return (
-      <main className="grid min-h-dvh flex-1 lg:grid-cols-2">
-        <div className="flex flex-col px-4 py-6 sm:px-6 lg:px-16 lg:py-10">
-          <Logo />
-          <div className="flex flex-1 items-start py-10 lg:items-center lg:py-12">
-            <div className="w-full max-w-[500px]">{children}</div>
+      <main className="grid h-dvh min-h-0 shrink-0 grid-rows-1 overflow-hidden lg:grid-cols-2">
+        <div className="flex min-h-0 flex-col px-4 py-6 sm:px-6 lg:px-16 lg:py-10">
+          <Logo className="shrink-0" />
+          <div className="flex min-h-0 flex-1 flex-col justify-center py-6 lg:py-10">
+            <div className="flex min-h-0 w-full max-w-[500px] flex-col">{children}</div>
           </div>
-          <LegalLinks className="gap-x-4 text-xs text-muted-foreground" />
+          <LegalLinks className="shrink-0 gap-x-4 text-xs text-muted-foreground" />
         </div>
         <aside className="hidden bg-ink-2 text-white lg:block">{aside}</aside>
       </main>

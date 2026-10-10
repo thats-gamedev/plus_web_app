@@ -28,6 +28,19 @@ function FormMessage({ state }: { state: { status: string; message?: string } })
   )
 }
 
+// The auth pages don't scroll (AuthShell bare): in a short window only the
+// fields scroll, while the heading above and the button below stay put.
+const formLayout = "flex min-h-0 flex-1 flex-col"
+
+function FormFields({ children }: { children: React.ReactNode }) {
+  // The small inset keeps the fields' focus rings from being clipped.
+  return <div className="-mx-1 min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-1 py-1 [scrollbar-width:thin]">{children}</div>
+}
+
+function FormActions({ children }: { children: React.ReactNode }) {
+  return <div className="shrink-0 space-y-4 pt-5">{children}</div>
+}
+
 function SwitchLink({ text, href, label }: { text: string; href: string; label: string }) {
   return (
     <p className="text-center text-muted-foreground lg:text-left">
@@ -77,58 +90,58 @@ export function SignUpForm() {
   }
 
   return (
-    <form action={action} className="space-y-5" noValidate>
+    <form action={action} className={formLayout} noValidate>
       {/* Carried through email confirmation to the paywall and checkout. */}
       {plan && <input type="hidden" name="plan" value={plan} />}
       {consent && <input type="hidden" name="consent" value={consent} />}
-      <FormField
-        name="displayName"
-        label="Display name"
-        placeholder="Mara"
-        autoComplete="nickname"
-        maxLength={60}
-        required
-        defaultValue={state.values?.displayName}
-        error={errors.displayName}
-      />
-      <FormField
-        name="email"
-        type="email"
-        label="Email"
-        placeholder="you@studio.com"
-        autoComplete="email"
-        required
-        defaultValue={state.values?.email}
-        error={errors.email}
-      />
-      <FormField
-        name="password"
-        password
-        label="Password"
-        autoComplete="new-password"
-        minLength={PASSWORD_MIN}
-        required
-        hint={passwordHint}
-        error={errors.password}
-      />
-      <FormField
-        name="passwordRepeat"
-        password
-        label="Repeat password"
-        autoComplete="new-password"
-        required
-        error={errors.passwordRepeat}
-      />
-      <Turnstile resetKey={state} />
-      <FormMessage state={state} />
-      <Button type="submit" size="lg" className="w-full" disabled={pending}>
-        {pending ? "Creating account…" : "Create account"}
-      </Button>
-      <SwitchLink
-        text="Already have an account?"
-        href={loginHref}
-        label="Log in"
-      />
+      <FormFields>
+        <FormField
+          name="displayName"
+          label="Display name"
+          placeholder="Mara"
+          autoComplete="nickname"
+          maxLength={60}
+          required
+          defaultValue={state.values?.displayName}
+          error={errors.displayName}
+        />
+        <FormField
+          name="email"
+          type="email"
+          label="Email"
+          placeholder="you@studio.com"
+          autoComplete="email"
+          required
+          defaultValue={state.values?.email}
+          error={errors.email}
+        />
+        <FormField
+          name="password"
+          password
+          label="Password"
+          autoComplete="new-password"
+          minLength={PASSWORD_MIN}
+          required
+          hint={passwordHint}
+          error={errors.password}
+        />
+        <FormField
+          name="passwordRepeat"
+          password
+          label="Repeat password"
+          autoComplete="new-password"
+          required
+          error={errors.passwordRepeat}
+        />
+        <Turnstile resetKey={state} />
+      </FormFields>
+      <FormActions>
+        <FormMessage state={state} />
+        <Button type="submit" size="lg" className="w-full" disabled={pending}>
+          {pending ? "Creating account…" : "Create account"}
+        </Button>
+        <SwitchLink text="Already have an account?" href={loginHref} label="Log in" />
+      </FormActions>
     </form>
   )
 }
@@ -144,54 +157,58 @@ export function LoginForm() {
     errors.password ?? (state.status === "error" && !unconfirmed ? state.message : undefined)
 
   return (
-    <div className="space-y-5">
+    <div className={formLayout}>
       {unconfirmed && state.values?.email && (
-        <div className="space-y-3">
+        <div className="mb-5 shrink-0 space-y-3">
           <Banner variant="warning" title="Confirm your email first">
             Click the link we sent to <strong>{state.values.email}</strong>, then log in.
           </Banner>
           <ResendConfirmation email={state.values.email} />
         </div>
       )}
-      <form action={action} className="space-y-5" noValidate>
+      <form action={action} className={formLayout} noValidate>
         <input type="hidden" name="next" value={params.get("next") ?? ""} />
-        {linkExpired && (
-          <Banner variant="warning">That link has expired or was already used. Log in again.</Banner>
-        )}
-        <FormField
-          name="email"
-          type="email"
-          label="Email"
-          placeholder="you@studio.com"
-          autoComplete="email"
-          required
-          defaultValue={state.values?.email}
-          error={errors.email}
-        />
-        <div className="space-y-3">
+        <FormFields>
+          {linkExpired && (
+            <Banner variant="warning">That link has expired or was already used. Log in again.</Banner>
+          )}
           <FormField
-            name="password"
-            password
-            label="Password"
-            autoComplete="current-password"
+            name="email"
+            type="email"
+            label="Email"
+            placeholder="you@studio.com"
+            autoComplete="email"
             required
-            error={passwordError}
+            defaultValue={state.values?.email}
+            error={errors.email}
           />
-          <div className="text-right">
-            <Link href="/forgot-password" className="text-sm font-semibold text-brand hover:underline">
-              Forgot password?
-            </Link>
+          <div className="space-y-3">
+            <FormField
+              name="password"
+              password
+              label="Password"
+              autoComplete="current-password"
+              required
+              error={passwordError}
+            />
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm font-semibold text-brand hover:underline">
+                Forgot password?
+              </Link>
+            </div>
           </div>
-        </div>
-        <Turnstile resetKey={state} appearance="interaction-only" />
-        <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
-          {pending ? "Logging in…" : "Log in"}
-        </Button>
-        <SwitchLink
-          text="New here?"
-          href={withParams("/signup", { plan: params.get("plan") })}
-          label="Create an account"
-        />
+        </FormFields>
+        <FormActions>
+          <Turnstile resetKey={state} appearance="interaction-only" />
+          <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
+            {pending ? "Logging in…" : "Log in"}
+          </Button>
+          <SwitchLink
+            text="New here?"
+            href={withParams("/signup", { plan: params.get("plan") })}
+            label="Create an account"
+          />
+        </FormActions>
       </form>
     </div>
   )
@@ -203,30 +220,34 @@ export function ForgotPasswordForm() {
   const errors = state.fieldErrors ?? {}
 
   return (
-    <form action={action} className="space-y-5" noValidate>
-      {linkExpired && (
-        <Banner variant="warning">
-          That reset link has expired or was already used. Request a new one.
-        </Banner>
-      )}
-      <FormField
-        name="email"
-        type="email"
-        label="Email"
-        placeholder="you@studio.com"
-        autoComplete="email"
-        required
-        defaultValue={state.values?.email}
-        error={errors.email}
-      />
-      <Turnstile resetKey={state} appearance="interaction-only" />
-      <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
-        {pending ? "Sending…" : "Send reset link"}
-      </Button>
-      <FormMessage state={state} />
-      <Link href="/login" className="inline-block text-brand hover:underline">
-        Back to log in
-      </Link>
+    <form action={action} className={formLayout} noValidate>
+      <FormFields>
+        {linkExpired && (
+          <Banner variant="warning">
+            That reset link has expired or was already used. Request a new one.
+          </Banner>
+        )}
+        <FormField
+          name="email"
+          type="email"
+          label="Email"
+          placeholder="you@studio.com"
+          autoComplete="email"
+          required
+          defaultValue={state.values?.email}
+          error={errors.email}
+        />
+      </FormFields>
+      <FormActions>
+        <Turnstile resetKey={state} appearance="interaction-only" />
+        <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
+          {pending ? "Sending…" : "Send reset link"}
+        </Button>
+        <FormMessage state={state} />
+        <Link href="/login" className="inline-block text-brand hover:underline">
+          Back to log in
+        </Link>
+      </FormActions>
     </form>
   )
 }
@@ -236,29 +257,33 @@ export function ResetPasswordForm() {
   const errors = state.fieldErrors ?? {}
 
   return (
-    <form action={action} className="space-y-5" noValidate>
-      <FormField
-        name="password"
-        password
-        label="New password"
-        autoComplete="new-password"
-        minLength={PASSWORD_MIN}
-        required
-        hint={passwordHint}
-        error={errors.password}
-      />
-      <FormField
-        name="passwordRepeat"
-        password
-        label="Repeat new password"
-        autoComplete="new-password"
-        required
-        error={errors.passwordRepeat}
-      />
-      <FormMessage state={state} />
-      <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
-        {pending ? "Saving…" : "Save and log in"}
-      </Button>
+    <form action={action} className={formLayout} noValidate>
+      <FormFields>
+        <FormField
+          name="password"
+          password
+          label="New password"
+          autoComplete="new-password"
+          minLength={PASSWORD_MIN}
+          required
+          hint={passwordHint}
+          error={errors.password}
+        />
+        <FormField
+          name="passwordRepeat"
+          password
+          label="Repeat new password"
+          autoComplete="new-password"
+          required
+          error={errors.passwordRepeat}
+        />
+      </FormFields>
+      <FormActions>
+        <FormMessage state={state} />
+        <Button type="submit" variant="dark" size="lg" className="w-full" disabled={pending}>
+          {pending ? "Saving…" : "Save and log in"}
+        </Button>
+      </FormActions>
     </form>
   )
 }
