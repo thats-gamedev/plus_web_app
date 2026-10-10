@@ -34,7 +34,7 @@ const monthly = PLANS.founding_monthly.price
 export function Hero({ cards }: { cards: PublicResource[] }) {
   return (
     <section className="overflow-hidden">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1.1fr_1fr] lg:gap-10 lg:px-10 lg:py-20">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-2 lg:gap-12 lg:px-10 lg:py-20">
         <div>
           <Badge variant="new" className="h-6 px-2.5 text-xs">
             Founding price · {monthly}/mo
@@ -57,11 +57,11 @@ export function Hero({ cards }: { cards: PublicResource[] }) {
 }
 
 // Tilted on desktop (LW1), a plain stack on phones (LM1).
-const tilts = ["lg:rotate-[1.5deg] lg:translate-x-6", "lg:-rotate-1", "lg:rotate-[0.75deg] lg:translate-x-4"]
+const tilts = ["lg:rotate-[1.5deg] lg:ml-8", "lg:-rotate-1 lg:mr-8", "lg:rotate-[0.75deg] lg:ml-4 lg:mr-2"]
 
 function HeroCards({ cards }: { cards: PublicResource[] }) {
   return (
-    <ul aria-label="Recently added" className="space-y-3 lg:mx-auto lg:max-w-md lg:space-y-0 lg:[&>li+li]:-mt-2">
+    <ul aria-label="Recently added" className="space-y-3 lg:space-y-0 lg:[&>li+li]:-mt-2">
       {cards.map((card, i) => {
         // "Tools list · October drop" for drop content, else "Tools list · 32 items" (LW1).
         const detail = card.dropMonth ? `${monthName(card.dropMonth)} drop` : resourceSize(card)
@@ -69,7 +69,7 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
           <li
             key={card.title}
             className={cn(
-              "flex items-center gap-3.5 rounded-card border border-border bg-card p-3 lg:p-3.5 lg:shadow-[0_8px_24px_-12px_rgb(0_0_0/0.18)]",
+              "flex items-center gap-4 rounded-card border border-border bg-card p-3 lg:p-4 lg:shadow-[0_8px_24px_-12px_rgb(0_0_0/0.18)]",
               tilts[i]
             )}
           >
