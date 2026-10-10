@@ -38,18 +38,20 @@ function HeaderCard({
 }) {
   return (
     <div className="rounded-panel border border-border bg-card p-5 md:p-7">
-      <div className="flex gap-4 md:items-center md:gap-10">
+      {/* Desktop: the text starts at the top next to the cover, the actions
+          sit at the bottom right, level with the cover's bottom edge. */}
+      <div className="flex gap-4 md:gap-10">
         <Cover resource={resource} />
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 flex-col">
           <ResourceBadges resource={resource} />
           <h1 className="mt-3 text-xl leading-tight font-bold md:text-4xl">{resource.title}</h1>
           <p className="mt-2 font-mono text-xs text-muted-foreground md:mt-3 md:text-sm">{meta}</p>
           <div className="mt-4 hidden text-muted-foreground md:block">{description}</div>
-          <div className="mt-5 hidden md:block">{children}</div>
+          {children && <div className="mt-auto hidden justify-end pt-6 md:flex">{children}</div>}
         </div>
       </div>
       <div className="mt-4 text-muted-foreground md:hidden">{description}</div>
-      <div className="mt-4 md:hidden">{children}</div>
+      {children && <div className="mt-4 md:hidden">{children}</div>}
     </div>
   )
 }
@@ -84,7 +86,7 @@ export function EbookDetail({ resource, downloadFailed }: { resource: ResourceDe
         description={resource.bodyMd ? <MarkdownArticle>{resource.bodyMd}</MarkdownArticle> : resource.summary}
       >
         {resource.hasFile ? (
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+          <div className="flex flex-col gap-2 md:flex-row-reverse md:items-center md:gap-4">
             {/* A plain link: the route redirects to a signed URL that expires after 60 s. */}
             <a href={href} className={buttonVariants({ size: "lg", className: "w-full md:w-auto" })}>
               <DownloadIcon aria-hidden />
