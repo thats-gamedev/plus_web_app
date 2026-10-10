@@ -76,9 +76,11 @@ In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were
 - A cancellation or withdrawal whose receipt failed shows up under "Receipts not sent" (open or closed, after 2 minutes) and in the sidebar count; "Send receipt" sends it once, members get a 404, and a second click is refused.
 - Revoke, Discard draft and the drop announcement ask in the app's dialog instead of the browser's confirm box.
 
-**Sign-up checkbox (2026-10-10, in the browser)**
-- "Create account" stays disabled until the box is ticked; the server refuses a sign-up without it (unit-tested).
-- The tick survives a failed submit (React resets the form after each submit, and Radix would otherwise untick the box), and clicking again unticks it.
+**Sign-up form (2026-10-10, in the browser)**
+- One password field (it has Show), so the form fits a ~600px-high window without scrolling.
+- The terms checkbox sits in a bordered row; a click anywhere on the row ticks it, a click on the box toggles it once.
+- "Create account" stays active: clicked without the tick, the row turns red with "Tick the box to create your account." The server refuses a sign-up without it too (unit-tested).
+- The tick survives a failed submit (React resets the form after each submit, and Radix would otherwise untick the box).
 
 **Pages**
 - The four legal pages render in English with the draft banner; every public page shows "Cancel contracts here" and "Withdraw from contract here" in the footer (server HTML).

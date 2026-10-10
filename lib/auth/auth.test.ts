@@ -19,7 +19,6 @@ describe("signUpSchema", () => {
     displayName: "  Mara ",
     email: " Mara@Studio.com ",
     password: "correct-horse",
-    passwordRepeat: "correct-horse",
     acceptTerms: "yes",
   }
 
@@ -28,13 +27,8 @@ describe("signUpSchema", () => {
   })
 
   it("requires at least 6 password characters", () => {
-    const result = signUpSchema.safeParse({ ...valid, password: "short", passwordRepeat: "short" })
+    const result = signUpSchema.safeParse({ ...valid, password: "short" })
     expect(errorsOf(result)).toEqual({ password: "At least 6 characters." })
-  })
-
-  it("requires matching passwords", () => {
-    const result = signUpSchema.safeParse({ ...valid, passwordRepeat: "something-else" })
-    expect(errorsOf(result)).toEqual({ passwordRepeat: "Passwords don't match." })
   })
 
   it("requires the terms checkbox", () => {
@@ -43,7 +37,7 @@ describe("signUpSchema", () => {
   })
 
   it("reports every invalid field once", () => {
-    const result = signUpSchema.safeParse({ displayName: " ", email: "nope", password: "", passwordRepeat: "", acceptTerms: "" })
+    const result = signUpSchema.safeParse({ displayName: " ", email: "nope", password: "", acceptTerms: "" })
     expect(errorsOf(result)).toEqual({
       displayName: "Enter a display name.",
       email: "Enter a valid email address.",

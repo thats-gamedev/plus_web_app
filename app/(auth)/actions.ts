@@ -41,7 +41,6 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     "displayName",
     "email",
     "password",
-    "passwordRepeat",
     "acceptTerms",
     "plan",
     "consent",

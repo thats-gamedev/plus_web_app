@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { cn } from "cn"
 import { useSearchParams } from "next/navigation"
 import { useActionState, useId, useState } from "react"
 import {
@@ -41,12 +42,13 @@ function FormFields({ children }: { children: React.ReactNode }) {
 }
 
 function FormActions({ children }: { children: React.ReactNode }) {
-  return <div className="shrink-0 space-y-3 pt-5">{children}</div>
+  return <div className="shrink-0 space-y-3 pt-3">{children}</div>
 }
 
 /**
  * Required on sign-up, unticked at first. GDPR: the privacy policy is
- * information, not something to accept, hence "have read".
+ * information, not something to accept, hence "have read". The whole row is
+ * the label, so a tap anywhere on it ticks the box (the links still open).
  */
 function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChange: (checked: boolean) => void; error?: string }) {
   const id = useId()
@@ -57,16 +59,22 @@ function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChang
           box toggles on real clicks only (label and Space key included), and
           the value travels in this input. */}
       <input type="hidden" name="acceptTerms" value={checked ? "yes" : ""} />
-      <div className="flex items-start gap-3">
+      <label
+        htmlFor={id}
+        className={cn(
+          "flex cursor-pointer items-start gap-3 rounded-lg border bg-card p-3 transition-colors",
+          error ? "border-danger" : checked ? "border-ink/40" : "border-border hover:border-ink/30"
+        )}
+      >
         <Checkbox
           id={id}
           checked={checked}
           onClick={() => onChange(!checked)}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
-          className="mt-0.5"
+          className="mt-px size-5 rounded-[5px] border-[1.5px] border-ink/70 bg-card data-checked:border-brand data-checked:bg-brand [&_svg]:size-3.5"
         />
-        <label htmlFor={id} className="text-sm leading-snug text-muted-foreground">
+        <span className="text-sm leading-snug text-muted-foreground">
           I agree to the{" "}
           <Link href="/terms" target="_blank" className="font-medium text-foreground underline hover:text-brand">
             Terms
@@ -76,8 +84,8 @@ function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChang
             Privacy policy
           </Link>
           .
-        </label>
-      </div>
+        </span>
+      </label>
       {error && (
         <p id={`${id}-error`} className="mt-1.5 text-xs text-danger">
           {error}
@@ -123,6 +131,14 @@ export function SignUpForm() {
   const errors = state.fieldErrors ?? {}
   // Kept across a failed submit (see TermsCheckbox).
   const [termsAccepted, setTermsAccepted] = useState(false)
+  // Set when "Create account" is clicked without the tick; the button stays
+  // active, so the reason shows up right where it's needed.
+  const [termsMissing, setTermsMissing] = useState(false)
+  const termsError = termsAccepted
+    ? undefined
+    : termsMissing
+      ? "Tick the box to create your account."
+      : errors.acceptTerms
 
   if (state.status === "success" && state.values?.email) {
     return (
@@ -138,7 +154,17 @@ export function SignUpForm() {
   }
 
   return (
-    <form action={action} className={formLayout} noValidate>
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (!termsAccepted) {
+          event.preventDefault()
+          setTermsMissing(true)
+        }
+      }}
+      className={formLayout}
+      noValidate
+    >
       {/* Carried through email confirmation to the paywall and checkout. */}
       {plan && <input type="hidden" name="plan" value={plan} />}
       {consent && <input type="hidden" name="consent" value={consent} />}
@@ -173,20 +199,12 @@ export function SignUpForm() {
           hint={passwordHint}
           error={errors.password}
         />
-        <FormField
-          name="passwordRepeat"
-          password
-          label="Repeat password"
-          autoComplete="new-password"
-          required
-          error={errors.passwordRepeat}
-        />
         <Turnstile resetKey={state} />
       </FormFields>
       <FormActions>
-        <TermsCheckbox checked={termsAccepted} onChange={setTermsAccepted} error={errors.acceptTerms} />
+        <TermsCheckbox checked={termsAccepted} onChange={setTermsAccepted} error={termsError} />
         <FormMessage state={state} />
-        <Button type="submit" size="lg" className="h-11 w-full" disabled={pending || !termsAccepted}>
+        <Button type="submit" size="lg" className="h-11 w-full" disabled={pending}>
           {pending ? "Creating account…" : "Create account"}
         </Button>
         <SwitchLink text="Already have an account?" href={loginHref} label="Log in" />
