@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Set a new password" }
 // Reached from the reset email via /auth/callback, which signs the user in.
 export default function ResetPasswordPage() {
   return (
-    <AuthShell aside={<RenderPanel />}>
+    <AuthShell bare aside={<RenderPanel />}>
       <AuthHeading title="Set a new password" lead="This signs you out on all other devices." />
       <Suspense fallback={<FormSkeleton fields={2} />}>
         <ResetPasswordGate />

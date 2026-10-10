@@ -1,19 +1,40 @@
 import Link from "next/link"
 import { Logo } from "@/components/layout/logo"
-import { SiteFooter } from "@/components/layout/site-footer"
+import { LegalLinks, SiteFooter } from "@/components/layout/site-footer"
 import { Button } from "@/components/ui/button"
 
-// Split layout of the auth mockups (LW7–10, LM8–11): slim header, form on the
-// left, dark panel on the right (hidden on mobile), legal footer.
+// Split layout of the auth mockups (LW7–10, LM8–11): form on the left, dark
+// panel on the right (hidden on mobile).
+// - Default: slim header and the site footer (/cancel, /withdraw).
+// - `bare` (login, sign-up, password reset): no header or footer bar, just the
+//   logo above the form and the legal links as a quiet line below it, since
+//   the law wants them reachable from every page.
 export function AuthShell({
   headerAction,
   aside,
+  bare = false,
   children,
 }: {
   headerAction?: { href: string; label: string }
   aside: React.ReactNode
+  bare?: boolean
   children: React.ReactNode
 }) {
+  if (bare) {
+    return (
+      <main className="grid min-h-dvh flex-1 lg:grid-cols-2">
+        <div className="flex flex-col px-4 py-6 sm:px-6 lg:px-16 lg:py-10">
+          <Logo />
+          <div className="flex flex-1 items-start py-10 lg:items-center lg:py-12">
+            <div className="w-full max-w-[500px]">{children}</div>
+          </div>
+          <LegalLinks className="gap-x-4 text-xs text-muted-foreground" />
+        </div>
+        <aside className="hidden bg-ink-2 text-white lg:block">{aside}</aside>
+      </main>
+    )
+  }
+
   return (
     <>
       <header className="border-b border-border bg-card">

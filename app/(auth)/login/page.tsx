@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Log in" }
 
 export default function LoginPage() {
   return (
-    <AuthShell headerAction={{ href: "/signup", label: "Create account" }} aside={<RenderPanel />}>
+    <AuthShell bare aside={<RenderPanel />}>
       <AuthHeading title="Welcome back" lead="Good to see you again." />
       <Suspense fallback={<FormSkeleton fields={2} />}>
         <LoginForm />

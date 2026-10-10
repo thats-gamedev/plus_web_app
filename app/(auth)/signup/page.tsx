@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Create your account" }
 export default function SignUpPage() {
   return (
     <AuthShell
-      headerAction={{ href: "/login", label: "Log in" }}
+      bare
       aside={
         <Suspense>
           <PlanPanel />
