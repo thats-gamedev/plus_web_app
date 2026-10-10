@@ -29,7 +29,7 @@ export default function MemberLayout({ children }: LayoutProps<"/app">) {
             </Suspense>
           }
         />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-5 pb-24 md:px-10 md:pt-8 md:pb-12">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-5 pb-24 md:px-8 md:pt-8 md:pb-12">
           {children}
         </main>
       </div>

@@ -63,7 +63,7 @@ export function ProductCard({
         className={cn(
           "relative shrink-0 overflow-hidden",
           pastels[index % pastels.length],
-          compact ? "size-20 rounded-xl" : "aspect-square w-full"
+          compact ? "size-20 rounded-xl" : "aspect-[5/4] w-full"
         )}
       >
         {first && (

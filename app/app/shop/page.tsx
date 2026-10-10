@@ -46,7 +46,7 @@ async function Shop() {
     <>
       <CodeBanner code={code} percent={percent} />
       {config && products && products.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {products.map((product, index) => (
             <li key={product.id}>
               <ProductCard
@@ -86,7 +86,7 @@ function ShopSkeleton() {
   return (
     <div aria-hidden>
       <Skeleton className="mb-5 h-16 w-full rounded-card" />
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {Array.from({ length: 8 }, (_, i) => (
           <Skeleton key={i} className="aspect-[3/4] rounded-card" />
         ))}
