@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { cn } from "cn"
 import { ArrowRightIcon, ChevronRightIcon } from "lucide-react"
 import Markdown from "react-markdown"
 import { ResourceIcon } from "@/components/shared/resource-icon"
@@ -13,8 +14,14 @@ export function dropMonthName(month: string) {
 
 // Dark "This month" card on the member home (MW1 / MM1). Desktop shows the
 // intro next to the resources; mobile keeps the theme and a compact list.
+// At most three resources are visible; more scroll inside the card, so the
+// panel doesn't take over the home page. The fade at the bottom hints that
+// there's more, and the bottom padding lets the last item scroll clear of it.
+const VISIBLE = 3
+
 export function DropCard({ drop }: { drop: Drop }) {
   const theme = drop.theme ?? drop.title
+  const scrolls = drop.resources.length > VISIBLE
 
   return (
     <DarkPanel className="grid gap-6 p-5 md:p-8 lg:grid-cols-2 lg:gap-10">
@@ -37,7 +44,14 @@ export function DropCard({ drop }: { drop: Drop }) {
       </div>
 
       {drop.resources.length > 0 ? (
-        <ul className="divide-y divide-ink-border md:space-y-3 md:divide-y-0">
+        <ul
+          aria-label={`${drop.resources.length} resources in this drop`}
+          className={cn(
+            "divide-y divide-ink-border md:space-y-3 md:divide-y-0",
+            scrolls &&
+              "max-h-[164px] overflow-y-auto overscroll-contain pb-6 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] [scrollbar-color:var(--ink-border)_transparent] [scrollbar-width:thin] md:max-h-[268px] md:pr-2"
+          )}
+        >
           {drop.resources.map((resource) => (
             <li key={resource.id}>
               <Link

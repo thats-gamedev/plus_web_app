@@ -50,12 +50,18 @@ export async function SidebarUser() {
   const user = await getShellUser()
 
   return (
-    <div className="flex items-center gap-3">
-      <Avatar name={user.displayName} />
-      <div className="min-w-0 flex-1 text-sm">
-        <p className="truncate font-semibold">{user.displayName}</p>
-        <p className="truncate text-xs text-muted-foreground">{user.planLabel}</p>
-      </div>
+    <div className="flex items-center gap-2">
+      {/* Name and avatar open the account settings; Log out stays separate. */}
+      <Link
+        href="/app/account"
+        className="-my-1.5 -ml-1.5 flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted"
+      >
+        <Avatar name={user.displayName} />
+        <span className="min-w-0 flex-1 text-sm">
+          <span className="block truncate font-semibold">{user.displayName}</span>
+          <span className="block truncate text-xs text-muted-foreground">{user.planLabel}</span>
+        </span>
+      </Link>
       <LogoutButton className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
         <LogOutIcon aria-hidden className="size-4" />
         <span className="sr-only">Log out</span>
