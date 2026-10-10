@@ -61,7 +61,7 @@ function ToolRow({ item, number, isNew }: { item: ToolItem; number: number; isNe
   ]
 
   return (
-    <div className="relative rounded-card border border-border bg-card p-4 md:grid md:grid-cols-[2.5rem_3rem_minmax(0,1fr)_minmax(0,15rem)_auto] md:items-center md:gap-4 md:rounded-none md:border-0 md:px-5 md:py-3.5">
+    <div className="relative rounded-card border border-border bg-card p-4 md:grid md:grid-cols-[1.5rem_3rem_minmax(0,1fr)_minmax(0,15rem)_auto] md:items-center md:gap-4 md:rounded-none md:border-0 md:px-5 md:py-3.5">
       <span className="hidden font-mono text-sm text-brand md:block">{String(number).padStart(2, "0")}</span>
       <div className="flex items-center gap-3 md:contents">
         <ItemImage path={item.imagePath} sizes="48px" className="size-10 md:size-12" />
