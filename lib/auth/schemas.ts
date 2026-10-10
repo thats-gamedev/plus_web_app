@@ -30,8 +30,11 @@ const passwordsMatch = (data: { password: string; passwordRepeat: string }) =>
   data.password === data.passwordRepeat
 const mismatch = { path: ["passwordRepeat"], message: "Passwords don't match." }
 
+/** The terms checkbox on sign-up; its form value is "yes" when ticked. */
+const acceptTerms = z.string().refine((value) => value === "yes", "Agree to the terms to create an account.")
+
 export const signUpSchema = z
-  .object({ displayName, email, password: newPassword, passwordRepeat })
+  .object({ displayName, email, password: newPassword, passwordRepeat, acceptTerms })
   .refine(passwordsMatch, mismatch)
 
 export const signInSchema = z.object({

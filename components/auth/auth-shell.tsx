@@ -1,16 +1,16 @@
 import Link from "next/link"
 import { Logo } from "@/components/layout/logo"
-import { LegalLinks, SiteFooter } from "@/components/layout/site-footer"
+import { SiteFooter } from "@/components/layout/site-footer"
 import { Button } from "@/components/ui/button"
 
 // Split layout of the auth mockups (LW7–10, LM8–11): form on the left, dark
 // panel on the right (hidden on mobile).
 // - Default: slim header and the site footer (/cancel, /withdraw).
-// - `bare` (login, sign-up, password reset): no header or footer bar, just the
-//   logo above the form and the legal links as a quiet line below it, since
-//   the law wants them reachable from every page. The page is exactly one
-//   window high and never scrolls; in a short window the form's fields
-//   scroll instead (see FormFields in ./forms).
+// - `bare` (login, sign-up, password reset): no header, footer or legal links,
+//   just the logo above the form (owner's decision, 2026-10-10; the legal
+//   risk is noted in docs/Verified.md). Sign-up links Terms and Privacy in
+//   its checkbox. The page is exactly one window high and never scrolls; in
+//   a short window the form's fields scroll instead (FormFields in ./forms).
 export function AuthShell({
   headerAction,
   aside,
@@ -30,7 +30,6 @@ export function AuthShell({
           <div className="mx-auto flex min-h-0 w-full max-w-[420px] flex-1 flex-col">
             <Logo className="shrink-0" />
             <div className="flex min-h-0 flex-1 flex-col justify-center py-6 lg:py-8">{children}</div>
-            <LegalLinks className="shrink-0 gap-x-4 text-xs text-muted-foreground" />
           </div>
         </div>
         <aside className="hidden bg-ink-2 text-white lg:block">{aside}</aside>

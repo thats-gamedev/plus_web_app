@@ -20,6 +20,7 @@ describe("signUpSchema", () => {
     email: " Mara@Studio.com ",
     password: "correct-horse",
     passwordRepeat: "correct-horse",
+    acceptTerms: "yes",
   }
 
   it("trims the name and normalises the email", () => {
@@ -36,12 +37,18 @@ describe("signUpSchema", () => {
     expect(errorsOf(result)).toEqual({ passwordRepeat: "Passwords don't match." })
   })
 
+  it("requires the terms checkbox", () => {
+    const result = signUpSchema.safeParse({ ...valid, acceptTerms: "" })
+    expect(errorsOf(result)).toEqual({ acceptTerms: "Agree to the terms to create an account." })
+  })
+
   it("reports every invalid field once", () => {
-    const result = signUpSchema.safeParse({ displayName: " ", email: "nope", password: "", passwordRepeat: "" })
+    const result = signUpSchema.safeParse({ displayName: " ", email: "nope", password: "", passwordRepeat: "", acceptTerms: "" })
     expect(errorsOf(result)).toEqual({
       displayName: "Enter a display name.",
       email: "Enter a valid email address.",
       password: "At least 6 characters.",
+      acceptTerms: "Agree to the terms to create an account.",
     })
   })
 })

@@ -42,6 +42,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     "email",
     "password",
     "passwordRepeat",
+    "acceptTerms",
     "plan",
     "consent",
     "captchaToken",
@@ -63,8 +64,9 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      // Read by the handle_new_user trigger to fill profiles.display_name.
-      data: { display_name: parsed.data.displayName },
+      // display_name is read by the handle_new_user trigger to fill
+      // profiles.display_name; terms_accepted_at records the sign-up checkbox.
+      data: { display_name: parsed.data.displayName, terms_accepted_at: new Date().toISOString() },
       // The confirmation link verifies the email and signs the user in.
       emailRedirectTo: await authCallbackUrl(landing),
       ...captcha(raw.captchaToken),

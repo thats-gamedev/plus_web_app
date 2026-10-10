@@ -4,6 +4,8 @@ What has been checked, and decisions that were made, so they don't have to be re
 
 ## Decisions
 
+- **2026-10-10: no legal links on the auth pages.** Login, sign-up and the password pages show no footer and no legal links (owner's decision). The risk was pointed out and accepted: the imprint (§ 5 DDG) should be reachable from every page, and "Cancel contracts here" / "Withdraw from contract here" should be available at all times; a missing imprint link is a common reason for a cease-and-desist letter (Abmahnung). It's on the legal check in `Open_Items.md`. Sign-up links Terms and the privacy policy in its checkbox.
+- **2026-10-10: terms checkbox on sign-up.** Required and unticked at first: "I agree to the Terms and have read the Privacy policy." The privacy policy is only "read", not accepted, because under GDPR it's information, not consent. The time of acceptance is stored in the account's user metadata (`terms_accepted_at`).
 - **2026-10-09: English site, German law.** Everything visible stays in English, including the legal pages, `/cancel` and `/withdraw`; German law applies, and the texts keep their German legal references. The footer links read "Cancel contracts here" and "Withdraw from contract here". This supersedes the spec's line "only the visible content of the legal pages and the /cancel page is German".
 - **2026-10-09: withdrawal function built** (§ 356a BGB, Art. 11a Consumer Rights Directive, in force since 19 June 2026), to be on the safe side, even though most members waive the right at checkout: a missing withdrawal function can extend the withdrawal period. Requests are judged by the admin in the inbox (refund and end, or decline when the right had expired).
 - **2026-10-09: `/cancel/confirm` needs a button click.** Opening the emailed link only shows "Confirm cancellation", so mail scanners that open links can't cancel anyone. (Part of the legal check in `Open_Items.md`.)
@@ -73,6 +75,10 @@ In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were
 **Inbox and admin**
 - A cancellation or withdrawal whose receipt failed shows up under "Receipts not sent" (open or closed, after 2 minutes) and in the sidebar count; "Send receipt" sends it once, members get a 404, and a second click is refused.
 - Revoke, Discard draft and the drop announcement ask in the app's dialog instead of the browser's confirm box.
+
+**Sign-up checkbox (2026-10-10, in the browser)**
+- "Create account" stays disabled until the box is ticked; the server refuses a sign-up without it (unit-tested).
+- The tick survives a failed submit (React resets the form after each submit, and Radix would otherwise untick the box), and clicking again unticks it.
 
 **Pages**
 - The four legal pages render in English with the draft banner; every public page shows "Cancel contracts here" and "Withdraw from contract here" in the footer (server HTML).

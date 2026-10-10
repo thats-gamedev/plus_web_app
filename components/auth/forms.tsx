@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useActionState } from "react"
+import { useActionState, useId, useState } from "react"
 import {
   requestPasswordReset,
   resendConfirmation,
@@ -14,6 +14,7 @@ import { FormField } from "@/components/auth/form-field"
 import { Turnstile } from "@/components/auth/turnstile"
 import { Banner } from "@/components/ui/banner"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { idleState } from "@/lib/auth/form-state"
 import { withParams } from "@/lib/auth/redirects"
 import { PASSWORD_MIN } from "@/lib/auth/schemas"
@@ -41,6 +42,49 @@ function FormFields({ children }: { children: React.ReactNode }) {
 
 function FormActions({ children }: { children: React.ReactNode }) {
   return <div className="shrink-0 space-y-3 pt-5">{children}</div>
+}
+
+/**
+ * Required on sign-up, unticked at first. GDPR: the privacy policy is
+ * information, not something to accept, hence "have read".
+ */
+function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChange: (checked: boolean) => void; error?: string }) {
+  const id = useId()
+  return (
+    <div>
+      {/* React resets the form after every submit, and Radix answers the
+          reset event by unticking the box through onCheckedChange. So the
+          box toggles on real clicks only (label and Space key included), and
+          the value travels in this input. */}
+      <input type="hidden" name="acceptTerms" value={checked ? "yes" : ""} />
+      <div className="flex items-start gap-3">
+        <Checkbox
+          id={id}
+          checked={checked}
+          onClick={() => onChange(!checked)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className="mt-0.5"
+        />
+        <label htmlFor={id} className="text-sm leading-snug text-muted-foreground">
+          I agree to the{" "}
+          <Link href="/terms" target="_blank" className="font-medium text-foreground underline hover:text-brand">
+            Terms
+          </Link>{" "}
+          and have read the{" "}
+          <Link href="/privacy" target="_blank" className="font-medium text-foreground underline hover:text-brand">
+            Privacy policy
+          </Link>
+          .
+        </label>
+      </div>
+      {error && (
+        <p id={`${id}-error`} className="mt-1.5 text-xs text-danger">
+          {error}
+        </p>
+      )}
+    </div>
+  )
 }
 
 function SwitchLink({ text, href, label }: { text: string; href: string; label: string }) {
@@ -77,6 +121,8 @@ export function SignUpForm() {
   const consent = params.get("consent")
   const loginHref = withParams("/login", { next: withParams("/app", { plan, consent }) })
   const errors = state.fieldErrors ?? {}
+  // Kept across a failed submit (see TermsCheckbox).
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   if (state.status === "success" && state.values?.email) {
     return (
@@ -138,8 +184,9 @@ export function SignUpForm() {
         <Turnstile resetKey={state} />
       </FormFields>
       <FormActions>
+        <TermsCheckbox checked={termsAccepted} onChange={setTermsAccepted} error={errors.acceptTerms} />
         <FormMessage state={state} />
-        <Button type="submit" size="lg" className="h-11 w-full" disabled={pending}>
+        <Button type="submit" size="lg" className="h-11 w-full" disabled={pending || !termsAccepted}>
           {pending ? "Creating account…" : "Create account"}
         </Button>
         <SwitchLink text="Already have an account?" href={loginHref} label="Log in" />
