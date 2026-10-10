@@ -215,6 +215,7 @@ Phase 12 is section 1 of this file: work through it from top to bottom.
   - both codes are revoked
 - [ ] **Fourthwall, once the credentials are set.** Verify:
   - the product image field names (`lib/fourthwall/products.ts` guesses `images[].url`)
+  - the product description field (`lib/fourthwall/products.ts` reads `description` as HTML and shows two lines of it); without it the cards show no text under the title
   - the product page URL pattern (`/products/{slug}`)
   - the endpoint for listing collections (the spec's collection chips on `/app/shop` are left out until this is known)
   - whether `shipping: "Excluded"` is accepted in the discount

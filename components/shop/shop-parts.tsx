@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { CopyButton } from "@/components/ui/copy-button"
 import { formatMoney, memberPrice, productUrl, type ShopProduct } from "@/lib/fourthwall/products"
 
-/** "Buy": copies the member code, then opens the product on Fourthwall (spec). */
+/** "Shop now": copies the member code, then opens the product on Fourthwall (spec). */
 function BuyButton({ href, code, className }: { href: string; code: string | null; className?: string }) {
   async function buy() {
     // Open first: browsers block window.open after an awaited clipboard call.
@@ -23,7 +23,7 @@ function BuyButton({ href, code, className }: { href: string; code: string | nul
 
   return (
     <Button variant="outline" size="sm" onClick={buy} className={className}>
-      Buy
+      Shop now
     </Button>
   )
 }
@@ -31,7 +31,7 @@ function BuyButton({ href, code, className }: { href: string; code: string | nul
 const pastels = ["bg-pastel-peach", "bg-pastel-grey", "bg-pastel-sky", "bg-pastel-mint"]
 
 // Product card (MM10): image (second image on hover), name, member price in
-// brand colour next to the struck-through regular price, Buy.
+// brand colour next to the struck-through regular price, Shop now.
 export function ProductCard({
   product,
   index,
@@ -83,7 +83,12 @@ export function ProductCard({
       <div className={cn("flex min-w-0 flex-1", compact ? "items-center gap-3" : "flex-col p-3")}>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold md:text-base">{product.name}</h3>
-          <p className="mt-0.5 font-mono text-sm">
+          {!compact && (
+            // Two lines at most, and always two lines high, so prices and
+            // buttons line up across the grid.
+            <p className="mt-1 line-clamp-2 min-h-[2lh] text-xs text-muted-foreground md:text-sm">{product.description}</p>
+          )}
+          <p className={cn("font-mono text-sm", compact ? "mt-0.5" : "mt-2")}>
             <span className="font-semibold text-brand">{price}</span>{" "}
             <span className="text-xs text-faint line-through">{regular}</span>
             <span className="sr-only"> member price, regular {regular}</span>

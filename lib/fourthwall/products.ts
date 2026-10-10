@@ -18,6 +18,8 @@ const product = z
     price: money.optional(),
     compareAtPrice: money.nullish(),
     images: z.array(image).optional(),
+    // HTML from the Fourthwall product editor (not in the docs' excerpt; optional).
+    description: z.string().nullish(),
     variants: z.array(z.object({ unitPrice: money.optional() }).passthrough()).optional(),
   })
   .passthrough()
@@ -35,7 +37,23 @@ export type ShopProduct = {
   /** Fourthwall's own "was" price, if the shop set one. */
   compareAtPrice: { value: number; currency: string } | null
   images: string[]
+  /** Plain text, for the two lines under the title. */
+  description: string | null
   soldOut: boolean
+}
+
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'", apos: "'", nbsp: " " }
+
+/** Fourthwall's HTML description as one line of plain text, or null when empty. */
+export function plainDescription(html: string | null | undefined): string | null {
+  if (!html) return null
+  const text = html
+    .replace(/<(br|\/p|\/div|\/li|\/h\d)\b[^>]*>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&(amp|lt|gt|quot|#39|apos|nbsp);/g, (_, name: string) => ENTITIES[name] ?? "")
+    .replace(/\s+/g, " ")
+    .trim()
+  return text || null
 }
 
 /**
@@ -57,6 +75,7 @@ export function toShopProduct(raw: unknown): ShopProduct | null {
     price,
     compareAtPrice: p.compareAtPrice ?? null,
     images: (p.images ?? []).map((i) => i.url),
+    description: plainDescription(p.description),
     soldOut: state === "SOLD_OUT",
   }
 }

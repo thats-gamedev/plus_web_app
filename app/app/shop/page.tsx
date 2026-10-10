@@ -23,7 +23,7 @@ export default function ShopPage() {
 }
 
 // Merch from Fourthwall with member prices (MM10; desktop uses 4 columns).
-// No cart: Buy opens the product on Fourthwall with the code copied.
+// No cart: Shop now opens the product on Fourthwall with the code copied.
 async function Shop() {
   await requirePlus()
   const config = shopConfig()
