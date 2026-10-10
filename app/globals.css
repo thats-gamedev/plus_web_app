@@ -157,6 +157,17 @@
   h4 {
     @apply font-heading tracking-tight;
   }
+  /* Selected text in the brand's dark grey instead of the browser's blue;
+     inverted on dark surfaces, where dark grey wouldn't show. */
+  ::selection {
+    background-color: var(--ink);
+    color: #fff;
+  }
+  :is(.bg-ink, .bg-ink-2, .bg-ink-border) ::selection,
+  :is(.bg-ink, .bg-ink-2, .bg-ink-border)::selection {
+    background-color: #fff;
+    color: var(--ink);
+  }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
