@@ -43,21 +43,21 @@ export function CodeCard({ kind, code }: { kind: CodeKind; code: MemberCode | un
     )
 
   return (
-    <article className="flex flex-col rounded-card border-2 border-ink bg-card p-5 shadow-[0_3px_0_var(--ink)]">
+    <article className="flex flex-col rounded-card border-2 border-ink bg-card p-4 shadow-[0_3px_0_var(--ink)]">
       <div className="flex items-center justify-between gap-3">
         <Icon aria-hidden className="hidden size-6 md:block" strokeWidth={1.75} />
         <h2 className="text-lg font-semibold md:hidden">{title}</h2>
         <p className="font-mono text-base font-semibold text-brand">{percent}% off</p>
       </div>
-      <h2 className="mt-4 hidden text-lg font-semibold md:block">{title}</h2>
+      <h2 className="mt-3 hidden text-lg font-semibold md:block">{title}</h2>
       <p className="hidden text-sm text-muted-foreground md:block">{text}</p>
 
       {ready ? (
         <>
-          <p className="mt-4 rounded-xl bg-muted px-4 py-3 text-center font-mono text-base tracking-wide select-all">
+          <p className="mt-3 rounded-xl bg-muted px-4 py-2.5 text-center font-mono text-base tracking-wide select-all">
             {code.code}
           </p>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-3 flex gap-2">
             <CopyButton value={code.code} variant="dark" toastMessage="Code copied" className="h-10 flex-1">
               Copy
             </CopyButton>
@@ -65,7 +65,7 @@ export function CodeCard({ kind, code }: { kind: CodeKind; code: MemberCode | un
           </div>
         </>
       ) : (
-        <p role="status" className="mt-4 rounded-xl border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">
+        <p role="status" className="mt-3 rounded-xl border border-dashed border-border px-4 py-4 text-center text-sm text-muted-foreground">
           Your code is being created. Refresh in a minute.
         </p>
       )}
@@ -76,7 +76,7 @@ export function CodeCard({ kind, code }: { kind: CodeKind; code: MemberCode | un
 /** Coding app teaser (MW9): included in Plus once the app launches. */
 export function CodingAppCard() {
   return (
-    <article className="rounded-card bg-ink p-5 text-white">
+    <article className="rounded-card bg-ink p-4 text-white">
       <div className="flex items-center justify-between gap-3">
         <CodeIcon aria-hidden className="size-6 text-brand" />
         <Badge variant="info">
@@ -84,7 +84,7 @@ export function CodingAppCard() {
           <span className="hidden md:inline">In development</span>
         </Badge>
       </div>
-      <h2 className="mt-4 text-lg font-semibold">Code Your Hero Pro</h2>
+      <h2 className="mt-3 text-lg font-semibold">Code Your Hero Pro</h2>
       <p className="mt-1 text-sm leading-relaxed text-ink-muted">
         Learn Unity C# in bite-sized lessons where the code you write becomes your hero&apos;s abilities. Included
         when it launches. Same login, nothing to redeem.
