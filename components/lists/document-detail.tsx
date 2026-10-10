@@ -29,11 +29,14 @@ function HeaderCard({
   resource,
   meta,
   description,
+  cover = true,
   children,
 }: {
   resource: ResourceDetail
   meta: string
   description: React.ReactNode
+  /** E-books show their cover; guides are just the title card. */
+  cover?: boolean
   children?: React.ReactNode
 }) {
   return (
@@ -41,16 +44,16 @@ function HeaderCard({
       {/* Desktop: the text starts at the top next to the cover, the actions
           sit at the bottom right, level with the cover's bottom edge. */}
       <div className="flex gap-4 md:gap-10">
-        <Cover resource={resource} />
+        {cover && <Cover resource={resource} />}
         <div className="flex min-w-0 flex-1 flex-col">
           <ResourceBadges resource={resource} />
           <h1 className="mt-3 text-xl leading-tight font-bold md:text-4xl">{resource.title}</h1>
           <p className="mt-2 font-mono text-xs text-muted-foreground md:mt-3 md:text-sm">{meta}</p>
-          <div className="mt-4 hidden text-muted-foreground md:block">{description}</div>
+          <div className={cover ? "mt-4 hidden text-muted-foreground md:block" : "mt-4 text-muted-foreground"}>{description}</div>
           {children && <div className="mt-auto hidden justify-end pt-6 md:flex">{children}</div>}
         </div>
       </div>
-      <div className="mt-4 text-muted-foreground md:hidden">{description}</div>
+      {cover && <div className="mt-4 text-muted-foreground md:hidden">{description}</div>}
       {children && <div className="mt-4 md:hidden">{children}</div>}
     </div>
   )
@@ -112,6 +115,7 @@ export function GuideDetail({ resource }: { resource: ResourceDetail }) {
         resource={resource}
         meta={[minutes && `${minutes} min read`, `updated ${formatDay(resource.updatedAt)}`].filter(Boolean).join(" · ")}
         description={resource.summary}
+        cover={false}
       />
       {resource.bodyMd ? (
         <article className="mt-6 rounded-panel border border-border bg-card p-5 md:mt-8 md:p-8">
