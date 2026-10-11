@@ -5,7 +5,7 @@ What has been checked, and decisions that were made, so they don't have to be re
 ## Decisions
 
 - **2026-10-10: no legal links on the auth pages.** Login, sign-up and the password pages show no footer and no legal links (owner's decision). The risk was pointed out and accepted: the imprint (§ 5 DDG) should be reachable from every page, and "Cancel contracts here" / "Withdraw from contract here" should be available at all times; a missing imprint link is a common reason for a cease-and-desist letter (Abmahnung). It's on the legal check in `Open_Items.md`. Sign-up links Terms and the privacy policy in its checkbox.
-- **2026-10-10: terms checkbox on sign-up.** Required and unticked at first: "I agree to the Terms and have read the Privacy policy." The privacy policy is only "read", not accepted, because under GDPR it's information, not consent. The time of acceptance is stored in the account's user metadata (`terms_accepted_at`).
+- **2026-10-10: terms checkbox on sign-up.** Required and unticked at first: "I agree to the Terms and have read the Privacy policy." The privacy policy is only "read", not accepted, because under GDPR it's information, not consent. The time of acceptance is stored in `profiles.terms_accepted_at`, set once by the sign-up trigger with the database's time (since 2026-10-12; before, only in the user metadata, which users can edit).
 - **2026-10-09: English site, German law.** Everything visible stays in English, including the legal pages, `/cancel` and `/withdraw`; German law applies, and the texts keep their German legal references. The footer links read "Cancel contracts here" and "Withdraw from contract here". This supersedes the spec's line "only the visible content of the legal pages and the /cancel page is German".
 - **2026-10-09: withdrawal function built** (§ 356a BGB, Art. 11a Consumer Rights Directive, in force since 19 June 2026), to be on the safe side, even though most members waive the right at checkout: a missing withdrawal function can extend the withdrawal period. Requests are judged by the admin in the inbox (refund and end, or decline when the right had expired).
 - **2026-10-09: `/cancel/confirm` needs a button click.** Opening the emailed link only shows "Confirm cancellation", so mail scanners that open links can't cancel anyone. (Part of the legal check in `Open_Items.md`.)
@@ -15,6 +15,10 @@ What has been checked, and decisions that were made, so they don't have to be re
 - **2026-10-10: auth picture from Unsplash.** The placeholder panel on the auth pages shows "A computer generated image of red and white shapes" by Micke Lindström (unsplash.com/photos/6REIcx1yeuI), free to use under the Unsplash License, with a "Photo by … on Unsplash" credit.
 
 - **2026-10-11: fonts are self-hosted.** Space Grotesk and JetBrains Mono come from the `@fontsource-variable` packages through `next/font/local`, not from Google Fonts. A failed Google download had silently switched the dev server to a fallback font (wider and heavier, so the whole app looked oversized); local files can't fail that way, in dev or on Vercel. `next build` bundles both files.
+
+- **2026-10-12: drop content goes live with its drop.** Content attached to a planned drop can be published ahead and stays hidden everywhere (member library, landing page, public teasers, sitemap) until the drop's go-live time. Its `published_at` follows the drop's (database triggers), so "New" and "Recently added" count from go-live day.
+- **2026-10-12: no CAPTCHA on `/cancel` and `/withdraw`.** Abuse is limited per visitor (an HMAC of the IP, 5 requests an hour; the IP itself isn't stored) instead, so the statutory buttons stay as easy as possible. Logged in, the receipt goes to the account's email.
+- **2026-10-12: "Dismiss" in the inbox** closes a cancellation or withdrawal that needs nothing (forged, duplicate, handled in Stripe), without Stripe changes or an email.
 
 ## Verified
 
@@ -98,3 +102,15 @@ In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were
 - `/lists/[slug]` renders the teaser items of all four list kinds with "N of M shown free" and "Unlock all M"; an unknown slug gets the not-found page with `noindex`.
 - `sitemap.xml` lists the home page, every list teaser and the legal and contract pages; `robots.txt` excludes `/app`, `/admin`, `/api`, `/auth`, `/welcome`, `/cancel/confirm`, `/reset-password` and `/styleguide`; the share image renders (1200×630) and the Open Graph tags are set.
 - Renaming a published list in the admin shows up on its public page on the next request after the stale one (cache tag refreshed by the admin actions).
+
+**Full audit (2026-10-11/12)**
+Type check, lint, 244 unit tests and `next build` pass. Every route was loaded as a visitor, the Plus test member and the admin: visitors are sent to `/login` from the member area and get 404 from `/admin` and 401 from the crons; members get 404 from `/admin`; `/styleguide` and the shop preview are off in production. Three read-only reviews (auth/security/billing, member and public area, admin/email/cron) found no critical issue; their findings were fixed and checked:
+- Drop go-live: the triggers move a resource's go-live with its drop, and back to "now" when it leaves a planned drop (tested in a rolled-back transaction); public teasers and the sitemap still work through the changed views.
+- Drop announcement: recipients load in one paginated query (2 recipients in dev, both active); a failed load sends nothing and doesn't mark the drop announced.
+- Admin and cron reads go past Supabase's 1000-row cap (`fetchAll`, unit-tested); `/admin`, members, codes and the CSV export load.
+- Inbox "Dismiss" closes a request (tested on a throwaway request); no-match and decline replies keep the request open when the email fails; a refund after the membership ended uses the latest subscription.
+- `/cancel` per-visitor limit: five requests from one IP with five emails went through, the sixth was refused; all five stored the same hash, no IP (test rows deleted).
+- Unsubscribe: opening the link only shows a button; the button and the RFC 8058 one-click POST unsubscribe (test member switched back on).
+- Error pages for the member area, admin and public pages, a global fallback, and a branded 404 for unknown URLs and unknown public lists (checked in the browser).
+- The sign-up trigger stores `terms_accepted_at` with the database's time and ignores a client-supplied date (rolled-back test).
+- The Supabase security advisor shows only the three known findings (the two teaser views, `is_plus`/`is_admin` callable, leaked-password protection off).

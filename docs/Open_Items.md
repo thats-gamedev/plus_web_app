@@ -12,7 +12,7 @@ Sources (details live there, every open task lives here):
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-09 (Phases 1–11 built, Phase 12 started; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
+_Last updated: 2026-10-12 (full audit done and its fixes applied; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
 
 **Contents**
 1. Before deployment and launch (the checklist)
@@ -73,10 +73,11 @@ Everything that has to be true, in order. Details for each step are in the secti
   - **The `/cancel/confirm` button.** Opening the link only shows a "Confirm cancellation" button; the click cancels. This stops mail scanners from cancelling anyone, but it's one more step for the member.
   - **Withdrawals are judged by hand.** Nothing happens automatically; the admin refunds or declines within 2 business days. "Decline" is only offered when the waiver is on record or 14 days have passed. Check the decline email's wording, and that the § 356 (5) BGB waiver at checkout (with the contract confirmation email) is enough to decline.
   - **Refund amount.** "Refund & end now" refunds the whole last payment. The law may allow keeping a share for the days used; we don't.
-  - **The rate limit.** At most 3 requests per email per hour and 30 per minute overall, shared by cancellations and withdrawals. A flood of fake requests could briefly block real ones.
+  - **The rate limit.** At most 3 requests per email per hour, 5 per visitor (hashed IP) per hour and 30 per minute overall, shared by cancellations and withdrawals. A flood of fake requests could briefly block real ones. There's no CAPTCHA on these forms on purpose (one more hurdle on a statutory button); ask whether one would be acceptable if abuse shows up.
+  - **Logged-out withdrawals aren't verified.** Anyone can type a member's email at `/withdraw`; the request is only linked to that account as a hint, and the admin can "Dismiss" one that wasn't sent by the member. Ask whether an emailed confirmation step (as on `/cancel`) is wanted.
   - **Contract links in the member area only on Account** (and on `/app/more` on phones), not on every member page (owner's decision, 2026-10-10). Ask whether one click away is enough.
   - **No legal links on login, sign-up and the password pages** (owner's decision, 2026-10-10). Ask whether the imprint and the cancel and withdraw links must appear there too; if so, add them back as one small line (`LegalLinks` in `components/layout/site-footer.tsx`).
-  - **The sign-up checkbox wording:** "I agree to the Terms and have read the Privacy policy", required, with the acceptance time stored (`terms_accepted_at` in the user metadata). Stripe Checkout asks for the terms again at purchase.
+  - **The sign-up checkbox wording:** "I agree to the Terms and have read the Privacy policy", required, with the acceptance time stored (`profiles.terms_accepted_at`, set by the database at sign-up). Stripe Checkout asks for the terms again at purchase.
 - [ ] **Final legal texts** (in English, under German law). `/imprint`, `/privacy`, `/terms` and `/withdrawal` are English drafts with a "Draft" banner; every missing value is highlighted in `[…]`. Replace them with generated or lawyer-reviewed texts and remove the banner (`components/legal/legal-page.tsx`). Generators such as eRecht24 or IT-Recht Kanzlei offer English versions. Points the drafts leave open:
   - name, address, contact and VAT ID (or small-business rule) in the imprint
   - how Stripe Managed Payments appears as seller in the terms, privacy policy and withdrawal policy
@@ -112,6 +113,7 @@ Everything that has to be true, in order. Details for each step are in the secti
   - Terms of service URL
   - Customer Portal saved
   - live price ids in Vercel's env vars
+- [ ] **One subscription per customer.** Turn on Stripe's "Limit customers to one subscription" (Settings → Checkout) in test and live. The app already expires a member's older open Checkout sessions before starting a new one; this is the second guard against paying twice.
 - [ ] **Production webhook.** Create an endpoint in the Dashboard (`checkout.session.completed`, `customer.subscription.*`) and put its signing secret in Vercel's `STRIPE_WEBHOOK_SECRET`.
 - [ ] **Refunds under Managed Payments in live mode.** "Refund & end now" (withdrawals) refunds through the API; this worked in the sandbox. Confirm it's allowed in live mode too, or refund in the Dashboard.
 - [ ] **Stripe CLI login** expires every 90 days. When `stripe listen` fails with "api_key_expired", run `stripe login` again.
@@ -204,6 +206,14 @@ Phase 12 is section 1 of this file: work through it from top to bottom.
   - one list of each kind
   - an e-book and a guide
   - `/app/account`, `/app/more`, `/app/perks` and `/app/shop`
+- [ ] **Audit fixes of 2026-10-12 in the browser.** Each was tested from scripts or the database; click through:
+  - publish a list attached to the planned November drop: it shows "Live 1 Nov" in `/admin/content`, the toast names the date, and it doesn't appear in the member library, on the landing page or as a public teaser until the drop goes live
+  - an announced drop saves again (title or intro changed)
+  - inbox: "Dismiss", and the confirm dialogs of "Cancel membership" and "Decline"
+  - the list editor between 1024 and 1400 px wide: the header wraps and the side panels stay below it
+  - the error page (e.g. stop the network in DevTools on `/app/library`): sidebar stays, "Try again" works
+  - the billing portal error banner (`/app/account?billing=unavailable`)
+- [ ] **Delete member, after the 2026-10-12 changes.** It now also cancels unpaid, paused and incomplete subscriptions and removes the member's Spotlight uploads. Type-checked but not run again; test it on a throwaway member.
 - [ ] **KPIs vs Stripe.** The overview counts every live subscription row. In dev that includes the seed's `member@example.com`, whose subscription doesn't exist in Stripe, so dev shows 2 members while the Stripe sandbox has 1 active subscription. Compare against Stripe in prod.
 - [ ] **Stripe manual checks** (Phase 4):
   - an annual plan purchase
@@ -280,7 +290,6 @@ None of this exists in production as long as the seed isn't run there; it's abou
 ## 8. Known gaps and follow-ups in the code
 
 - [ ] **Failed emails aren't retried.** If Resend fails during the webhook (welcome, cancellation confirmed), a Spotlight feature or an inbox action, the error is logged and the claim released, but nothing sends it again later. Drop announcements can be retried with "Retry sending".
-- [ ] **Unused index migration not applied.** The advisor reports `cancellation_requests_status_idx` and `cancellation_requests_kind_status_idx` as unused; one index on `(kind, status, created_at)` would replace both. The Supabase connector's migration tool failed ("Invalid or expired requestState") when this was tried, so nothing was changed. Apply it once the connector works again (reconnect it), as a migration file plus `apply_migration`. Harmless until then.
 - [ ] **Unconfirmed `/cancel` links** stay in the inbox as "Account found" requests. The admin should cancel them within 2 business days even without the click (see the legal check in section 2).
 - [ ] **Personal data left after Delete member** (GDPR):
   - `webhook_events.payload` keeps the raw Stripe events, which contain the member's email and name. Decide whether to scrub them on delete or prune events after a retention period (e.g. 90 days).
@@ -301,6 +310,8 @@ None of this exists in production as long as the seed isn't run there; it's abou
 - [ ] **Spotlight `admin_note` is readable by the member.** Members can select every column of their own submission, including `admin_note`. Nothing writes or shows it yet, but don't put private notes there, or revoke the column for members.
 - [ ] **Spotlight images removed before submitting** stay in the member's Storage folder (members have no delete permission). Harmless, but they count toward storage.
 - [ ] **Spotlight months are UTC.** A submission at 00:30 Berlin time on the 1st still counts for the previous month (the database's `now()` is UTC).
+- [ ] **The Supabase connector's `apply_migration` still fails** ("Invalid or expired requestState"). The migrations of 2026-10-11/12 were applied to dev with `execute_sql` and recorded in `supabase_migrations.schema_migrations` by hand, so `supabase db push` sees them as applied. Production gets every file in `supabase/migrations/` the normal way (section 1). Reconnect the connector if it's needed again.
+- [ ] **Staggered cards start invisible.** The member grids (Home, Library, Shop, Perks, drop rows) fade their cards in, so the server HTML has them at opacity 0 until JavaScript runs. On a slow phone they appear a moment later. The page itself is visible; switch the `subtle` variant in `components/ui/motion.tsx` to rise-only if Lighthouse complains.
 - [ ] **Implementation plan checkboxes** were never ticked. This file is the record of what's open; tick the plan too, or leave it as the original plan.
 
 ## 9. Gotchas for later phases
