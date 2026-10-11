@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 import { cn } from "cn"
-import { deleteResource } from "@/app/admin/content/actions"
 import { discardListDraft, publishList, unpublishList } from "@/app/admin/content/list-actions"
 import { Badge } from "@/components/ui/badge"
 import { Banner } from "@/components/ui/banner"
@@ -186,24 +185,6 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
               onConfirm={() => run(() => discardListDraft(resourceId), () => window.location.reload())}
             />
           )}
-          <ConfirmDialog
-            trigger={
-              <Button variant="ghost" size="sm" disabled={pending} className="text-danger hover:text-danger">
-                Delete
-              </Button>
-            }
-            title={`Delete “${settings.title}”?`}
-            description="Members lose access right away, and the list's images are removed. This can't be undone."
-            confirmLabel="Delete for good"
-            destructive
-            onConfirm={() =>
-              startTransition(async () => {
-                // Redirects to the content list when it worked.
-                const result = await deleteResource(resourceId)
-                if (!result.ok) toast.error(result.message)
-              })
-            }
-          />
           <label className="sr-only" htmlFor="publish-drop">
             Add to drop
           </label>

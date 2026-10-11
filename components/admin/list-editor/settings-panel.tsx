@@ -1,9 +1,12 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useRef, useState } from "react"
-import { GripVerticalIcon, PlusIcon } from "lucide-react"
+import { useEffect, useRef, useState, useTransition } from "react"
+import { GripVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { toast } from "sonner"
+import { deleteResource } from "@/app/admin/content/actions"
 import { saveListSettings } from "@/app/admin/content/list-actions"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { FileUpload } from "@/components/admin/file-upload"
 import { Button } from "@/components/ui/button"
 import { Chip } from "@/components/ui/chip"
@@ -43,6 +46,7 @@ export function SettingsPanel({
   const intro = useEditor((s) => s.doc.intro ?? "")
   const sections = useEditor((s) => s.doc.sections)
   const change = useEditor((s) => s.change)
+  const [deleting, startDelete] = useTransition()
 
   useEffect(() => {
     if (first.current) {
@@ -144,6 +148,30 @@ export function SettingsPanel({
           <PlusIcon aria-hidden />
           Section
         </Button>
+      </div>
+
+      <div className="border-t border-border pt-4">
+        <p className="mb-2 text-xs font-semibold text-muted-foreground">Delete list</p>
+        <p className="mb-3 text-xs text-muted-foreground">Removes the list and its images for good.</p>
+        <ConfirmDialog
+          trigger={
+            <Button type="button" variant="destructive-outline" size="sm" className="w-full" disabled={deleting}>
+              <Trash2Icon aria-hidden />
+              {deleting ? "Deleting…" : "Delete list"}
+            </Button>
+          }
+          title={`Delete “${settings.title}”?`}
+          description="Members lose access right away, and the list's images are removed. This can't be undone."
+          confirmLabel="Delete for good"
+          destructive
+          onConfirm={() =>
+            startDelete(async () => {
+              // Redirects to the content list when it worked.
+              const result = await deleteResource(resourceId)
+              if (!result.ok) toast.error(result.message)
+            })
+          }
+        />
       </div>
     </div>
   )
