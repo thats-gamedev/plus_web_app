@@ -19,6 +19,7 @@ import { getMemberDetail, getMembers } from "@/lib/dal/admin"
 import { formatDay } from "@/lib/format"
 import { PLANS } from "@/lib/plans"
 import { stripeDashboardUrl } from "@/lib/stripe/client"
+import { ListPage, listScroll, stickyHead } from "@/components/admin/list-page"
 
 export const metadata: Metadata = { title: "Members" }
 
@@ -39,7 +40,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
   }
 
   return (
-    <>
+    <ListPage>
       <PageHeader
         title={
           <>
@@ -57,9 +58,9 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
       {members.length === 0 ? (
         <p className="rounded-card border border-border bg-card p-6 text-muted-foreground">No members match.</p>
       ) : (
-        <div className="overflow-x-auto rounded-card border border-border bg-card">
+        <div className={`overflow-x-auto rounded-card border border-border bg-card ${listScroll}`}>
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-border text-xs text-muted-foreground">
+            <thead className={`text-xs text-muted-foreground ${stickyHead}`}>
               <tr>
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Plan</th>
@@ -103,7 +104,7 @@ export default async function MembersPage({ searchParams }: PageProps<"/admin/me
       <MemberDrawer open={Boolean(detail)} title={detail?.member.email ?? "Member"}>
         {detail && <MemberDetailView detail={detail} />}
       </MemberDrawer>
-    </>
+    </ListPage>
   )
 }
 

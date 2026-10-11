@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { getAdminCodes } from "@/lib/dal/admin"
 import { formatDay } from "@/lib/format"
+import { ListPage, listScroll, stickyHead } from "@/components/admin/list-page"
 
 export const metadata: Metadata = { title: "Codes" }
 
@@ -47,7 +48,7 @@ export default async function CodesPage({ searchParams }: PageProps<"/admin/code
   }
 
   return (
-    <>
+    <ListPage>
       <PageHeader
         title="Codes"
         actions={
@@ -98,9 +99,9 @@ export default async function CodesPage({ searchParams }: PageProps<"/admin/code
           {query ? `No code or member matches "${query}".` : "No codes yet. Members get theirs when they join."}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-card border border-border bg-card">
+        <div className={`overflow-x-auto rounded-card border border-border bg-card ${listScroll}`}>
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-border text-xs text-muted-foreground">
+            <thead className={`text-xs text-muted-foreground ${stickyHead}`}>
               <tr>
                 <th className="px-5 py-3 font-medium">Code</th>
                 <th className="px-5 py-3 font-medium">Member</th>
@@ -141,6 +142,6 @@ export default async function CodesPage({ searchParams }: PageProps<"/admin/code
       <p className="mt-4 text-sm text-faint">
         Promotion codes live only here. Look one up before invoicing a booked post.
       </p>
-    </>
+    </ListPage>
   )
 }

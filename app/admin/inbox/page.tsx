@@ -25,6 +25,7 @@ import {
   getWebhookLog,
 } from "@/lib/dal/admin"
 import { TIME_ZONE } from "@/lib/format"
+import { ListPage, listScroll } from "@/components/admin/list-page"
 
 export const metadata: Metadata = { title: "Inbox" }
 
@@ -48,7 +49,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/admin/inbo
   const open = new Set([...requests, ...withdrawals, ...receipts].map((r) => r.id)).size + failed.length
 
   return (
-    <>
+    <ListPage>
       <PageHeader
         title="Inbox"
         actions={<span className="font-mono text-xs text-muted-foreground">{open} open</span>}
@@ -75,7 +76,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/admin/inbo
       </nav>
 
       {showLog ? <WebhookLog /> : <OpenItems requests={requests} withdrawals={withdrawals} failed={failed} receipts={receipts} />}
-    </>
+    </ListPage>
   )
 }
 
@@ -91,7 +92,7 @@ function OpenItems({
   receipts: MissingReceipt[]
 }) {
   return (
-    <div className="max-w-4xl space-y-10">
+    <div className={`max-w-4xl space-y-10 ${listScroll}`}>
       {receipts.length > 0 && <MissingReceipts receipts={receipts} />}
 
       {withdrawals.length > 0 && <Withdrawals withdrawals={withdrawals} />}
@@ -298,9 +299,9 @@ async function WebhookLog() {
   }
 
   return (
-    <div className="max-w-5xl">
+    <div className="flex max-w-5xl flex-col lg:min-h-0">
       <p className="mb-3 text-sm text-muted-foreground">The last 50 events Stripe sent. Replay re-runs one through the normal processing.</p>
-      <ul className="divide-y divide-border rounded-card border border-border bg-card">
+      <ul className={`divide-y divide-border rounded-card border border-border bg-card ${listScroll}`}>
         {events.map((event) => {
           const state = event.processedAt ? "processed" : event.error ? "failed" : "pending"
           return (

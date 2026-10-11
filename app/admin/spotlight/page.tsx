@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { monthName } from "@/lib/admin/drops"
 import { getAdminSubmissions, getSubmissionMonths } from "@/lib/dal/spotlight"
 import { CREDIT_PLATFORMS, PROJECT_TYPES, STATUS_LABELS, submissionMonth } from "@/lib/spotlight/schema"
+import { ListPage, listScroll } from "@/components/admin/list-page"
 
 export const metadata: Metadata = { title: "Spotlight" }
 
@@ -39,7 +40,7 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
   const href = (s: Filter) => `/admin/spotlight?month=${month}${s === "all" ? "" : `&status=${s}`}`
 
   return (
-    <>
+    <ListPage>
       <PageHeader
         title={
           <>
@@ -78,7 +79,7 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
           {all.length === 0 ? `No submissions for ${monthName(month)} yet.` : "Nothing with this status."}
         </p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className={`grid gap-3 sm:grid-cols-2 lg:-mx-1 lg:grid-cols-3 lg:px-1 lg:pb-1 xl:grid-cols-4 ${listScroll}`}>
           {shown.map((s, i) => (
             <li key={s.id} className="flex flex-col overflow-hidden rounded-card border border-border bg-card">
               {/* The image is absolutely positioned so its own size can't
@@ -141,6 +142,6 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
           ))}
         </ul>
       )}
-    </>
+    </ListPage>
   )
 }

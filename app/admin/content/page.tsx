@@ -10,6 +10,7 @@ import { shortAge } from "@/lib/admin/metrics"
 import { coverUrl } from "@/lib/content/covers"
 import { categoryLabels, categoryTones, resourceTypeLabel } from "@/lib/content/resources"
 import { getAdminContent } from "@/lib/dal/admin-content"
+import { ListPage, listScroll, stickyHead } from "@/components/admin/list-page"
 
 export const metadata: Metadata = { title: "Content" }
 
@@ -35,7 +36,7 @@ export default async function ContentPage({ searchParams }: PageProps<"/admin/co
   const now = new Date()
 
   return (
-    <>
+    <ListPage>
       <PageHeader
         title={
           <>
@@ -69,9 +70,9 @@ export default async function ContentPage({ searchParams }: PageProps<"/admin/co
       {rows.length === 0 ? (
         <p className="rounded-card border border-border bg-card p-6 text-muted-foreground">Nothing here yet.</p>
       ) : (
-        <div className="overflow-x-auto rounded-card border border-border bg-card">
+        <div className={`overflow-x-auto rounded-card border border-border bg-card ${listScroll}`}>
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="border-b border-border text-xs text-muted-foreground">
+            <thead className={`text-xs text-muted-foreground ${stickyHead}`}>
               <tr>
                 <th className="py-3 pl-5 font-medium">
                   <span className="sr-only">Cover</span>
@@ -122,6 +123,6 @@ export default async function ContentPage({ searchParams }: PageProps<"/admin/co
           </table>
         </div>
       )}
-    </>
+    </ListPage>
   )
 }
