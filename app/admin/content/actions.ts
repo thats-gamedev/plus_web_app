@@ -115,11 +115,34 @@ export async function setDocumentStatus(id: string, status: "published" | "draft
   return { ok: true, message: status === "published" ? "Published. Members can see it now." : "Unpublished. Members no longer see it." }
 }
 
-/** Deletes a resource and its uploaded files. Drops keep working without it. */
+/** Image paths a list's items point to, in the live and the draft version. */
+function listImagePaths(...versions: unknown[]): string[] {
+  const paths = new Set<string>()
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) value.forEach(walk)
+    else if (value && typeof value === "object") {
+      for (const [key, inner] of Object.entries(value)) {
+        if ((key === "imagePath" || key === "exampleImagePath") && typeof inner === "string") paths.add(inner)
+        else walk(inner)
+      }
+    }
+  }
+  versions.forEach(walk)
+  return [...paths]
+}
+
+/**
+ * Deletes a resource (e-book, guide or list) and its uploaded files: cover,
+ * PDF and a list's item images. Drops keep working without it.
+ */
 export async function deleteResource(id: string): Promise<ContentActionResult> {
   await requireAdmin()
   const db = createAdminClient()
-  const { data: resource } = await db.from("resources").select("title, cover_path, file_path").eq("id", id).maybeSingle()
+  const { data: resource } = await db
+    .from("resources")
+    .select("title, cover_path, file_path, content, draft_content")
+    .eq("id", id)
+    .maybeSingle()
   if (!resource) return { ok: false, message: "It no longer exists." }
 
   const { error } = await db.from("resources").delete().eq("id", id)
@@ -128,6 +151,8 @@ export async function deleteResource(id: string): Promise<ContentActionResult> {
   // Best effort: a leftover file is harmless, a failed delete shouldn't block.
   if (resource.cover_path) await db.storage.from("covers").remove([resource.cover_path])
   if (resource.file_path) await db.storage.from("ebooks").remove([resource.file_path])
+  const itemImages = listImagePaths(resource.content, resource.draft_content)
+  if (itemImages.length) await db.storage.from("covers").remove(itemImages)
 
   refreshPublicContent()
   redirect("/admin/content")
