@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Banner } from "@/components/ui/banner"
 import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import type { DropOption } from "@/lib/dal/admin-content"
 import { TIME_ZONE } from "@/lib/format"
@@ -185,22 +186,19 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
               onConfirm={() => run(() => discardListDraft(resourceId), () => window.location.reload())}
             />
           )}
-          <label className="sr-only" htmlFor="publish-drop">
-            Add to drop
-          </label>
-          <select
-            id="publish-drop"
-            value={drop}
-            onChange={(e) => setDrop(e.target.value)}
-            className="h-8 rounded-lg border border-ink bg-card px-2 text-sm"
-          >
-            <option value="">No drop</option>
-            {drops.map((d) => (
-              <option key={d.id} value={d.id}>
-                Add to drop: {new Date(`${d.month}T00:00:00Z`).toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}
-              </option>
-            ))}
-          </select>
+          <Select value={drop || "none"} onValueChange={(next) => setDrop(next === "none" ? "" : next)}>
+            <SelectTrigger size="sm" aria-label="Add to drop">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" align="end">
+              <SelectItem value="none">No drop</SelectItem>
+              {drops.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  Add to drop: {new Date(`${d.month}T00:00:00Z`).toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button size="sm" disabled={pending || !errors.valid || save.state === "conflict"} onClick={publish}>
             {pending ? "Working…" : published ? "Publish changes" : "Publish"}
           </Button>

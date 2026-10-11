@@ -9,6 +9,7 @@ import { Chip } from "@/components/ui/chip"
 import { CountedTextarea } from "@/components/ui/counted-textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { type DocumentErrors, findItem, parseTagList } from "@/lib/lists/editor"
@@ -306,18 +307,21 @@ function CreatorFields({ item, update, errors }: FieldProps) {
         {links.map((link, index) => (
           <div key={index} className="space-y-1.5 rounded-xl bg-muted/50 p-2.5">
             <div className="flex items-center gap-2">
-              <select
-                aria-label="Platform"
+              <Select
                 value={link.platform}
-                onChange={(e) => setLinks(links.map((l, i) => (i === index ? { ...l, platform: e.target.value } : l)))}
-                className="h-9 flex-1 rounded-lg border border-input bg-card px-2 text-sm"
+                onValueChange={(next) => setLinks(links.map((l, i) => (i === index ? { ...l, platform: next } : l)))}
               >
-                {Object.entries(socialPlatformLabels).map(([value, label]) => (
-                  <option key={value} value={value} disabled={value !== link.platform && used.has(value)}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger size="sm" aria-label="Platform" className="min-w-0 flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" align="start">
+                  {Object.entries(socialPlatformLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value} disabled={value !== link.platform && used.has(value)}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <label className="flex items-center gap-1 text-xs">
                 <input
                   type="radio"

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 function useSpotlightAction() {
   const [pending, start] = useTransition()
@@ -115,21 +116,24 @@ export function MonthSelect({ months, value }: { months: string[]; value: string
   const pathname = usePathname()
   const params = useSearchParams()
   return (
-    <select
-      aria-label="Month"
+    <Select
       value={value}
-      onChange={(e) => {
+      onValueChange={(month) => {
         const next = new URLSearchParams(params)
-        next.set("month", e.target.value)
+        next.set("month", month)
         router.push(`${pathname}?${next}`)
       }}
-      className="h-10 rounded-lg border border-ink bg-card px-3 text-sm"
     >
-      {months.map((m) => (
-        <option key={m} value={m}>
-          {new Date(`${m}T00:00:00Z`).toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}
-        </option>
-      ))}
-    </select>
+      <SelectTrigger aria-label="Month" className="min-w-44">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent position="popper" align="end">
+        {months.map((m) => (
+          <SelectItem key={m} value={m}>
+            {new Date(`${m}T00:00:00Z`).toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

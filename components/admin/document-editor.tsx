@@ -15,6 +15,7 @@ import { Chip } from "@/components/ui/chip"
 import { CountedTextarea } from "@/components/ui/counted-textarea"
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { idleState } from "@/lib/auth/form-state"
 import { coverUrl } from "@/lib/content/covers"
@@ -31,6 +32,7 @@ export function DocumentEditor({ resource, drops }: { resource: EditableResource
   const [state, action, saving] = useActionState(saveDocument, idleState)
   const [statusPending, startStatus] = useTransition()
   const [category, setCategory] = useState<ResourceCategory>(resource.category)
+  const [dropId, setDropId] = useState(resource.dropId ?? "")
   const [coverPath, setCoverPath] = useState(resource.coverPath)
   const [filePath, setFilePath] = useState(resource.filePath)
   const [body, setBody] = useState(resource.bodyMd ?? "")
@@ -51,6 +53,7 @@ export function DocumentEditor({ resource, drops }: { resource: EditableResource
     <form action={action} className="max-w-3xl space-y-6" noValidate>
       <input type="hidden" name="id" value={resource.id} />
       <input type="hidden" name="category" value={category} />
+      <input type="hidden" name="dropId" value={dropId} />
       <input type="hidden" name="coverPath" value={coverPath ?? ""} />
       <input type="hidden" name="filePath" value={filePath ?? ""} />
 
@@ -97,19 +100,19 @@ export function DocumentEditor({ resource, drops }: { resource: EditableResource
           <Label htmlFor="dropId" className="font-semibold">
             Drop
           </Label>
-          <select
-            id="dropId"
-            name="dropId"
-            defaultValue={values?.dropId ?? resource.dropId ?? ""}
-            className="h-11 w-full rounded-lg border border-input bg-card px-3 text-sm"
-          >
-            <option value="">No drop</option>
-            {drops.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.month.slice(0, 7)} · {d.title}
-              </option>
-            ))}
-          </select>
+          <Select value={dropId || "none"} onValueChange={(next) => setDropId(next === "none" ? "" : next)}>
+            <SelectTrigger id="dropId" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" align="start">
+              <SelectItem value="none">No drop</SelectItem>
+              {drops.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.month.slice(0, 7)} · {d.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <fieldset className="space-y-2 md:col-span-2">
           <legend className="text-sm font-semibold">Category</legend>
