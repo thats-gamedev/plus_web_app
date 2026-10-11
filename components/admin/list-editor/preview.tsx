@@ -36,7 +36,7 @@ export function ListPreview({ doc, teaser }: { doc: ListDocument; teaser: boolea
   }
 
   return (
-    <div className="rounded-card border border-dashed border-border bg-background p-4 md:p-6">
+    <div>
       {teaser && (
         <p className="mb-4 text-sm text-muted-foreground">
           Logged-out visitors see these items on the public list page; the rest is locked.

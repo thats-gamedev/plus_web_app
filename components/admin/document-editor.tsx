@@ -3,9 +3,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useActionState, useState, useTransition } from "react"
+import { EyeIcon } from "lucide-react"
 import { toast } from "sonner"
 import { type ContentActionResult, deleteResource, saveDocument, setDocumentStatus } from "@/app/admin/content/actions"
 import { FileUpload } from "@/components/admin/file-upload"
+import { PreviewDialog } from "@/components/admin/preview-dialog"
 import { FormField } from "@/components/auth/form-field"
 import { MarkdownArticle } from "@/components/shared/markdown"
 import { Badge } from "@/components/ui/badge"
@@ -158,14 +160,10 @@ export function DocumentEditor({ resource, drops }: { resource: EditableResource
           <Label htmlFor="bodyMd" className="font-semibold">
             {isEbook ? "Description (Markdown)" : "Guide text (Markdown)"}
           </Label>
-          <div className="flex gap-1">
-            <Chip active={!preview} onClick={() => setPreview(false)}>
-              Write
-            </Chip>
-            <Chip active={preview} onClick={() => setPreview(true)}>
-              Preview
-            </Chip>
-          </div>
+          <Button type="button" variant="outline" size="sm" onClick={() => setPreview(true)}>
+            <EyeIcon aria-hidden />
+            Preview
+          </Button>
         </div>
         <Textarea
           id="bodyMd"
@@ -173,14 +171,17 @@ export function DocumentEditor({ resource, drops }: { resource: EditableResource
           rows={16}
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          className={preview ? "hidden" : "font-mono text-sm"}
+          className="font-mono text-sm"
           aria-invalid={errors.bodyMd ? true : undefined}
         />
-        {preview && (
-          <div className="min-h-40 rounded-xl border border-border p-5">
-            {body.trim() ? <MarkdownArticle>{body}</MarkdownArticle> : <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>}
+        <PreviewDialog open={preview} onOpenChange={setPreview} title={resource.title}>
+          {/* The text card as members see it on the guide or e-book page. */}
+          <div className="rounded-card border border-border bg-card p-5 md:p-8">
+            <div className="max-w-prose">
+              {body.trim() ? <MarkdownArticle>{body}</MarkdownArticle> : <p className="text-sm text-muted-foreground">Nothing to preview yet.</p>}
+            </div>
           </div>
-        )}
+        </PreviewDialog>
         {errors.bodyMd && <p className="text-xs text-danger">{errors.bodyMd}</p>}
         <p className="text-xs text-faint">## Heading, **bold**, - list, [link](https://…). Images aren&apos;t shown yet.</p>
       </div>

@@ -3,12 +3,13 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState, useTransition } from "react"
+import { EyeIcon } from "lucide-react"
 import { toast } from "sonner"
-import { cn } from "cn"
 import { discardListDraft, publishList, unpublishList } from "@/app/admin/content/list-actions"
 import { Badge } from "@/components/ui/badge"
 import { Banner } from "@/components/ui/banner"
 import { ConfirmDialog } from "@/components/admin/confirm-dialog"
+import { PreviewDialog } from "@/components/admin/preview-dialog"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
@@ -96,7 +97,7 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
   const errors = useMemo(() => validateDocument(doc), [doc])
   const [drop, setDrop] = useState(dropId ?? "")
   const narrow = useMediaQuery("(max-width: 1023px)")
-  const [view, setView] = useState<"edit" | "member" | "teaser">("edit")
+  const [preview, setPreview] = useState<"member" | "teaser" | null>(null)
   const teaserCount = doc.sections.reduce((n, s) => n + s.items.filter((i) => i.isTeaser).length, 0)
   const [pending, startTransition] = useTransition()
 
@@ -240,28 +241,15 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
 
         <div className="min-w-0 p-4 md:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div role="tablist" aria-label="View" className="inline-flex rounded-full bg-muted p-1">
-              {(
-                [
-                  { value: "edit", label: "Edit" },
-                  { value: "member", label: "Member preview" },
-                  { value: "teaser", label: `Teaser view · ${teaserCount}` },
-                ] as const
-              ).map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={view === t.value}
-                  onClick={() => setView(t.value)}
-                  className={cn(
-                    "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                    view === t.value ? "bg-ink text-white" : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPreview("member")}>
+                <EyeIcon aria-hidden />
+                Member preview
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPreview("teaser")}>
+                <EyeIcon aria-hidden />
+                Teaser view · {teaserCount}
+              </Button>
             </div>
             {errors.valid ? (
               <p className="text-sm text-muted-foreground">
@@ -279,7 +267,7 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
               {errors.general.join(" · ")}
             </Banner>
           )}
-          {view === "edit" ? <Canvas errors={errors} /> : <ListPreview doc={doc} teaser={view === "teaser"} />}
+          <Canvas errors={errors} />
         </div>
 
         <aside className="hidden border-l border-border p-6 lg:block">
@@ -288,6 +276,20 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
           </div>
         </aside>
       </div>
+
+      <PreviewDialog
+        open={preview !== null}
+        onOpenChange={(open) => !open && setPreview(null)}
+        title={settings.title}
+        tabs={[
+          { value: "member", label: "Member preview" },
+          { value: "teaser", label: `Teaser view · ${teaserCount}` },
+        ]}
+        tab={preview ?? "member"}
+        onTabChange={setPreview}
+      >
+        {preview && <ListPreview doc={doc} teaser={preview === "teaser"} />}
+      </PreviewDialog>
 
       {/* Below 1024 px the inspector is a slide-over sheet (spec). It must not
           render on desktop, or its overlay would cover the editor. */}
