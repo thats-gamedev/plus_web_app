@@ -215,6 +215,7 @@ export type Database = {
           id: string
           role: Database["public"]["Enums"]["user_role"]
           stripe_customer_id: string | null
+          terms_accepted_at: string | null
         }
         Insert: {
           created_at?: string
@@ -224,6 +225,7 @@ export type Database = {
           id: string
           role?: Database["public"]["Enums"]["user_role"]
           stripe_customer_id?: string | null
+          terms_accepted_at?: string | null
         }
         Update: {
           created_at?: string
@@ -233,6 +235,7 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["user_role"]
           stripe_customer_id?: string | null
+          terms_accepted_at?: string | null
         }
         Relationships: []
       }

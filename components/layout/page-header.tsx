@@ -23,13 +23,3 @@ export function PageHeader({
     </div>
   )
 }
-
-// Stand-in body for routes that are built in a later phase.
-export function ComingInPhase({ phase, children }: { phase: number; children: React.ReactNode }) {
-  return (
-    <div className="rounded-card border-2 border-dashed border-brand/50 bg-card p-8 text-muted-foreground">
-      <p className="font-mono text-xs text-brand">Built in phase {phase}</p>
-      <p className="mt-2">{children}</p>
-    </div>
-  )
-}
