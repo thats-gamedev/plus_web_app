@@ -2,9 +2,12 @@ import { verifyUnsubscribeToken } from "@/lib/email/unsubscribe"
 import { escapeHtml } from "@/lib/email/templates"
 import { createAdminClient } from "@/lib/supabase/admin"
 
+const INVALID = 'Turn drop emails off under <a href="/app/account" style="color:#e2622b">Account</a> instead.'
+
 // Unsubscribe from drop emails via the signed link in every drop email.
-// GET shows a confirmation page; POST is the one-click unsubscribe that mail
-// clients send for the List-Unsubscribe header (RFC 8058). The token, not a
+// GET shows a confirmation button; POST unsubscribes (the button, and the
+// one-click request mail clients send for the List-Unsubscribe header,
+// RFC 8058). The token, not a
 // session, authorises the change, so the service-role client is used only
 // after it verifies.
 
@@ -25,13 +28,30 @@ function page(title: string, body: string, status = 200) {
 }
 
 export async function GET(request: Request) {
-  const ok = await turnOff(new URL(request.url).searchParams.get("t"))
-  return ok
-    ? page("You're unsubscribed", 'You won\'t get drop emails anymore. Turn them back on any time under <a href="/app/account" style="color:#e2622b">Account</a>.')
-    : page("This link doesn't work", 'Turn drop emails off under <a href="/app/account" style="color:#e2622b">Account</a> instead.', 400)
+  // Only shows a button: mail scanners and link previews open links in
+  // emails on their own, and that mustn't unsubscribe anyone.
+  const token = new URL(request.url).searchParams.get("t") ?? ""
+  const valid = Boolean(verifyUnsubscribeToken(token, process.env.UNSUBSCRIBE_SECRET ?? ""))
+  if (!valid) return page("This link doesn't work", INVALID, 400)
+  const action = `/api/email/unsubscribe?t=${encodeURIComponent(token)}`
+  return page(
+    "Unsubscribe from drop emails?",
+    `You won't get the monthly drop email anymore. You can turn it back on any time under Account.</p>
+<form method="post" action="${escapeHtml(action)}" style="margin:20px 0 0"><input type="hidden" name="confirm" value="1">
+<button type="submit" style="font:inherit;font-weight:600;color:#fff;background:#1f1f1f;border:0;border-radius:10px;padding:12px 18px;cursor:pointer">Unsubscribe</button></form><p style="margin:0">`
+  )
 }
 
+/**
+ * POST does the unsubscribe: the button above, and the one-click request
+ * mail clients send for the List-Unsubscribe header (RFC 8058, body
+ * "List-Unsubscribe=One-Click"), which only needs a status code.
+ */
 export async function POST(request: Request) {
   const ok = await turnOff(new URL(request.url).searchParams.get("t"))
-  return new Response(null, { status: ok ? 200 : 400 })
+  const form = await request.formData().catch(() => null)
+  if (form?.get("confirm") !== "1") return new Response(null, { status: ok ? 200 : 400 })
+  return ok
+    ? page("You're unsubscribed", `You won't get drop emails anymore. Turn them back on any time under <a href="/app/account" style="color:#e2622b">Account</a>.`)
+    : page("This link doesn't work", INVALID, 400)
 }
