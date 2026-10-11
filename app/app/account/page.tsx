@@ -25,7 +25,7 @@ export default function AccountPage() {
         <Account />
       </Suspense>
       <ContractLinks />
-      <div className="mt-6 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mt-6 flex flex-col items-start gap-3 text-sm md:flex-row md:items-center md:justify-between">
         <a href={contactMailto("Data export or deletion request")} className="text-brand hover:underline">
           Request data export or deletion
         </a>
