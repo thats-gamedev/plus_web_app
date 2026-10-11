@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { isCurrentMonth } from "@/lib/content/landing"
 import { cn } from "cn"
 import { Stagger, StaggerItem } from "@/components/ui/motion"
 import { ArrowRightIcon, ChevronRightIcon } from "lucide-react"
@@ -27,7 +28,7 @@ export function DropCard({ drop }: { drop: Drop }) {
   return (
     <DarkPanel className="grid gap-6 p-5 md:p-8 lg:grid-cols-2 lg:gap-10">
       <div>
-        <Eyebrow>This month</Eyebrow>
+        <Eyebrow>{isCurrentMonth(drop.month) ? "This month" : "Latest drop"}</Eyebrow>
         <h2 className="mt-3 text-2xl font-bold md:text-4xl">
           <span className="hidden md:inline">
             {dropMonthName(drop.month)}:
@@ -87,11 +88,13 @@ export function DropCard({ drop }: { drop: Drop }) {
 }
 
 /** Before the first drop goes live: "Your first drop arrives on [date]". */
-export function FirstDropCard({ arrivesOn }: { arrivesOn: string }) {
+export function FirstDropCard({ arrivesOn }: { arrivesOn: string | null }) {
   return (
     <DarkPanel className="p-5 md:p-8">
-      <Eyebrow>This month</Eyebrow>
-      <h2 className="mt-3 text-2xl font-bold md:text-4xl">Your first drop arrives on {arrivesOn}.</h2>
+      <Eyebrow>First drop</Eyebrow>
+      <h2 className="mt-3 text-2xl font-bold md:text-4xl">
+        {arrivesOn ? `Your first drop arrives on ${arrivesOn}.` : "Your first drop arrives soon."}
+      </h2>
       <p className="mt-3 max-w-prose text-ink-muted">
         Each month brings a themed set of lists, prompts and guides. Until then, the library is open.
       </p>

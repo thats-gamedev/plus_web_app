@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { dropHeading, dropSummary } from "./landing"
+import { dropHeading, dropSummary, isCurrentMonth } from "./landing"
 
 describe("dropHeading", () => {
   it("uses the month and the theme, or the title without a theme", () => {
@@ -26,5 +26,14 @@ describe("dropSummary", () => {
 
   it("is null for an empty drop", () => {
     expect(dropSummary([])).toBeNull()
+  })
+})
+
+describe("isCurrentMonth", () => {
+  it("compares the month in German time", () => {
+    expect(isCurrentMonth("2026-10-01", new Date("2026-10-15T12:00:00Z"))).toBe(true)
+    expect(isCurrentMonth("2026-10-01", new Date("2026-11-02T12:00:00Z"))).toBe(false)
+    // 31 Oct 23:30 UTC is already 1 November in Berlin.
+    expect(isCurrentMonth("2026-11-01", new Date("2026-10-31T23:30:00Z"))).toBe(true)
   })
 })

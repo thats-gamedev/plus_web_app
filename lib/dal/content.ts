@@ -2,6 +2,7 @@ import "server-only"
 import { cache } from "react"
 import { type LibraryFilters, searchPattern } from "@/lib/content/library-filters"
 import type { ResourceCategory, ResourceListKind, ResourceType } from "@/lib/content/resources"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
 // Data Access Layer for the library and drops. Queries run as the signed-in
@@ -185,4 +186,20 @@ export async function getLibrary(filters: LibraryFilters): Promise<ResourceCard[
   const { data, error } = await query.limit(LIBRARY_LIMIT)
   if (error) throw new Error(`Could not load the library: ${error.message}`)
   return (data ?? []).map(toCard)
+}
+
+/**
+ * Go-live time of the next planned drop, for "Your first drop arrives on …".
+ * Members can't read planned drops (RLS shows live ones only), so this reads
+ * just the date with the service role.
+ */
+export async function getNextDropAt(): Promise<string | null> {
+  const { data } = await createAdminClient()
+    .from("drops")
+    .select("published_at")
+    .gt("published_at", new Date().toISOString())
+    .order("published_at", { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  return data?.published_at ?? null
 }

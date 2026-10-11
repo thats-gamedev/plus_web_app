@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { parseConsent } from "@/lib/billing/consent"
 import { getIsPlus, getProfile, requireUser } from "@/lib/dal/auth"
-import { getCurrentDrop, getRecentResources } from "@/lib/dal/content"
+import { getCurrentDrop, getNextDropAt, getRecentResources } from "@/lib/dal/content"
 import { parsePlan } from "@/lib/plans"
 import { Stagger, StaggerItem } from "@/components/ui/motion"
 
@@ -68,7 +68,7 @@ async function Home({ searchParams }: Pick<PageProps<"/app">, "searchParams">) {
         actions={<LibrarySearch />}
       />
 
-      {drop ? <DropCard drop={drop} /> : <FirstDropCard arrivesOn={firstOfNextMonth(now)} />}
+      {drop ? <DropCard drop={drop} /> : <FirstDropCard arrivesOn={await nextDropDay()} />}
 
       <section className="mt-8 md:mt-10" aria-labelledby="recent-heading">
         <div className="mb-4 flex items-baseline justify-between gap-4">
@@ -166,10 +166,10 @@ function formatToday(now: Date) {
   return `${part("weekday")}, ${part("day")} ${part("month")}`
 }
 
-/** "1 November": drops go live at the start of a month. */
-function firstOfNextMonth(now: Date) {
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
-  return next.toLocaleString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })
+/** "1 November": the next planned drop's go-live day, if one is planned. */
+async function nextDropDay() {
+  const at = await getNextDropAt()
+  return at ? new Date(at).toLocaleString("en-GB", { day: "numeric", month: "long", timeZone: TIME_ZONE }) : null
 }
 
 function HomeSkeleton() {

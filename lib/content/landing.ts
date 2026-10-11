@@ -3,6 +3,15 @@ import type { ResourceListKind, ResourceType } from "./resources"
 
 // Copy helpers for the landing page's drop teaser (LW3). Pure, unit-tested.
 
+/**
+ * Whether a drop (its month as "2026-10-01") is this month's, in German time.
+ * An older drop is still the latest one, but not "this month" anymore.
+ */
+export function isCurrentMonth(month: string, now: Date = new Date()): boolean {
+  const current = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", timeZone: "Europe/Berlin" }).format(now)
+  return month.slice(0, 7) === current
+}
+
 /** "October: Stylized texturing"; the drop's title when it has no theme. */
 export function dropHeading({ month, theme, title }: { month: string; theme: string | null; title: string }): string {
   return `${monthName(month)}: ${theme || title}`

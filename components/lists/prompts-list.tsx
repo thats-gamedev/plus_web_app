@@ -108,10 +108,10 @@ function PromptCard({
     >
       <div className="flex items-center gap-2">
         <h3 id={`${id}-title`} className="font-semibold md:text-lg">
-          {active || !hasVariables ? (
+          {active ? (
             item.name
           ) : (
-            // Inactive prompts with variables open their inputs on click.
+            // Selecting a prompt opens its inputs and its example image.
             <button type="button" onClick={onActivate} className="text-left hover:underline">
               {item.name}
             </button>
@@ -128,9 +128,11 @@ function PromptCard({
       </div>
       <p className="mt-1 text-sm text-muted-foreground">{item.why}</p>
 
+      {active && item.exampleImagePath && (
+        <ExampleImage path={item.exampleImagePath} className="mt-3 aspect-[4/3] lg:hidden" />
+      )}
       {active && hasVariables && (
         <>
-          <ExampleImage path={item.exampleImagePath} className="mt-3 aspect-[4/3] lg:hidden" />
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {item.variables.map((variable) => (
               <div key={variable.name} className="space-y-1.5">
