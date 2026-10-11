@@ -100,11 +100,22 @@ export function SettingsPanel({
         </div>
       </fieldset>
 
-      <div className="flex items-center gap-3">
-        <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-pastel-mint">
-          {settings.coverPath && <Image src={coverUrl(settings.coverPath)} alt="" fill sizes="48px" className="object-cover" />}
-        </div>
-        <FileUpload bucket="covers" folder={resourceId} path={settings.coverPath} onUploaded={(path) => update({ coverPath: path })} />
+      <div className="space-y-1.5">
+        <p className="text-sm font-medium">Cover</p>
+        {/* Wide like the library card's cover, where members see it. */}
+        <FileUpload
+          bucket="covers"
+          folder={resourceId}
+          path={settings.coverPath}
+          onUploaded={(path) => update({ coverPath: path })}
+          tile={{
+            label: "Cover",
+            preview: settings.coverPath && (
+              <Image src={coverUrl(settings.coverPath)} alt="" fill sizes="260px" className="object-cover" />
+            ),
+            onRemove: () => update({ coverPath: null }),
+          }}
+        />
       </div>
 
       <div className="space-y-1.5">
