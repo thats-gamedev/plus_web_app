@@ -65,8 +65,10 @@ export default async function DropsPage({ searchParams }: PageProps<"/admin/drop
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-        <div>
+      {/* xl+: both columns fit the window below the title (main padding and
+          the PageHeader, 8.5rem) and scroll inside, so the page stays put. */}
+      <div className="grid gap-6 xl:h-[calc(100dvh-8.5rem)] xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <div className="min-h-0">
           {selected ? (
             <DropEditor
               key={selected.id}
@@ -82,8 +84,8 @@ export default async function DropsPage({ searchParams }: PageProps<"/admin/drop
           )}
         </div>
 
-        <div className="space-y-4">
-          <form action="/admin/drops" role="search">
+        <div className="flex min-h-0 flex-col gap-4">
+          <form action="/admin/drops" role="search" className="shrink-0">
             <input
               type="search"
               name="q"
@@ -94,7 +96,7 @@ export default async function DropsPage({ searchParams }: PageProps<"/admin/drop
             />
             {filter !== "all" && <input type="hidden" name="state" value={filter} />}
           </form>
-          <nav aria-label="Status" className="flex flex-wrap gap-2">
+          <nav aria-label="Status" className="flex shrink-0 flex-wrap gap-2">
             {filters.map((f) => (
               <Link
                 key={f}
@@ -110,44 +112,46 @@ export default async function DropsPage({ searchParams }: PageProps<"/admin/drop
             ))}
           </nav>
 
-          {(["planned", "past"] as const).map((group) => {
-            const items = visible.filter((d) => (group === "planned" ? d.state === "planned" : d.state !== "planned"))
-            const ordered = group === "planned" ? [...items].reverse() : items
-            if (ordered.length === 0) return null
-            return (
-              <section key={group} aria-label={group === "planned" ? "Upcoming" : "Live and past"}>
-                <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{group === "planned" ? "Upcoming" : "Live & past"}</h2>
-                <ul className="space-y-2">
-                  {ordered.map((d) => (
-                    <li key={d.id}>
-                      <Link
-                        href={href({ drop: d.id })}
-                        aria-current={d.id === selected?.id ? "true" : undefined}
-                        className={cn(
-                          "flex items-center gap-3 rounded-card border bg-card px-4 py-3 transition-colors",
-                          d.id === selected?.id ? "border-2 border-ink shadow-[0_3px_0_var(--ink)]" : "border-border hover:border-ink/30"
-                        )}
-                      >
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
-                            {d.month.slice(0, 7)}
-                            {d.id === nextUp?.id && <Badge variant="new">Next up</Badge>}
+          <div className="min-h-0 flex-1 space-y-4 xl:-mx-1 xl:overflow-y-auto xl:overscroll-contain xl:px-1 xl:pb-1">
+            {(["planned", "past"] as const).map((group) => {
+              const items = visible.filter((d) => (group === "planned" ? d.state === "planned" : d.state !== "planned"))
+              const ordered = group === "planned" ? [...items].reverse() : items
+              if (ordered.length === 0) return null
+              return (
+                <section key={group} aria-label={group === "planned" ? "Upcoming" : "Live and past"}>
+                  <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{group === "planned" ? "Upcoming" : "Live & past"}</h2>
+                  <ul className="space-y-2">
+                    {ordered.map((d) => (
+                      <li key={d.id}>
+                        <Link
+                          href={href({ drop: d.id })}
+                          aria-current={d.id === selected?.id ? "true" : undefined}
+                          className={cn(
+                            "flex items-center gap-3 rounded-card border bg-card px-4 py-3 transition-colors",
+                            d.id === selected?.id ? "border-2 border-ink shadow-[0_3px_0_var(--ink)]" : "border-border hover:border-ink/30"
+                          )}
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
+                              {d.month.slice(0, 7)}
+                              {d.id === nextUp?.id && <Badge variant="new">Next up</Badge>}
+                            </span>
+                            <span className="block truncate font-semibold">{d.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {d.resources.length} {d.resources.length === 1 ? "item" : "items"}
+                            </span>
                           </span>
-                          <span className="block truncate font-semibold">{d.title}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {d.resources.length} {d.resources.length === 1 ? "item" : "items"}
-                          </span>
-                        </span>
-                        <Badge variant={stateBadges[d.state].variant} className={d.state === "planned" ? "text-foreground" : undefined}>
-                          {stateBadges[d.state].label}
-                        </Badge>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )
-          })}
+                          <Badge variant={stateBadges[d.state].variant} className={d.state === "planned" ? "text-foreground" : undefined}>
+                            {stateBadges[d.state].label}
+                          </Badge>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )
+            })}
+          </div>
         </div>
       </div>
     </>

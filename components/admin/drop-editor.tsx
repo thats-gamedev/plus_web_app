@@ -78,7 +78,9 @@ export function DropEditor({
   const values = form.values
 
   return (
-    <div className="overflow-hidden rounded-card border border-border bg-card">
+    // Next to the drops list (xl+) the card fits the window: the top row and
+    // the publish bar stay put, the fields and the content scroll between.
+    <div className="flex flex-col overflow-hidden rounded-card border border-border bg-card xl:h-full">
       {goesLiveLabel && (
         <p className="flex items-center gap-2 border-b border-border bg-brand-soft px-5 py-3 text-sm">
           <CalendarClockIcon aria-hidden className="size-4 text-brand" />
@@ -86,72 +88,75 @@ export function DropEditor({
           <Badge variant="muted" className="text-foreground">Planned</Badge>
         </p>
       )}
-      <form action={action} className="space-y-5 p-5 md:p-6" noValidate>
-        <input type="hidden" name="id" value={drop.id} />
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="font-mono text-sm text-muted-foreground">{drop.month.slice(0, 7)}</span>
-          <div className="flex items-center gap-3">
-            <Link href={`/admin/drops/${drop.id}/preview`} target="_blank" className="text-sm font-semibold hover:underline">
-              Preview as member
-            </Link>
-            <DeleteDrop dropId={drop.id} title={drop.title} />
-          </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3 md:px-6">
+        <span className="font-mono text-sm text-muted-foreground">{drop.month.slice(0, 7)}</span>
+        <div className="flex items-center gap-3">
+          <Link href={`/admin/drops/${drop.id}/preview`} target="_blank" className="text-sm font-semibold hover:underline">
+            Preview as member
+          </Link>
+          <DeleteDrop dropId={drop.id} title={drop.title} />
         </div>
-
-        <FormField name="title" label="Title" maxLength={120} defaultValue={values?.title ?? drop.title} error={errors.title} hint="Used in the admin and as the email subject." />
-        <FormField
-          name="theme"
-          label="Theme"
-          maxLength={60}
-          defaultValue={values?.theme ?? drop.theme ?? ""}
-          error={errors.theme}
-          hint={`Members see “${monthName(drop.month)}: <theme>” on their home page.`}
-        />
-        <div className="space-y-2">
-          <Label htmlFor="introMd" className="font-semibold">
-            Intro
-          </Label>
-          <CountedTextarea id="introMd" name="introMd" rows={3} maxLength={2000} defaultValue={values?.introMd ?? drop.introMd ?? ""} />
-          <p className="text-xs text-faint">Shown at the top of the drop and in the email. Markdown: **bold**, [link](https://…).</p>
-        </div>
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-semibold">Goes live</legend>
-          <div className="grid grid-cols-[1fr_8rem] gap-3">
-            <Input type="date" name="date" aria-label="Date" defaultValue={values?.date ?? zoned.date} disabled={state === "announced"} />
-            <Input type="time" name="time" aria-label="Time" defaultValue={values?.time ?? zoned.time} disabled={state === "announced"} />
-          </div>
-          <p className={errors.date || errors.time ? "text-xs text-danger" : "text-xs text-faint"}>
-            {errors.date ?? errors.time ?? "Times are in German time (Europe/Berlin). It publishes automatically."}
-          </p>
-        </fieldset>
-        {form.message && <Banner variant={form.status === "success" ? "success" : "danger"}>{form.message}</Banner>}
-        <Button type="submit" variant="outline" disabled={saving}>
-          {saving ? "Saving…" : "Save"}
-        </Button>
-      </form>
-
-      <div className="space-y-3 border-t border-border p-5 md:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-semibold">
-            Content <span className="text-muted-foreground">{drop.resources.length}</span>
-          </h2>
-          <AddContent dropId={drop.id} attachable={attachable} />
-        </div>
-        {drop.resources.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nothing attached yet.</p>
-        ) : (
-          // Remounts when the content changes, so it starts from the server's order.
-          <DropContentList key={drop.resources.map((r) => r.id).join()} dropId={drop.id} resources={drop.resources} />
-        )}
-        {drop.resources.length > 1 && (
-          <p className="text-xs text-faint">Drag to set the order members see. Keyboard: Space, arrow keys, Space.</p>
-        )}
-        {drop.resources.some((r) => r.status === "draft") && (
-          <p className="text-xs text-muted-foreground">Drafts aren&apos;t shown to members until you publish them.</p>
-        )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-5 md:px-6">
+      <div className="min-h-0 flex-1 xl:overflow-y-auto xl:overscroll-contain">
+        <form action={action} className="space-y-5 p-5 md:p-6" noValidate>
+          <input type="hidden" name="id" value={drop.id} />
+
+          <FormField name="title" label="Title" maxLength={120} defaultValue={values?.title ?? drop.title} error={errors.title} hint="Used in the admin and as the email subject." />
+          <FormField
+            name="theme"
+            label="Theme"
+            maxLength={60}
+            defaultValue={values?.theme ?? drop.theme ?? ""}
+            error={errors.theme}
+            hint={`Members see “${monthName(drop.month)}: <theme>” on their home page.`}
+          />
+          <div className="space-y-2">
+            <Label htmlFor="introMd" className="font-semibold">
+              Intro
+            </Label>
+            <CountedTextarea id="introMd" name="introMd" rows={3} maxLength={2000} defaultValue={values?.introMd ?? drop.introMd ?? ""} />
+            <p className="text-xs text-faint">Shown at the top of the drop and in the email. Markdown: **bold**, [link](https://…).</p>
+          </div>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-semibold">Goes live</legend>
+            <div className="grid grid-cols-[1fr_8rem] gap-3">
+              <Input type="date" name="date" aria-label="Date" defaultValue={values?.date ?? zoned.date} disabled={state === "announced"} />
+              <Input type="time" name="time" aria-label="Time" defaultValue={values?.time ?? zoned.time} disabled={state === "announced"} />
+            </div>
+            <p className={errors.date || errors.time ? "text-xs text-danger" : "text-xs text-faint"}>
+              {errors.date ?? errors.time ?? "Times are in German time (Europe/Berlin). It publishes automatically."}
+            </p>
+          </fieldset>
+          {form.message && <Banner variant={form.status === "success" ? "success" : "danger"}>{form.message}</Banner>}
+          <Button type="submit" variant="outline" disabled={saving}>
+            {saving ? "Saving…" : "Save"}
+          </Button>
+        </form>
+
+        <div className="space-y-3 border-t border-border p-5 md:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-semibold">
+              Content <span className="text-muted-foreground">{drop.resources.length}</span>
+            </h2>
+            <AddContent dropId={drop.id} attachable={attachable} />
+          </div>
+          {drop.resources.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nothing attached yet.</p>
+          ) : (
+            // Remounts when the content changes, so it starts from the server's order.
+            <DropContentList key={drop.resources.map((r) => r.id).join()} dropId={drop.id} resources={drop.resources} />
+          )}
+          {drop.resources.length > 1 && (
+            <p className="text-xs text-faint">Drag to set the order members see. Keyboard: Space, arrow keys, Space.</p>
+          )}
+          {drop.resources.some((r) => r.status === "draft") && (
+            <p className="text-xs text-muted-foreground">Drafts aren&apos;t shown to members until you publish them.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border p-5 md:px-6">
         <p className="text-sm text-muted-foreground">
           {state === "planned"
             ? `Members see it on ${zoned.date}. Nothing is sent yet.`
