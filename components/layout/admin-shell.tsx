@@ -3,7 +3,8 @@
 import { Suspense, use } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { MenuIcon } from "lucide-react"
+import { LogOutIcon, MenuIcon } from "lucide-react"
+import { signOut } from "@/app/(auth)/actions"
 import { cn } from "cn"
 import { Logo } from "@/components/layout/logo"
 import { adminNav, isActive } from "@/components/layout/nav-config"
@@ -14,6 +15,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+
+/** Log out as a form, so it works without JavaScript. */
+function LogoutForm({ className, children }: { className: string; children: React.ReactNode }) {
+  return (
+    <form action={signOut}>
+      <button type="submit" className={className}>
+        {children}
+      </button>
+    </form>
+  )
+}
 
 /** Open-item counts shown as orange numbers next to nav items. */
 export type AdminNavCounts = Partial<Record<string, number>>
@@ -85,9 +97,16 @@ export function AdminSidebar({
       <div className="flex-1">
         <AdminNavList counts={counts} />
       </div>
-      <p className="mx-2 border-t border-ink-border px-3 py-5 text-sm text-ink-muted">
-        Signed in as {adminName} · admin
-      </p>
+      <div className="mx-2 flex items-center gap-1 border-t border-ink-border py-3 pl-3">
+        <p className="min-w-0 flex-1 text-sm">
+          <span className="block truncate font-semibold">{adminName}</span>
+          <span className="block text-xs text-ink-muted">Admin</span>
+        </p>
+        <LogoutForm className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-muted transition-colors hover:bg-ink-2 hover:text-white">
+          <LogOutIcon aria-hidden className="size-4" />
+          <span className="sr-only">Log out</span>
+        </LogoutForm>
+      </div>
     </aside>
   )
 }
@@ -112,6 +131,12 @@ export function AdminMobileTopBar({ counts }: { counts: CountsPromise }) {
         <SheetContent side="right" className="w-72 border-ink-border bg-ink pt-12 text-white">
           <SheetTitle className="sr-only">Admin menu</SheetTitle>
           <AdminNavList counts={counts} onNavigate />
+          <div className="mx-2 mt-auto border-t border-ink-border px-2 py-4">
+            <LogoutForm className="flex h-11 w-full items-center gap-3 rounded-lg px-3 font-medium text-ink-muted transition-colors hover:bg-ink-2 hover:text-white">
+              <LogOutIcon aria-hidden className="size-[18px]" />
+              Log out
+            </LogoutForm>
+          </div>
         </SheetContent>
       </Sheet>
     </header>
