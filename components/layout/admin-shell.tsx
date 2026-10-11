@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense, use } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { MenuIcon } from "lucide-react"
@@ -17,11 +18,20 @@ import {
 /** Open-item counts shown as orange numbers next to nav items. */
 export type AdminNavCounts = Partial<Record<string, number>>
 
+// The counts arrive as a promise, so the shell and the page don't wait for
+// them: each number pops in when its query is done.
+type CountsPromise = Promise<AdminNavCounts>
+
+function NavCount({ counts, href }: { counts: CountsPromise; href: string }) {
+  const count = use(counts)[href]
+  return count ? <span className="text-sm font-semibold text-brand">{count}</span> : null
+}
+
 function AdminNavList({
   counts,
   onNavigate,
 }: {
-  counts: AdminNavCounts
+  counts: CountsPromise
   onNavigate?: boolean
 }) {
   const pathname = usePathname()
@@ -30,7 +40,6 @@ function AdminNavList({
     <nav aria-label="Admin" className="flex flex-col gap-1 px-2">
       {adminNav.map((item) => {
         const active = isActive(pathname, item)
-        const count = counts[item.href]
         const link = (
           <Link
             key={item.href}
@@ -43,7 +52,9 @@ function AdminNavList({
           >
             <item.icon aria-hidden />
             <span className="flex-1">{item.label}</span>
-            {count ? <span className="text-sm font-semibold text-brand">{count}</span> : null}
+            <Suspense>
+              <NavCount counts={counts} href={item.href} />
+            </Suspense>
           </Link>
         )
         return onNavigate ? (
@@ -60,10 +71,10 @@ function AdminNavList({
 
 export function AdminSidebar({
   adminName,
-  counts = {},
+  counts,
 }: {
   adminName: string
-  counts?: AdminNavCounts
+  counts: CountsPromise
 }) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-ink text-white lg:flex">
@@ -81,7 +92,7 @@ export function AdminSidebar({
   )
 }
 
-export function AdminMobileTopBar({ counts = {} }: { counts?: AdminNavCounts }) {
+export function AdminMobileTopBar({ counts }: { counts: CountsPromise }) {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-ink px-4 text-white lg:hidden">
       <div className="flex items-baseline gap-2">

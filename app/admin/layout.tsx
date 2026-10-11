@@ -8,9 +8,13 @@ export const instant = false
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const admin = await requireAdmin()
-  const { pendingCodes, inbox, spotlight } = await getAdminNavCounts()
-  // Orange numbers in the sidebar: things waiting for the admin.
-  const counts = { "/admin/codes": pendingCodes, "/admin/inbox": inbox, "/admin/spotlight": spotlight }
+  // Orange numbers in the sidebar: things waiting for the admin. Not awaited:
+  // the sidebar streams them in, so pages don't wait for these queries.
+  const counts = getAdminNavCounts().then(({ pendingCodes, inbox, spotlight }) => ({
+    "/admin/codes": pendingCodes,
+    "/admin/inbox": inbox,
+    "/admin/spotlight": spotlight,
+  }))
 
   return (
     <div className="flex min-h-dvh">
