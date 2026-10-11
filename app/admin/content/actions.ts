@@ -9,6 +9,7 @@ import { dropAssignment } from "@/lib/admin/drop-position"
 import { documentFormSchema, newResourceSchema } from "@/lib/content/document-schema"
 import { newListId, slugify, uniqueSlug } from "@/lib/content/slug"
 import { requireAdmin } from "@/lib/dal/auth"
+import { publishedMessage } from "@/lib/content/scheduled"
 import { emptyListDocument } from "@/lib/lists/schema"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -112,7 +113,8 @@ export async function setDocumentStatus(id: string, status: "published" | "draft
 
   refresh()
   refreshPublicContent()
-  return { ok: true, message: status === "published" ? "Published. Members can see it now." : "Unpublished. Members no longer see it." }
+  if (status === "draft") return { ok: true, message: "Unpublished. Members no longer see it." }
+  return { ok: true, message: await publishedMessage(db, id, "Published. Members can see it now.") }
 }
 
 /** Image paths a list's items point to, in the live and the draft version. */

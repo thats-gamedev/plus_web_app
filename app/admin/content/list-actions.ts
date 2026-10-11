@@ -7,6 +7,7 @@ import { dropAssignment } from "@/lib/admin/drop-position"
 import { categories } from "@/lib/content/library-filters"
 import { SLUG_PATTERN } from "@/lib/content/slug"
 import { requireAdmin } from "@/lib/dal/auth"
+import { publishedMessage } from "@/lib/content/scheduled"
 import { LIST_LIMITS, listDocumentSchema } from "@/lib/lists/schema"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Json } from "@/lib/supabase/database.types"
@@ -155,7 +156,7 @@ export async function publishList(id: string, dropId: string | null): Promise<Pu
 
   refresh()
   refreshPublicContent()
-  return { ok: true, message: "Published. Members see this version now." }
+  return { ok: true, message: await publishedMessage(db, id, "Published. Members see this version now.") }
 }
 
 /** Throws away unpublished edits; the editor reloads the live version. */

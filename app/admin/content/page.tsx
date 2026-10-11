@@ -6,6 +6,7 @@ import { NewResourceDialog } from "@/components/admin/new-resource-dialog"
 import { PageHeader } from "@/components/layout/page-header"
 import { ResourceIcon } from "@/components/shared/resource-icon"
 import { Badge } from "@/components/ui/badge"
+import { formatDay } from "@/lib/format"
 import { shortAge } from "@/lib/admin/metrics"
 import { coverUrl } from "@/lib/content/covers"
 import { categoryLabels, categoryTones, resourceTypeLabel } from "@/lib/content/resources"
@@ -107,6 +108,10 @@ export default async function ContentPage({ searchParams }: PageProps<"/admin/co
                   <td className="px-4 py-2.5">
                     {r.status === "draft" ? (
                       <Badge variant="muted" className="text-foreground">Draft</Badge>
+                    ) : r.scheduledFor ? (
+                      <Badge variant="info" title="Goes live with its drop">
+                        Live {formatDay(r.scheduledFor)}
+                      </Badge>
                     ) : r.hasDraft ? (
                       <Badge variant="warning">Published · draft</Badge>
                     ) : (

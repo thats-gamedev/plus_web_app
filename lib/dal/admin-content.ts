@@ -21,15 +21,18 @@ export type AdminContentRow = {
   updatedAt: string
   /** A saved draft that differs from what members see. */
   hasDraft: boolean
+  /** Published, but waiting for its drop to go live. */
+  scheduledFor: string | null
 }
 
 export async function getAdminContent(): Promise<AdminContentRow[]> {
   await requireAdmin()
   const { data, error } = await createAdminClient()
     .from("resources")
-    .select("id, title, slug, type, list_kind, category, status, cover_path, updated_at, draft_updated_at, drop:drops (month)")
+    .select("id, title, slug, type, list_kind, category, status, cover_path, published_at, updated_at, draft_updated_at, drop:drops (month)")
     .order("updated_at", { ascending: false })
   if (error) throw new Error(`resources read: ${error.message}`)
+  const now = new Date().toISOString()
   return data.map((r) => ({
     id: r.id,
     title: r.title,
@@ -42,6 +45,7 @@ export async function getAdminContent(): Promise<AdminContentRow[]> {
     dropMonth: r.drop?.month ?? null,
     updatedAt: r.draft_updated_at && r.draft_updated_at > r.updated_at ? r.draft_updated_at : r.updated_at,
     hasDraft: r.status === "published" && r.draft_updated_at !== null,
+    scheduledFor: r.status === "published" && r.published_at && r.published_at > now ? r.published_at : null,
   }))
 }
 
