@@ -5,6 +5,7 @@ import type { SubscriptionFacts } from "@/lib/admin/metrics"
 import { requireAdmin } from "@/lib/dal/auth"
 import type { Enums, Json } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
+import { fetchAll } from "@/lib/supabase/fetch-all"
 
 // Data Access Layer for the admin area. Every function checks the admin role
 // itself (pages can be rendered outside the layout), then reads as the
@@ -17,13 +18,18 @@ import { createClient } from "@/lib/supabase/server"
 export const getSubscriptionFacts = cache(async (): Promise<SubscriptionFacts[]> => {
   await requireAdmin()
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("subscriptions")
-    .select(
-      "id, user_id, plan, status, cancel_at_period_end, created_at, canceled_at, ended_at, updated_at, profile:profiles (email)"
-    )
-    .order("created_at", { ascending: false })
-  if (error) throw new Error(`subscriptions read: ${error.message}`)
+  const data = await fetchAll((from, to) =>
+    supabase
+      .from("subscriptions")
+      .select(
+        "id, user_id, plan, status, cancel_at_period_end, created_at, canceled_at, ended_at, updated_at, profile:profiles (email)"
+      )
+      .order("created_at", { ascending: false })
+      .order("id")
+      .range(from, to)
+  ).catch((error: Error) => {
+    throw new Error(`subscriptions read: ${error.message}`)
+  })
 
   return data.map((row) => ({
     id: row.id,
@@ -88,8 +94,11 @@ function toMemberRow(row: MemberQueryRow): MemberRow {
 export const getMembers = cache(async (): Promise<MemberRow[]> => {
   await requireAdmin()
   const supabase = await createClient()
-  const { data, error } = await supabase.from("profiles").select(memberColumns).order("created_at", { ascending: false })
-  if (error) throw new Error(`profiles read: ${error.message}`)
+  const data = await fetchAll((from, to) =>
+    supabase.from("profiles").select(memberColumns).order("created_at", { ascending: false }).order("id").range(from, to)
+  ).catch((error: Error) => {
+    throw new Error(`profiles read: ${error.message}`)
+  })
   return data.map(toMemberRow)
 })
 
@@ -145,11 +154,16 @@ export type AdminCode = {
 export async function getAdminCodes(): Promise<AdminCode[]> {
   await requireAdmin()
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("member_codes")
-    .select("id, code, kind, percent, status, created_at, revoked_at, user_id, profile:profiles (email)")
-    .order("created_at", { ascending: false })
-  if (error) throw new Error(`member_codes read: ${error.message}`)
+  const data = await fetchAll((from, to) =>
+    supabase
+      .from("member_codes")
+      .select("id, code, kind, percent, status, created_at, revoked_at, user_id, profile:profiles (email)")
+      .order("created_at", { ascending: false })
+      .order("id")
+      .range(from, to)
+  ).catch((error: Error) => {
+    throw new Error(`member_codes read: ${error.message}`)
+  })
   return data.map((row) => ({
     id: row.id,
     code: row.code,

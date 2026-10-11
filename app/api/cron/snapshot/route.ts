@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server"
 import { computeKpis, type SubscriptionFacts } from "@/lib/admin/metrics"
 import { isCronRequest } from "@/lib/cron"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { fetchAll } from "@/lib/supabase/fetch-all"
 
 // Daily member snapshot for the admin chart (vercel.json, 03:00 UTC). One
 // row per day; running it again the same day overwrites that day's row.
@@ -10,10 +11,18 @@ export async function GET(request: NextRequest) {
   if (!isCronRequest(request)) return new Response("Unauthorized", { status: 401 })
 
   const db = createAdminClient()
-  const { data, error } = await db
-    .from("subscriptions")
-    .select("id, user_id, plan, status, cancel_at_period_end, created_at, canceled_at, ended_at, updated_at")
-  if (error) return Response.json({ error: error.message }, { status: 500 })
+  let data
+  try {
+    data = await fetchAll((from, to) =>
+      db
+        .from("subscriptions")
+        .select("id, user_id, plan, status, cancel_at_period_end, created_at, canceled_at, ended_at, updated_at")
+        .order("id")
+        .range(from, to)
+    )
+  } catch (error) {
+    return Response.json({ error: (error as Error).message }, { status: 500 })
+  }
 
   const facts: SubscriptionFacts[] = data.map((row) => ({
     id: row.id,
