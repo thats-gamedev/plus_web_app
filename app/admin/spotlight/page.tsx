@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { ExternalLinkIcon, PlayIcon, StarIcon } from "lucide-react"
 import { cn } from "cn"
 import { DownloadMedia, MonthSelect, SubmissionActions } from "@/components/admin/spotlight-actions"
 import { PageHeader } from "@/components/layout/page-header"
@@ -15,6 +16,15 @@ type Filter = (typeof statuses)[number]
 
 const statusVariants = { submitted: "info", shortlisted: "warning", featured: "success", declined: "muted" } as const
 const pastels = ["bg-pastel-mint", "bg-pastel-sky", "bg-pastel-cream", "bg-pastel-peach"]
+
+// One look for every link on the card: small, grey, icon first.
+const linkClass =
+  "inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground [&_svg]:size-3.5"
+
+/** "Instagram mara.makes · ArtStation maramakes", for the tooltip. */
+function credits(list: { platform: string; handle: string }[]) {
+  return list.map((c) => `${CREDIT_PLATFORMS[c.platform as keyof typeof CREDIT_PLATFORMS] ?? c.platform} ${c.handle}`).join(" · ")
+}
 
 // Spotlight queue (AW9): a month's submissions with previews; Feature,
 // Shortlist, Decline and Download media.
@@ -78,67 +88,54 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
                   // eslint-disable-next-line @next/next/no-img-element -- short-lived signed Storage URL
                   <img src={s.cover} alt="" className="absolute inset-0 size-full object-cover" />
                 )}
-                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/30 to-transparent px-3 py-2">
-                  <span className="font-mono text-xs text-white drop-shadow">
-                    {s.downloads.length
-                      ? `${s.downloads.length} ${s.downloads.length === 1 ? "image" : "images"}`
-                      : s.videoUrl
-                        ? "video link"
-                        : "no media"}
-                  </span>
-                  <DownloadMedia files={s.downloads} title={s.title} />
-                </div>
+                <Badge variant={statusVariants[s.status]} className={cn("absolute top-2.5 left-2.5", s.status === "declined" && "text-foreground")}>
+                  {s.status === "declined" ? "Declined" : STATUS_LABELS[s.status]}
+                </Badge>
               </div>
-              <div className="flex flex-1 flex-col p-3.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate font-mono text-xs text-muted-foreground">
-                    {s.credits[0] ? `@${s.credits[0].handle.replace(/^https?:\/\//, "")}` : s.email}
-                  </span>
-                  <Badge variant={statusVariants[s.status]} className={s.status === "declined" ? "text-foreground" : undefined}>
-                    {s.status === "declined" ? "Declined" : STATUS_LABELS[s.status]}
-                  </Badge>
+
+              <div className="flex flex-1 flex-col gap-2 p-4">
+                <div className="min-w-0">
+                  <h2 className="truncate text-[15px] font-semibold" title={s.title}>
+                    {s.title}
+                  </h2>
+                  <p className="truncate text-xs text-muted-foreground" title={credits(s.credits)}>
+                    {[
+                      s.credits[0] ? `@${s.credits[0].handle.replace(/^https?:\/\//, "")}` : s.email,
+                      s.projectType ? PROJECT_TYPES[s.projectType as keyof typeof PROJECT_TYPES] : null,
+                      s.engine,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
                 </div>
-                <h2 className="mt-1.5 truncate font-semibold" title={s.title}>
-                  {s.title}
-                </h2>
-                <p className="mt-0.5 line-clamp-3 text-sm text-muted-foreground" title={s.description}>
+                <p className="line-clamp-2 text-sm text-muted-foreground" title={s.description}>
                   {s.description}
                 </p>
-                <dl className="mt-2.5 space-y-0.5 text-xs text-muted-foreground">
-                  <div>
-                    <dt className="inline">Type: </dt>
-                    <dd className="inline">
-                      {s.projectType ? PROJECT_TYPES[s.projectType as keyof typeof PROJECT_TYPES] : "–"}
-                      {s.engine && ` · ${s.engine}`}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="inline">Credit: </dt>
-                    <dd className="inline">
-                      {s.credits.map((c) => `${CREDIT_PLATFORMS[c.platform as keyof typeof CREDIT_PLATFORMS] ?? c.platform} ${c.handle}`).join(" · ")}
-                    </dd>
-                  </div>
-                  <div className="flex flex-wrap gap-x-3">
-                    {s.projectUrl && (
-                      <a href={s.projectUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
-                        Project
-                      </a>
-                    )}
-                    {s.videoUrl && (
-                      <a href={s.videoUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
-                        Video
-                      </a>
-                    )}
-                    {s.featuredPostUrl && (
-                      <a href={s.featuredPostUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand hover:underline">
-                        Instagram post
-                      </a>
-                    )}
-                  </div>
-                </dl>
-                <div className="mt-auto pt-3">
-                  <SubmissionActions id={s.id} status={s.status} title={s.title} />
+                <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 pt-1">
+                  {s.projectUrl && (
+                    <a href={s.projectUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                      <ExternalLinkIcon aria-hidden />
+                      Project
+                    </a>
+                  )}
+                  {s.videoUrl && (
+                    <a href={s.videoUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                      <PlayIcon aria-hidden />
+                      Video
+                    </a>
+                  )}
+                  {s.featuredPostUrl && (
+                    <a href={s.featuredPostUrl} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                      <StarIcon aria-hidden />
+                      Post
+                    </a>
+                  )}
+                  <DownloadMedia files={s.downloads} title={s.title} className={linkClass} />
                 </div>
+              </div>
+
+              <div className="border-t border-border px-4 py-3">
+                <SubmissionActions id={s.id} status={s.status} title={s.title} />
               </div>
             </li>
           ))}

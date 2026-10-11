@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
-import { DownloadIcon } from "lucide-react"
+import { DownloadIcon, RotateCcwIcon } from "lucide-react"
 import { toast } from "sonner"
 import { setSubmissionStatus, type SpotlightActionResult } from "@/app/admin/spotlight/actions"
 import { Button } from "@/components/ui/button"
@@ -32,17 +32,18 @@ export function SubmissionActions({ id, status, title }: { id: string; status: s
 
   if (status === "featured" || status === "declined") {
     return (
-      <Button variant="ghost" size="sm" className="w-full" disabled={pending} onClick={() => run(() => setSubmissionStatus(id, "submitted"))}>
-        Reset to submitted
+      <Button variant="outline" size="sm" className="w-full" disabled={pending} onClick={() => run(() => setSubmissionStatus(id, "submitted"))}>
+        <RotateCcwIcon aria-hidden />
+        Back to submitted
       </Button>
     )
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex gap-2">
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="dark" className="w-full" disabled={pending}>
+          <Button variant="dark" size="sm" className="flex-1" disabled={pending}>
             Feature
           </Button>
         </DialogTrigger>
@@ -68,29 +69,26 @@ export function SubmissionActions({ id, status, title }: { id: string; status: s
           </form>
         </DialogContent>
       </Dialog>
-      <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant="outline"
-          disabled={pending || status === "shortlisted"}
-          onClick={() => run(() => setSubmissionStatus(id, "shortlisted"))}
-        >
-          {status === "shortlisted" ? "Shortlisted" : "Shortlist"}
+      {status !== "shortlisted" && (
+        <Button variant="outline" size="sm" className="flex-1" disabled={pending} onClick={() => run(() => setSubmissionStatus(id, "shortlisted"))}>
+          Shortlist
         </Button>
-        <Button variant="destructive-outline" disabled={pending} onClick={() => run(() => setSubmissionStatus(id, "declined"))}>
-          Decline
-        </Button>
-      </div>
+      )}
+      <Button variant="outline" size="sm" className="flex-1" disabled={pending} onClick={() => run(() => setSubmissionStatus(id, "declined"))}>
+        Decline
+      </Button>
     </div>
   )
 }
 
 /** "Download media": signed download links for each image. */
-export function DownloadMedia({ files, title }: { files: { name: string; url: string }[]; title: string }) {
+export function DownloadMedia({ files, title, className }: { files: { name: string; url: string }[]; title: string; className?: string }) {
   if (files.length === 0) return null
   return (
     <Dialog>
-      <DialogTrigger className="rounded-md p-1.5 text-ink/70 hover:bg-card/70" aria-label={`Download media of ${title}`}>
-        <DownloadIcon className="size-4" />
+      <DialogTrigger className={className} aria-label={`Download media of ${title}`}>
+        <DownloadIcon aria-hidden />
+        Media · {files.length}
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>Media of “{title}”</DialogTitle>
