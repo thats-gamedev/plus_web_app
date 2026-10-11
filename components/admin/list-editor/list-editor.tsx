@@ -134,7 +134,7 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
 
   return (
     <div className="-mx-4 -my-5 md:-mx-10 md:-my-8">
-      <header className="sticky top-0 z-30 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:px-6">
+      <header className="sticky top-0 z-30 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:px-6 lg:h-[60px] lg:py-0">
         <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 text-sm">
           <Link href="/admin/content" className="text-muted-foreground hover:text-foreground">
             Content /
@@ -235,7 +235,10 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
       )}
 
       <div className="grid lg:grid-cols-[260px_minmax(0,1fr)_360px]">
-        <aside className="border-b border-border p-4 md:p-6 lg:min-h-[calc(100dvh-57px)] lg:border-r lg:border-b-0">
+        {/* On desktop both side columns stay in view below the header and
+            scroll on their own; overscroll-contain keeps the page still when
+            one reaches its end. */}
+        <aside className="border-b border-border p-4 md:p-6 lg:sticky lg:top-[60px] lg:h-[calc(100dvh-60px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-b-0">
           <SettingsPanel resourceId={resourceId} kind={doc.kind} initial={settings} onSectionClick={scrollToSection} />
         </aside>
 
@@ -270,10 +273,8 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
           <Canvas errors={errors} />
         </div>
 
-        <aside className="hidden border-l border-border p-6 lg:block">
-          <div className="sticky top-20">
-            <Inspector errors={errors} />
-          </div>
+        <aside className="hidden border-l border-border p-6 lg:sticky lg:top-[60px] lg:block lg:h-[calc(100dvh-60px)] lg:overflow-y-auto lg:overscroll-contain">
+          <Inspector errors={errors} />
         </aside>
       </div>
 
