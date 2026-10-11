@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useState, useTransition } from "react"
+import { useActionState, useId, useState, useTransition } from "react"
 import {
   closestCenter,
   DndContext,
@@ -213,8 +213,12 @@ function DropContentList({ dropId, resources }: { dropId: string; resources: Dro
     })
   }
 
+  // A stable id keeps dnd-kit's aria ids the same on server and client.
+  const dndId = useId()
+
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={onDragEnd}

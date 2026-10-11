@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useId, useState } from "react"
 import {
   closestCenter,
   closestCorners,
@@ -151,8 +151,12 @@ export function Canvas({ errors }: { errors: DocumentErrors }) {
     change((d) => ops.moveItem(d, String(active.id), to, overIndex >= 0 ? overIndex : Number.MAX_SAFE_INTEGER))
   }
 
+  // A stable id keeps dnd-kit's aria ids the same on server and client.
+  const dndId = useId()
+
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={collisionDetection}
       onDragStart={({ active }) => setActiveId(String(active.id))}
