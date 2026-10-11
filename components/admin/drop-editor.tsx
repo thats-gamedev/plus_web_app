@@ -121,8 +121,10 @@ export function DropEditor({
           <fieldset className="space-y-2">
             <legend className="text-sm font-semibold">Goes live</legend>
             <div className="grid grid-cols-[1fr_8rem] gap-3">
-              <Input type="date" name="date" aria-label="Date" defaultValue={values?.date ?? zoned.date} disabled={state === "announced"} />
-              <Input type="time" name="time" aria-label="Time" defaultValue={values?.time ?? zoned.time} disabled={state === "announced"} />
+              {/* readOnly, not disabled: disabled fields aren't submitted, and
+                  saving needs them. An announced drop keeps its date anyway. */}
+              <Input type="date" name="date" aria-label="Date" defaultValue={values?.date ?? zoned.date} readOnly={state === "announced"} className="read-only:opacity-60" />
+              <Input type="time" name="time" aria-label="Time" defaultValue={values?.time ?? zoned.time} readOnly={state === "announced"} className="read-only:opacity-60" />
             </div>
             <p className={errors.date || errors.time ? "text-xs text-danger" : "text-xs text-faint"}>
               {errors.date ?? errors.time ?? "Times are in German time (Europe/Berlin). It publishes automatically."}

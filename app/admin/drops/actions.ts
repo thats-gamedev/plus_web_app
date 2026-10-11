@@ -15,6 +15,7 @@ import { type FormState, readFields } from "@/lib/auth/form-state"
 import { fieldErrors } from "@/lib/auth/schemas"
 import { requireAdmin } from "@/lib/dal/auth"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { fetchAll } from "@/lib/supabase/fetch-all"
 
 // Drop actions (AW7). Each checks requireAdmin() before using the
 // service-role client.
@@ -158,12 +159,24 @@ export async function announceDrop(id: string): Promise<DropActionResult> {
     if (error) return { ok: false, message: `Couldn't publish: ${error.message}` }
   }
 
-  // Members (live subscription) who have drop emails on.
-  const { data: subs } = await db.from("subscriptions").select("user_id").in("status", [...LIVE_STATUSES]).not("user_id", "is", null)
-  const memberIds = [...new Set((subs ?? []).map((s) => s.user_id as string))]
-  const { data: recipients } = memberIds.length
-    ? await db.from("profiles").select("id, email").in("id", memberIds).eq("drop_emails", true)
-    : { data: [] }
+  // Members (live subscription) who have drop emails on, in one query and
+  // page by page. If it fails, nothing is sent and the drop isn't marked
+  // announced, so "Send announcement" can simply be pressed again.
+  let recipients: { id: string; email: string }[]
+  try {
+    recipients = await fetchAll((from, to) =>
+      db
+        .from("profiles")
+        .select("id, email, subscriptions!inner(status)")
+        .eq("drop_emails", true)
+        .in("subscriptions.status", [...LIVE_STATUSES])
+        .order("id")
+        .range(from, to)
+    )
+  } catch (error) {
+    refresh()
+    return { ok: false, message: `Couldn't load the members: ${error instanceof Error ? error.message : "unknown error"}. Nothing was sent.` }
+  }
 
   const siteUrl = await getSiteUrl()
   const highlights = [...drop.resources]
@@ -182,7 +195,7 @@ export async function announceDrop(id: string): Promise<DropActionResult> {
   let sent = 0
   let skipped = 0
   let failed = 0
-  const queue = [...(recipients ?? [])]
+  const queue = [...recipients]
   await Promise.all(
     Array.from({ length: SEND_CONCURRENCY }, async () => {
       for (let r = queue.shift(); r; r = queue.shift()) {
