@@ -126,6 +126,23 @@ describe("templates", () => {
     expect(email.text).toContain("Unsubscribe: https://plus.example/api/email/unsubscribe?t=abc")
   })
 
+  it("renders the intro's https links and bold, escaped", () => {
+    const email = dropAnnouncementEmail({
+      monthName: "November",
+      theme: "Portfolio season",
+      intro: "See [the guide](https://plus.example/g?a=1&b=2) and **this**. [bad](javascript:alert(1)) <script>",
+      highlights: [],
+      siteUrl: "https://plus.example",
+      unsubscribeUrl: "https://plus.example/u",
+    })
+    expect(email.html).toContain('<a href="https://plus.example/g?a=1&amp;b=2"')
+    expect(email.html).toContain(">the guide</a>")
+    expect(email.html).toContain("<strong>this</strong>")
+    expect(email.html).not.toContain('href="javascript')
+    expect(email.html).not.toContain("<script>")
+    expect(email.text).toContain("See the guide (https://plus.example/g?a=1&b=2) and this.")
+  })
+
   it("greets by name when there is one", () => {
     expect(welcomeEmail({ name: "Mara", siteUrl: "https://x", dropTitle: null }).text.startsWith("Hey Mara,")).toBe(true)
     expect(welcomeEmail({ name: "", siteUrl: "https://x", dropTitle: null }).text.startsWith("Hey,")).toBe(true)

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { EyeIcon } from "lucide-react"
 import { toast } from "sonner"
 import { discardListDraft, publishList, unpublishList } from "@/app/admin/content/list-actions"
@@ -51,7 +51,8 @@ export function ListEditor(props: ListEditorProps) {
 
 /**
  * Spec shortcuts for the selected item: Cmd/Ctrl+D duplicates, Delete
- * removes with an undo toast. Ignored while typing in a field.
+ * removes with an undo toast. Ignored while typing in a field, in a dropdown
+ * or under a dialog.
  */
 function useEditorShortcuts() {
   const store = useEditorStore()
@@ -60,7 +61,10 @@ function useEditorShortcuts() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
-      if (target?.closest("input, textarea, select, [contenteditable=true]")) return
+      // Not while typing, in a dropdown (Radix comboboxes are buttons) or
+      // while a dialog (preview, delete) is open over the editor.
+      if (target?.closest("input, textarea, select, [contenteditable=true], [role=combobox], [role=listbox], [role=dialog]")) return
+      if (document.querySelector("[role=dialog], [role=alertdialog]")) return
       const { selectedItemId, doc, change, select } = store.getState()
       if (!selectedItemId) return
       const found = ops.findItem(doc, selectedItemId)
@@ -129,12 +133,27 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
 
   useEditorShortcuts()
 
+  // The side panels stick right below the header. It wraps to two rows on
+  // narrower screens, so its real height goes into --editor-header.
+  const frame = useRef<HTMLDivElement>(null)
+  const header = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = header.current
+    if (!el) return
+    const observer = new ResizeObserver(() => frame.current?.style.setProperty("--editor-header", `${el.offsetHeight}px`))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   const scrollToSection = (sectionId: string) =>
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" })
 
   return (
-    <div className="-mx-4 -my-5 md:-mx-10 md:-my-8">
-      <header className="sticky top-0 z-30 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:px-6 lg:h-[60px] lg:py-0">
+    <div ref={frame} className="-mx-4 -my-5 [--editor-header:60px] md:-mx-10 md:-my-8">
+      <header
+        ref={header}
+        className="sticky top-0 z-30 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:px-6 lg:min-h-[60px] lg:py-2.5"
+      >
         <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 text-sm">
           <Link href="/admin/content" className="text-muted-foreground hover:text-foreground">
             Content /
@@ -238,7 +257,7 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
         {/* On desktop both side columns stay in view below the header and
             scroll on their own; overscroll-contain keeps the page still when
             one reaches its end. */}
-        <aside className="border-b border-border p-4 md:p-6 lg:sticky lg:top-[60px] lg:h-[calc(100dvh-60px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-b-0">
+        <aside className="border-b border-border p-4 md:p-6 lg:sticky lg:top-(--editor-header) lg:h-[calc(100dvh-var(--editor-header))] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-b-0">
           <SettingsPanel resourceId={resourceId} kind={doc.kind} initial={settings} onSectionClick={scrollToSection} />
         </aside>
 
@@ -273,7 +292,7 @@ function EditorLayout({ resourceId, slug, status, settings, dropId, drops }: Lis
           <Canvas errors={errors} />
         </div>
 
-        <aside className="hidden border-l border-border p-6 lg:sticky lg:top-[60px] lg:block lg:h-[calc(100dvh-60px)] lg:overflow-y-auto lg:overscroll-contain">
+        <aside className="hidden border-l border-border p-6 lg:sticky lg:top-(--editor-header) lg:block lg:h-[calc(100dvh-var(--editor-header))] lg:overflow-y-auto lg:overscroll-contain">
           <Inspector errors={errors} />
         </aside>
       </div>

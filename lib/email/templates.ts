@@ -20,6 +20,21 @@ const button = (href: string, label: string) =>
   `<a href="${escapeHtml(href)}" style="display:inline-block;margin:8px 0 16px;padding:12px 22px;border-radius:10px;background:${C.brand};color:#ffffff;font-weight:600;font-size:15px;text-decoration:none">${escapeHtml(label)}</a>`
 const link = (href: string, label: string) => `<a href="${escapeHtml(href)}" style="color:${C.brand}">${escapeHtml(label)}</a>`
 
+// The drop intro's Markdown subset, as the editor hint promises: **bold** and
+// [text](https://…). The HTML version works on escaped text, so neither the
+// label nor the URL can inject markup; only https links become links.
+const MD_LINK = /\[([^\]\n]+)\]\((https:\/\/[^\s)]+)\)/g
+
+export function inlineMarkdownHtml(value: string): string {
+  return escapeHtml(value)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(MD_LINK, `<a href="$2" style="color:${C.brand}">$1</a>`)
+}
+
+export function inlineMarkdownText(value: string): string {
+  return value.replace(/\*\*/g, "").replace(MD_LINK, "$1 ($2)")
+}
+
 /** The shared frame: logo line, white card, small footer. */
 function layout({ preheader, body, footer }: { preheader: string; body: string; footer?: string }): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
@@ -267,12 +282,12 @@ export function dropAnnouncementEmail(d: DropEmailInput): EmailContent {
       preheader: d.highlights.slice(0, 3).join(" · "),
       body:
         heading(title) +
-        (d.intro ? p(escapeHtml(d.intro).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")) : "") +
+        (d.intro ? p(inlineMarkdownHtml(d.intro)) : "") +
         list +
         button(`${d.siteUrl}/app`, "Open the drop"),
       footer: `You get this because drop emails are on in your account. ${link(d.unsubscribeUrl, "Unsubscribe")} or change it under Account.`,
     }),
-    text: `${title}\n\n${d.intro ? `${d.intro.replace(/\*\*/g, "")}\n\n` : ""}${d.highlights.map((h) => `- ${h}`).join("\n")}\n\nOpen the drop: ${d.siteUrl}/app\n\nUnsubscribe: ${d.unsubscribeUrl}`,
+    text: `${title}\n\n${d.intro ? `${inlineMarkdownText(d.intro)}\n\n` : ""}${d.highlights.map((h) => `- ${h}`).join("\n")}\n\nOpen the drop: ${d.siteUrl}/app\n\nUnsubscribe: ${d.unsubscribeUrl}`,
   }
 }
 
