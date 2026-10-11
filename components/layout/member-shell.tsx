@@ -26,7 +26,7 @@ function SidebarLinks({ pathname }: { pathname: string | null }) {
         href={item.href}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex h-11 items-center gap-3 rounded-lg px-3 font-medium transition-colors [&_svg]:size-[18px]",
+          "flex h-10 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors [&_svg]:size-[18px]",
           active ? "bg-ink text-white" : "text-foreground hover:bg-muted [&_svg]:text-muted-foreground hover:[&_svg]:text-foreground"
         )}
       >
@@ -45,19 +45,22 @@ function ActiveSidebarLinks() {
 // <Suspense>, so the rest of the shell stays in the static shell.
 export function MemberSidebar({ userSlot }: { userSlot: React.ReactNode }) {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
+    // One grid: 16px sidebar padding, and logo, icons and avatar all start
+    // 12px further in (28px); pills, hover areas and the divider share the
+    // same 16px edges.
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card px-4 md:flex">
       {/* The logo's row is centred on the page title next to it (52px down:
           the main area's 32px padding plus half the 40px title line). */}
-      <div className="flex h-[104px] shrink-0 items-center px-6">
+      <div className="flex h-[104px] shrink-0 items-center px-3">
         <Logo href="/app" />
       </div>
-      <nav aria-label="Member" className="flex flex-1 flex-col gap-1 px-3">
+      <nav aria-label="Member" className="flex flex-1 flex-col gap-0.5">
         <Suspense fallback={<SidebarLinks pathname={null} />}>
           <ActiveSidebarLinks />
         </Suspense>
       </nav>
       {/* The statutory cancel and withdraw links live on the Account page. */}
-      <div className="p-3">{userSlot}</div>
+      <div className="border-t border-border py-3">{userSlot}</div>
     </aside>
   )
 }

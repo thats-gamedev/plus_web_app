@@ -50,19 +50,20 @@ export async function SidebarUser() {
   const user = await getShellUser()
 
   return (
-    <div className="flex items-center gap-1 rounded-xl border border-border p-1.5">
-      {/* Name and avatar open the account settings; Log out stays separate. */}
+    <div className="flex items-center gap-1">
+      {/* Name and avatar open the account settings; Log out stays separate.
+          px-3 puts the avatar on the same line as the nav icons. */}
       <Link
         href="/app/account"
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-muted"
       >
-        <Avatar name={user.displayName} />
+        <Avatar name={user.displayName} className="size-8" />
         <span className="min-w-0 flex-1 text-sm">
           <span className="block truncate font-semibold">{user.displayName}</span>
           <span className="block truncate text-xs text-muted-foreground">{user.planLabel}</span>
         </span>
       </Link>
-      <LogoutButton className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+      <LogoutButton className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
         <LogOutIcon aria-hidden className="size-4" />
         <span className="sr-only">Log out</span>
       </LogoutButton>
@@ -72,8 +73,8 @@ export async function SidebarUser() {
 
 export function SidebarUserSkeleton() {
   return (
-    <div aria-hidden className="flex items-center gap-3 rounded-xl border border-border p-3">
-      <Skeleton className="size-9 rounded-full" />
+    <div aria-hidden className="flex items-center gap-3 px-3 py-2">
+      <Skeleton className="size-8 rounded-full" />
       <div className="flex-1 space-y-1.5">
         <Skeleton className="h-3.5 w-20" />
         <Skeleton className="h-3 w-28" />
