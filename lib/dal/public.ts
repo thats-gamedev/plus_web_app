@@ -1,4 +1,5 @@
 import "server-only"
+import { isCurrentMonth } from "@/lib/content/landing"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { cacheLife, cacheTag } from "next/cache"
 import type { ResourceCategory, ResourceListKind, ResourceType } from "@/lib/content/resources"
@@ -50,7 +51,15 @@ export type PublicList = {
 export type LandingData = {
   /** Three of the newest published resources (hero cards), outside the current drop first. */
   hero: PublicResource[]
-  drop: { month: string; title: string; theme: string | null; introMd: string | null; kinds: Pick<PublicResource, "type" | "listKind">[] } | null
+  drop: {
+    month: string
+    title: string
+    theme: string | null
+    introMd: string | null
+    kinds: Pick<PublicResource, "type" | "listKind">[]
+    /** Computed inside the cache: the static page can't read the clock. */
+    isCurrentMonth: boolean
+  } | null
   /** The newest list with teaser items (free list section). */
   freeList: PublicList | null
   /** Real titles for the "What's inside" cards, when there are any. */
@@ -123,6 +132,7 @@ export async function getLandingData(): Promise<LandingData> {
           theme: drop.theme,
           introMd: drop.intro_md,
           kinds: dropRows.map((r) => ({ type: r.type, listKind: r.list_kind })),
+          isCurrentMonth: isCurrentMonth(drop.month),
         }
       : null,
     freeList,

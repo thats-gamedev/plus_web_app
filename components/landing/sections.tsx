@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { PlaceholderCover } from "@/components/ui/placeholder-cover"
 import { coverUrl } from "@/lib/content/covers"
-import { dropHeading, isCurrentMonth, dropSummary } from "@/lib/content/landing"
+import { dropHeading, dropSummary } from "@/lib/content/landing"
 import { monthName } from "@/lib/admin/drops"
 import { categoryLabels, categoryTones, resourceSize, resourceTypeLabel } from "@/lib/content/resources"
 import type { LandingData, PublicList, PublicResource } from "@/lib/dal/public"
@@ -231,7 +231,7 @@ export function DropTeaser({ drop }: { drop: NonNullable<LandingData["drop"]> })
     <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
       <Reveal className="grid gap-8 rounded-[28px] bg-ink p-6 text-white md:grid-cols-2 md:items-center md:p-11">
         <div>
-          <p className="text-sm font-semibold text-brand">{isCurrentMonth(drop.month) ? "This month\u2019s drop" : "The latest drop"}</p>
+          <p className="text-sm font-semibold text-brand">{drop.isCurrentMonth ? "This month\u2019s drop" : "The latest drop"}</p>
           <h2 className="mt-2 text-4xl leading-tight font-bold md:text-5xl">{dropHeading(drop)}</h2>
           <p className="mt-3 max-w-md text-white/75">
             {summary ? `${summary} ` : ""}Members get it the day it drops.
