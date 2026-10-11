@@ -56,14 +56,14 @@ export function ProductCard({
     <article
       className={cn(
         "group flex overflow-hidden rounded-card border border-border bg-card",
-        compact ? "items-center gap-4 p-3" : "flex-col"
+        compact ? "items-center gap-4 p-3 md:p-3.5" : "flex-col"
       )}
     >
       <div
         className={cn(
           "relative shrink-0 overflow-hidden",
           pastels[index % pastels.length],
-          compact ? "size-20 rounded-xl" : "aspect-[5/4] w-full"
+          compact ? "size-14 rounded-xl" : "aspect-[5/4] w-full"
         )}
       >
         {first && (
