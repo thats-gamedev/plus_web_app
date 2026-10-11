@@ -62,8 +62,12 @@ export async function startCheckout(_prev: FormState, formData: FormData): Promi
     const stripe = getStripe()
     const site = await getSiteUrl()
 
-    const createSession = async (customer: string) =>
-      stripe.checkout.sessions.create({
+    const createSession = async (customer: string) => {
+      // One open Checkout at a time: finishing an older tab after this one
+      // would start a second subscription and charge twice.
+      const open = await stripe.checkout.sessions.list({ customer, status: "open", limit: 20 })
+      for (const old of open.data) await stripe.checkout.sessions.expire(old.id)
+      return stripe.checkout.sessions.create({
         mode: "subscription",
         customer,
         client_reference_id: user.id,
@@ -76,6 +80,7 @@ export async function startCheckout(_prev: FormState, formData: FormData): Promi
         success_url: `${site}/welcome?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${site}/app`,
       })
+    }
 
     let session: Stripe.Checkout.Session
     try {
@@ -102,11 +107,18 @@ export async function openBillingPortal() {
   const profile = await getProfile()
   if (!profile?.stripeCustomerId) redirect("/app")
 
-  const session = await getStripe().billingPortal.sessions.create({
-    customer: profile.stripeCustomerId,
-    return_url: `${await getSiteUrl()}/app/account`,
-  })
-  redirect(session.url)
+  let url: string | null = null
+  try {
+    const session = await getStripe().billingPortal.sessions.create({
+      customer: profile.stripeCustomerId,
+      return_url: `${await getSiteUrl()}/app/account`,
+    })
+    url = session.url
+  } catch (error) {
+    // E.g. Stripe is down, or the stored customer no longer exists.
+    console.error("Stripe billing portal failed", error)
+  }
+  redirect(url ?? "/app/account?billing=unavailable")
 }
 
 /** Polled by /welcome until the webhook has unlocked access. */

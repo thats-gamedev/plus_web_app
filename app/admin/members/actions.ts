@@ -2,7 +2,6 @@
 
 import { refresh } from "next/cache"
 import { type FormState, readFields } from "@/lib/auth/form-state"
-import { isLiveStatus } from "@/lib/billing/status"
 import { requireAdmin } from "@/lib/dal/auth"
 import { createFourthwallPromotions } from "@/lib/fourthwall/platform"
 import { getStripe } from "@/lib/stripe/client"
@@ -14,7 +13,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 /**
  * Deletes a member (spec, "Data protection"): cancel their subscriptions in
  * Stripe now, unlink the Stripe customer, end the Fourthwall merch promotion,
- * then delete the auth user.
+ * remove their Spotlight uploads, then delete the auth user.
  * The profile, codes and email log go with it; subscription rows stay with
  * user_id = null for the KPIs. Admin accounts can't be deleted here.
  */
@@ -38,7 +37,9 @@ export async function deleteMember(_prev: FormState, formData: FormData): Promis
     .select("stripe_subscription_id, status")
     .eq("user_id", profile.id)
   for (const sub of subscriptions ?? []) {
-    if (!isLiveStatus(sub.status)) continue
+    // Everything that can still charge: also unpaid, paused and incomplete
+    // (an incomplete one can still be paid for about a day).
+    if (sub.status === "canceled" || sub.status === "incomplete_expired") continue
     try {
       await getStripe().subscriptions.cancel(sub.stripe_subscription_id)
     } catch (stripeError) {
@@ -81,7 +82,18 @@ export async function deleteMember(_prev: FormState, formData: FormData): Promis
     }
   }
 
-  // 4. Delete the account; profiles, member_codes and email_log cascade.
+  // 4. Their Spotlight uploads (personal data). The rows cascade with the
+  //    account, the files in storage don't. Uploads sit flat in {user_id}/.
+  for (;;) {
+    const { data: files, error: listError } = await db.storage.from("spotlight").list(profile.id, { limit: 1000 })
+    if (listError) return { status: "error", message: `Couldn't list the Spotlight files (${listError.message}). Try again; the member wasn't deleted yet.` }
+    if (!files.length) break
+    const { error: removeError } = await db.storage.from("spotlight").remove(files.map((f) => `${profile.id}/${f.name}`))
+    if (removeError) return { status: "error", message: `Couldn't remove the Spotlight files (${removeError.message}). Try again; the member wasn't deleted yet.` }
+    if (files.length < 1000) break
+  }
+
+  // 5. Delete the account; profiles, member_codes and email_log cascade.
   const { error: deleteError } = await db.auth.admin.deleteUser(profile.id)
   if (deleteError) return { status: "error", message: `Couldn't delete the account: ${deleteError.message}` }
 

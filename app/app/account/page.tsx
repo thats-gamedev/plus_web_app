@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
 import { ChevronRightIcon } from "lucide-react"
+import { BillingUnavailableBanner } from "@/components/account/billing-unavailable"
 import { MembershipCard, PastDueBanner } from "@/components/account/membership-card"
 import { SettingsList } from "@/components/account/settings-list"
 import { contractLinks, legalLinks } from "@/components/layout/nav-config"
@@ -79,6 +80,7 @@ async function Account() {
 
   return (
     <>
+      <BillingUnavailableBanner />
       {membershipState(membership) === "past_due" && <PastDueBanner canUpdate={hasCustomer} />}
       <MembershipCard membership={membership} hasCustomer={hasCustomer} />
 
