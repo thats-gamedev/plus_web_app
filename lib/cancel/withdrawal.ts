@@ -1,4 +1,4 @@
-import { RATE_LIMIT } from "./flow"
+import { isRateLimited, type RecentRequests } from "./flow"
 
 // Withdrawal function (Art. 11a Consumer Rights Directive, § 356a BGB, in
 // force since 19 June 2026): "Withdraw from contract here" leads to /withdraw,
@@ -11,8 +11,8 @@ import { RATE_LIMIT } from "./flow"
 // to judge in the inbox, where they refund and end the membership, or decline.
 
 export type WithdrawalDeps = {
-  /** Requests (of any kind) for this email in the last hour, and from anyone in the last minute. */
-  recentRequests(email: string): Promise<{ sameEmailLastHour: number; allLastMinute: number }>
+  /** Requests (of any kind) for this email and from this client in the last hour, and from anyone in the last minute. */
+  recentRequests(email: string, client: string | null): Promise<RecentRequests>
   /** The account behind this email, member or not. */
   findAccount(email: string): Promise<{ userId: string } | null>
   insertWithdrawal(row: {
@@ -22,26 +22,24 @@ export type WithdrawalDeps = {
     userId: string | null
     /** Sent while logged in to that account. */
     verified: boolean
+    client: string | null
   }): Promise<{ id: string; createdAt: string }>
   sendReceipt(row: { id: string; name: string; email: string; reference: string | null; createdAt: string; userId: string | null }): Promise<void>
 }
 
-export type WithdrawalInput = { name: string; email: string; reference: string | null; sessionUserId: string | null }
+export type WithdrawalInput = { name: string; email: string; reference: string | null; sessionUserId: string | null; client: string | null }
 
 export type WithdrawalResult = { status: "rate_limited" } | { status: "received"; requestId: string; receivedAt: string }
 
 export async function handleWithdrawalRequest(input: WithdrawalInput, deps: WithdrawalDeps): Promise<WithdrawalResult> {
   const email = input.email.trim().toLowerCase()
   const name = input.name.trim()
-  const recent = await deps.recentRequests(email)
-  if (recent.sameEmailLastHour >= RATE_LIMIT.perEmailPerHour || recent.allLastMinute >= RATE_LIMIT.perMinute) {
-    return { status: "rate_limited" }
-  }
+  if (isRateLimited(await deps.recentRequests(email, input.client))) return { status: "rate_limited" }
 
   // Logged in, the request belongs to that account whatever email was typed.
   // Logged out, a matching account is only a hint for the admin.
   const userId = input.sessionUserId ?? (await deps.findAccount(email))?.userId ?? null
-  const request = await deps.insertWithdrawal({ name, email, reference: input.reference, userId, verified: Boolean(input.sessionUserId) })
+  const request = await deps.insertWithdrawal({ name, email, reference: input.reference, userId, verified: Boolean(input.sessionUserId), client: input.client })
   await deps.sendReceipt({ ...request, name, email, reference: input.reference, userId })
   return { status: "received", requestId: request.id, receivedAt: request.createdAt }
 }

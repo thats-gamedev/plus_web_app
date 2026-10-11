@@ -14,7 +14,7 @@ const NOW = new Date("2026-10-09T12:00:00Z")
 
 /** In-memory world: one member (mara) with a live membership, Stripe and the outbox. */
 function world() {
-  const requests: (StoredRequest & { email: string; tokenHash: string | null })[] = []
+  const requests: (StoredRequest & { email: string; client?: string | null; tokenHash: string | null })[] = []
   const outbox: { kind: string; to: string; token?: string }[] = []
   const cancelled: string[] = []
   const members = new Map([["mara@example.com", { userId: "u-mara", email: "mara@example.com", endsAt: "2026-11-08T00:00:00Z" }]])
@@ -29,16 +29,17 @@ function world() {
 
   const deps: CancelRequestDeps = {
     now: () => now,
-    async recentRequests(email) {
+    async recentRequests(email, client) {
       const hour = now.getTime() - 3_600_000
       const minute = now.getTime() - 60_000
       return {
         sameEmailLastHour: requests.filter((r) => r.email === email && Date.parse(r.createdAt) > hour).length,
+        sameClientLastHour: client ? requests.filter((r) => r.client === client && Date.parse(r.createdAt) > hour).length : 0,
         allLastMinute: requests.filter((r) => Date.parse(r.createdAt) > minute).length,
       }
     },
     async insertRequest(row) {
-      const r = { id: `req-${requests.length + 1}`, userId: null, status: "received" as const, tokenExpiresAt: null, executedAt: null, createdAt: now.toISOString(), email: row.email, tokenHash: null }
+      const r = { id: `req-${requests.length + 1}`, userId: null, status: "received" as const, tokenExpiresAt: null, executedAt: null, createdAt: now.toISOString(), email: row.email, client: row.client, tokenHash: null }
       requests.push(r)
       return { id: r.id, createdAt: r.createdAt }
     },
@@ -81,7 +82,7 @@ function world() {
   return { deps, confirmDeps, requests, outbox, cancelled, setNow: (d: Date) => (now = d) }
 }
 
-const request = (email: string, sessionUserId: string | null = null) => ({ name: "Mara M.", email, reference: null, sessionUserId })
+const request = (email: string, sessionUserId: string | null = null, client: string | null = "client-1") => ({ name: "Mara M.", email, reference: null, sessionUserId, client })
 
 describe("handleCancellationRequest", () => {
   it("always sends the receipt immediately", async () => {
@@ -125,6 +126,16 @@ describe("handleCancellationRequest", () => {
     expect(await handleCancellationRequest(request("x@example.com"), w.deps)).toEqual({ status: "rate_limited" })
     w.setNow(new Date(NOW.getTime() + 61 * 60_000))
     expect((await handleCancellationRequest(request("x@example.com"), w.deps)).status).toBe("received")
+  })
+
+  it("rate-limits one client rotating email addresses", async () => {
+    const w = world()
+    for (let i = 0; i < RATE_LIMIT.perClientPerHour; i++) {
+      expect((await handleCancellationRequest(request(`spam${i}@example.com`, null, "bot"), w.deps)).status).toBe("received")
+    }
+    expect(await handleCancellationRequest(request("spam-next@example.com", null, "bot"), w.deps)).toEqual({ status: "rate_limited" })
+    // Others are unaffected.
+    expect((await handleCancellationRequest(request("real@example.com", null, "someone-else"), w.deps)).status).toBe("received")
   })
 })
 

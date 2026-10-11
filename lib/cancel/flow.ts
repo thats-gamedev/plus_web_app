@@ -13,7 +13,18 @@ import { createHash, randomBytes } from "node:crypto"
 // to find out who is a member.
 
 export const TOKEN_DAYS = 7
-export const RATE_LIMIT = { perEmailPerHour: 3, perMinute: 30 } as const
+// Per email, per client (hashed IP, see lib/cancel/client.ts) and overall.
+export const RATE_LIMIT = { perEmailPerHour: 3, perClientPerHour: 5, perMinute: 30 } as const
+
+export type RecentRequests = { sameEmailLastHour: number; sameClientLastHour: number; allLastMinute: number }
+
+export function isRateLimited(recent: RecentRequests): boolean {
+  return (
+    recent.sameEmailLastHour >= RATE_LIMIT.perEmailPerHour ||
+    recent.sameClientLastHour >= RATE_LIMIT.perClientPerHour ||
+    recent.allLastMinute >= RATE_LIMIT.perMinute
+  )
+}
 
 export function createToken(): { token: string; hash: string } {
   const token = randomBytes(32).toString("base64url")
@@ -28,9 +39,9 @@ export type CancelOutcome = { ok: true; endsAt: string | null } | { ok: false; m
 
 export type CancelRequestDeps = {
   now(): Date
-  /** Requests for this email in the last hour, and from anyone in the last minute. */
-  recentRequests(email: string): Promise<{ sameEmailLastHour: number; allLastMinute: number }>
-  insertRequest(row: { name: string; email: string; reference: string | null }): Promise<{ id: string; createdAt: string }>
+  /** Requests for this email and from this client in the last hour, and from anyone in the last minute. */
+  recentRequests(email: string, client: string | null): Promise<RecentRequests>
+  insertRequest(row: { name: string; email: string; reference: string | null; client: string | null }): Promise<{ id: string; createdAt: string }>
   sendReceipt(row: { id: string; name: string; email: string; reference: string | null; createdAt: string }): Promise<void>
   /** The account behind this email, if it has a live membership. */
   findMember(email: string): Promise<{ userId: string; email: string } | null>
@@ -42,7 +53,14 @@ export type CancelRequestDeps = {
   linkUser(requestId: string, userId: string): Promise<void>
 }
 
-export type CancelRequestInput = { name: string; email: string; reference: string | null; sessionUserId: string | null }
+export type CancelRequestInput = {
+  name: string
+  email: string
+  reference: string | null
+  sessionUserId: string | null
+  /** Hashed client address for the per-client limit; null skips it. */
+  client: string | null
+}
 
 export type CancelRequestResult =
   | { status: "rate_limited" }
@@ -53,12 +71,9 @@ export type CancelRequestResult =
 
 export async function handleCancellationRequest(input: CancelRequestInput, deps: CancelRequestDeps): Promise<CancelRequestResult> {
   const email = input.email.trim().toLowerCase()
-  const recent = await deps.recentRequests(email)
-  if (recent.sameEmailLastHour >= RATE_LIMIT.perEmailPerHour || recent.allLastMinute >= RATE_LIMIT.perMinute) {
-    return { status: "rate_limited" }
-  }
+  if (isRateLimited(await deps.recentRequests(email, input.client))) return { status: "rate_limited" }
 
-  const request = await deps.insertRequest({ name: input.name.trim(), email, reference: input.reference })
+  const request = await deps.insertRequest({ name: input.name.trim(), email, reference: input.reference, client: input.client })
   await deps.sendReceipt({ ...request, name: input.name.trim(), email, reference: input.reference })
 
   if (input.sessionUserId) {

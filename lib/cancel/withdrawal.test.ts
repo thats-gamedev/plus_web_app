@@ -3,17 +3,21 @@ import { RATE_LIMIT } from "./flow"
 import { handleWithdrawalRequest, type WithdrawalDeps, withdrawalAssessment } from "./withdrawal"
 
 function world() {
-  const rows: { id: string; email: string; userId: string | null; verified: boolean; createdAt: string }[] = []
+  const rows: { id: string; email: string; userId: string | null; verified: boolean; client: string | null; createdAt: string }[] = []
   const receipts: string[] = []
   const deps: WithdrawalDeps = {
-    async recentRequests(email) {
-      return { sameEmailLastHour: rows.filter((r) => r.email === email).length, allLastMinute: rows.length }
+    async recentRequests(email, client) {
+      return {
+        sameEmailLastHour: rows.filter((r) => r.email === email).length,
+        sameClientLastHour: client ? rows.filter((r) => r.client === client).length : 0,
+        allLastMinute: rows.length,
+      }
     },
     async findAccount(email) {
       return email === "mara@example.com" ? { userId: "u-mara" } : null
     },
     async insertWithdrawal(row) {
-      const r = { id: `w-${rows.length + 1}`, email: row.email, userId: row.userId, verified: row.verified, createdAt: "2026-10-09T12:00:00Z" }
+      const r = { id: `w-${rows.length + 1}`, email: row.email, userId: row.userId, verified: row.verified, client: row.client, createdAt: "2026-10-09T12:00:00Z" }
       rows.push(r)
       return { id: r.id, createdAt: r.createdAt }
     },
@@ -24,7 +28,7 @@ function world() {
   return { deps, rows, receipts }
 }
 
-const input = (email: string, sessionUserId: string | null = null) => ({ name: " Mara ", email, reference: null, sessionUserId })
+const input = (email: string, sessionUserId: string | null = null) => ({ name: " Mara ", email, reference: null, sessionUserId, client: "client-1" })
 
 describe("handleWithdrawalRequest", () => {
   it("stores the request and sends the receipt at once, even without an account", async () => {

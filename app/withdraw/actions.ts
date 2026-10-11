@@ -5,6 +5,7 @@ import { type FormState, readFields } from "@/lib/auth/form-state"
 import { fieldErrors } from "@/lib/auth/schemas"
 import { createWithdrawalDeps } from "@/lib/cancel/deps"
 import { handleWithdrawalRequest } from "@/lib/cancel/withdrawal"
+import { clientKey } from "@/lib/cancel/client"
 import { getUser } from "@/lib/dal/auth"
 
 // Withdrawal function (/withdraw). The flow is lib/cancel/withdrawal.ts.
@@ -26,13 +27,13 @@ export async function submitWithdrawal(_prev: WithdrawState, formData: FormData)
   try {
     const user = await getUser()
     const result = await handleWithdrawalRequest(
-      { name, email, reference: reference || null, sessionUserId: user?.id ?? null },
+      { name, email: user?.email || email, reference: reference || null, sessionUserId: user?.id ?? null, client: await clientKey() },
       createWithdrawalDeps()
     )
     if (result.status === "rate_limited") {
-      return { status: "error", message: "We already received several requests for this email. Please wait an hour, or email us.", values: raw }
+      return { status: "error", message: "We already received several requests. Please wait an hour, or email us.", values: raw }
     }
-    return { status: "success", result: { requestId: result.requestId, receivedAt: result.receivedAt, email } }
+    return { status: "success", result: { requestId: result.requestId, receivedAt: result.receivedAt, email: user?.email || email } }
   } catch (error) {
     console.error("Withdrawal request failed", error)
     return {

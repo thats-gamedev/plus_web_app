@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       cancellation_requests: {
         Row: {
+          client_hash: string | null
           created_at: string
           email: string
           executed_at: string | null
@@ -31,6 +32,7 @@ export type Database = {
           verified_at: string | null
         }
         Insert: {
+          client_hash?: string | null
           created_at?: string
           email: string
           executed_at?: string | null
@@ -46,6 +48,7 @@ export type Database = {
           verified_at?: string | null
         }
         Update: {
+          client_hash?: string | null
           created_at?: string
           email?: string
           executed_at?: string | null

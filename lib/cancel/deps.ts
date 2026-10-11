@@ -51,13 +51,16 @@ export async function sendRequestReceipt(request: ReceiptRequest): Promise<"sent
 
 /** Requests of any kind, so cancellations and withdrawals share one limit. */
 function recentRequests(db: ReturnType<typeof createAdminClient>) {
-  return async (email: string) => {
-    const [same, all] = await Promise.all([
+  return async (email: string, client: string | null) => {
+    const [same, fromClient, all] = await Promise.all([
       db.from("cancellation_requests").select("id").eq("email", email).gt("created_at", ago(3_600_000)),
+      client
+        ? db.from("cancellation_requests").select("id").eq("client_hash", client).gt("created_at", ago(3_600_000))
+        : Promise.resolve({ data: [], error: null }),
       db.from("cancellation_requests").select("id").gt("created_at", ago(60_000)),
     ])
-    if (same.error || all.error) throw new Error("Couldn't check the rate limit.")
-    return { sameEmailLastHour: same.data.length, allLastMinute: all.data.length }
+    if (same.error || fromClient.error || all.error) throw new Error("Couldn't check the rate limit.")
+    return { sameEmailLastHour: same.data.length, sameClientLastHour: fromClient.data.length, allLastMinute: all.data.length }
   }
 }
 
@@ -73,8 +76,12 @@ export function createCancelRequestDeps(): CancelRequestDeps {
 
     recentRequests: recentRequests(db),
 
-    async insertRequest(row) {
-      const { data, error } = await db.from("cancellation_requests").insert(row).select("id, created_at").single()
+    async insertRequest({ client, ...row }) {
+      const { data, error } = await db
+        .from("cancellation_requests")
+        .insert({ ...row, client_hash: client })
+        .select("id, created_at")
+        .single()
       if (error) throw new Error(`Couldn't store the cancellation request: ${error.message}`)
       return { id: data.id, createdAt: data.created_at }
     },
@@ -126,10 +133,18 @@ export function createWithdrawalDeps(): WithdrawalDeps {
       return data ? { userId: data.id } : null
     },
 
-    async insertWithdrawal({ name, email, reference, userId, verified }) {
+    async insertWithdrawal({ name, email, reference, userId, verified, client }) {
       const { data, error } = await db
         .from("cancellation_requests")
-        .insert({ kind: "withdrawal", name, email, reference, user_id: userId, verified_at: verified ? new Date().toISOString() : null })
+        .insert({
+          kind: "withdrawal",
+          name,
+          email,
+          reference,
+          user_id: userId,
+          verified_at: verified ? new Date().toISOString() : null,
+          client_hash: client,
+        })
         .select("id, created_at")
         .single()
       if (error) throw new Error(`Couldn't store the withdrawal: ${error.message}`)

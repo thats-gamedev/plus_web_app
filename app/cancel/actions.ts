@@ -5,6 +5,7 @@ import { type FormState, readFields } from "@/lib/auth/form-state"
 import { fieldErrors } from "@/lib/auth/schemas"
 import { createCancelRequestDeps, createConfirmDeps } from "@/lib/cancel/deps"
 import { confirmCancellation, handleCancellationRequest } from "@/lib/cancel/flow"
+import { clientKey } from "@/lib/cancel/client"
 import { getUser } from "@/lib/dal/auth"
 
 // Statutory cancellation (LW13–14). The flow itself is lib/cancel/flow.ts.
@@ -33,11 +34,11 @@ export async function submitCancellation(_prev: CancelState, formData: FormData)
   try {
     const user = await getUser()
     const result = await handleCancellationRequest(
-      { name, email, reference: reference || null, sessionUserId: user?.id ?? null },
+      { name, email: user?.email || email, reference: reference || null, sessionUserId: user?.id ?? null, client: await clientKey() },
       createCancelRequestDeps()
     )
     if (result.status === "rate_limited") {
-      return { status: "error", message: "We already received several requests for this email. Please wait an hour, or email us.", values: raw }
+      return { status: "error", message: "We already received several requests. Please wait an hour, or email us.", values: raw }
     }
     return {
       status: "success",
@@ -46,7 +47,7 @@ export async function submitCancellation(_prev: CancelState, formData: FormData)
         requestId: result.requestId,
         receivedAt: result.receivedAt,
         endsAt: result.status === "cancelled" ? result.endsAt : null,
-        email,
+        email: user?.email || email,
       },
     }
   } catch (error) {
