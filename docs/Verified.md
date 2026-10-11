@@ -14,6 +14,8 @@ What has been checked, and decisions that were made, so they don't have to be re
 
 - **2026-10-10: auth picture from Unsplash.** The placeholder panel on the auth pages shows "A computer generated image of red and white shapes" by Micke Lindström (unsplash.com/photos/6REIcx1yeuI), free to use under the Unsplash License, with a "Photo by … on Unsplash" credit.
 
+- **2026-10-11: fonts are self-hosted.** Space Grotesk and JetBrains Mono come from the `@fontsource-variable` packages through `next/font/local`, not from Google Fonts. A failed Google download had silently switched the dev server to a fallback font (wider and heavier, so the whole app looked oversized); local files can't fail that way, in dev or on Vercel. `next build` bundles both files.
+
 ## Verified
 
 In dev with Stripe test mode (sandbox), 2026-10-08/09, unless noted. Emails were checked with console delivery (no Resend yet).
