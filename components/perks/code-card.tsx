@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { CopyButton } from "@/components/ui/copy-button"
 import { CODE_PERCENT, type CodeKind } from "@/lib/codes/generate"
 import type { MemberCode } from "@/lib/dal/perks"
+import { merchCodesConfigured } from "@/lib/fourthwall/platform"
 import { contactMailto } from "@/lib/site"
 
 const copy = {
@@ -66,7 +67,9 @@ export function CodeCard({ kind, code }: { kind: CodeKind; code: MemberCode | un
         </>
       ) : (
         <p role="status" className="mt-3 rounded-xl border border-dashed border-border px-4 py-4 text-center text-sm text-muted-foreground">
-          Your code is being created. Refresh in a minute.
+          {kind === "merch" && !merchCodesConfigured()
+            ? "Your code activates when the shop opens."
+            : "Your code is being created. Refresh in a minute."}
         </p>
       )}
     </article>

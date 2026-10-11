@@ -11,6 +11,15 @@ import type { ShopPromotions } from "@/lib/codes/sync"
 const BASE_URL = "https://api.fourthwall.com/open-api/v1.0"
 const TIMEOUT_MS = 10_000
 
+/**
+ * Whether merch codes can reach Fourthwall at all. Without the API
+ * credentials (e.g. launching before the shop), merch codes stay
+ * pending_sync until they're set, which members shouldn't read as "a minute".
+ */
+export function merchCodesConfigured(): boolean {
+  return Boolean(process.env.FOURTHWALL_API_USERNAME && process.env.FOURTHWALL_API_PASSWORD)
+}
+
 export class FourthwallError extends Error {
   constructor(
     message: string,

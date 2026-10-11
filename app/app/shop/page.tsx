@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 import { PageHeader } from "@/components/layout/page-header"
 import { CodeBanner, ProductCard } from "@/components/shop/shop-parts"
+import { merchCodesConfigured } from "@/lib/fourthwall/platform"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CODE_PERCENT } from "@/lib/codes/generate"
 import { requirePlus } from "@/lib/dal/auth"
@@ -45,7 +46,7 @@ async function Shop() {
 
   return (
     <>
-      <CodeBanner code={code} percent={percent} />
+      <CodeBanner code={code} percent={percent} shopOpen={merchCodesConfigured()} />
       {config && products && products.length > 0 ? (
         <Stagger as="ul" when="mount" stagger={0.05} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {products.map((product, index) => (

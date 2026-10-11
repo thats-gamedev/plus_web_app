@@ -27,12 +27,13 @@ const subtle: Variants = {
 
 /**
  * The member area's page transition (app/app/template.tsx re-mounts it on
- * every navigation): the page fades in and rises a few pixels.
+ * every navigation): the page rises a few pixels. No fade: opacity 0 would be
+ * in the server HTML too, and the page would stay blank until JS loads.
  */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   return (
     <MotionConfig reducedMotion="user">
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE }}>
+      <motion.div initial={{ y: 8 }} animate={{ y: 0 }} transition={{ duration: 0.3, ease: EASE }}>
         {children}
       </motion.div>
     </MotionConfig>

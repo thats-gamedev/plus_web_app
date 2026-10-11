@@ -45,7 +45,8 @@ export function LibraryToolbar({ filters, count }: { filters: LibraryFilters; co
 
   return (
     <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center" data-pending={pending || undefined}>
-      <SearchBox value={filters.q} onSearch={(q) => go({ q }, { replace: true })} />
+      {/* Keyed by the query: "Clear filters" and Back reset the text. */}
+      <SearchBox key={filters.q} value={filters.q} onSearch={(q) => go({ q }, { replace: true })} />
 
       <div className="flex flex-wrap gap-2">
         <FilterMenu

@@ -105,7 +105,7 @@ export function ProductCard({
 }
 
 /** Dark code banner at the top of /app/shop (MM10). */
-export function CodeBanner({ code, percent }: { code: string | null; percent: number }) {
+export function CodeBanner({ code, percent, shopOpen = true }: { code: string | null; percent: number; shopOpen?: boolean }) {
   return (
     <div className="mb-5 flex items-center gap-4 rounded-card bg-ink px-4 py-3.5 text-white md:px-5">
       <div className="min-w-0 flex-1">
@@ -116,7 +116,9 @@ export function CodeBanner({ code, percent }: { code: string | null; percent: nu
           </>
         ) : (
           <p className="text-sm text-ink-muted">
-            Your {percent}% member code is being created. Refresh in a minute.
+            {shopOpen
+              ? `Your ${percent}% member code is being created. Refresh in a minute.`
+              : `Your ${percent}% member code activates when the shop opens.`}
           </p>
         )}
       </div>

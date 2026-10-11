@@ -13,8 +13,8 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     q: "Can I cancel anytime?",
     a: (
       <>
-        Yes. Cancel in your account or with <Link href="/cancel">Cancel contracts here</Link> at the bottom of every
-        page. You keep access until the end of the period you paid for.
+        Yes. Cancel in your account, or with <Link href="/cancel">Cancel contracts here</Link> in the site footer. You
+        keep access until the end of the period you paid for.
       </>
     ),
   },

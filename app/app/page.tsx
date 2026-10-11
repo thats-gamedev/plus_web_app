@@ -94,7 +94,10 @@ async function Home({ searchParams }: Pick<PageProps<"/app">, "searchParams">) {
         )}
       </section>
 
-      <NewMerch />
+      {/* Its own boundary: a slow Fourthwall mustn't hold up the page. */}
+      <Suspense fallback={null}>
+        <NewMerch />
+      </Suspense>
 
       <div className="mt-8 md:mt-10">
         <PerksBanner />
