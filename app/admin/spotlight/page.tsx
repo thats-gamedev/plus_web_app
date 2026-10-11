@@ -68,13 +68,15 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
           {all.length === 0 ? `No submissions for ${monthName(month)} yet.` : "Nothing with this status."}
         </p>
       ) : (
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {shown.map((s, i) => (
             <li key={s.id} className="flex flex-col overflow-hidden rounded-card border border-border bg-card">
-              <div className={cn("relative aspect-[16/10]", pastels[i % pastels.length])}>
+              {/* The image is absolutely positioned so its own size can't
+                  stretch the 16:9 box. */}
+              <div className={cn("relative aspect-video overflow-hidden", pastels[i % pastels.length])}>
                 {s.cover && (
                   // eslint-disable-next-line @next/next/no-img-element -- short-lived signed Storage URL
-                  <img src={s.cover} alt="" className="size-full object-cover" />
+                  <img src={s.cover} alt="" className="absolute inset-0 size-full object-cover" />
                 )}
                 <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/30 to-transparent px-3 py-2">
                   <span className="font-mono text-xs text-white drop-shadow">
@@ -87,7 +89,7 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
                   <DownloadMedia files={s.downloads} title={s.title} />
                 </div>
               </div>
-              <div className="flex flex-1 flex-col p-4">
+              <div className="flex flex-1 flex-col p-3.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate font-mono text-xs text-muted-foreground">
                     {s.credits[0] ? `@${s.credits[0].handle.replace(/^https?:\/\//, "")}` : s.email}
@@ -96,9 +98,13 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
                     {s.status === "declined" ? "Declined" : STATUS_LABELS[s.status]}
                   </Badge>
                 </div>
-                <h2 className="mt-2 text-lg font-semibold">{s.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{s.description}</p>
-                <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
+                <h2 className="mt-1.5 truncate font-semibold" title={s.title}>
+                  {s.title}
+                </h2>
+                <p className="mt-0.5 line-clamp-3 text-sm text-muted-foreground" title={s.description}>
+                  {s.description}
+                </p>
+                <dl className="mt-2.5 space-y-0.5 text-xs text-muted-foreground">
                   <div>
                     <dt className="inline">Type: </dt>
                     <dd className="inline">
@@ -130,7 +136,7 @@ export default async function AdminSpotlightPage({ searchParams }: PageProps<"/a
                     )}
                   </div>
                 </dl>
-                <div className="mt-auto pt-4">
+                <div className="mt-auto pt-3">
                   <SubmissionActions id={s.id} status={s.status} title={s.title} />
                 </div>
               </div>
