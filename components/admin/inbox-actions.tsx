@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/admin/confirm-dialog"
 import {
+  dismissRequest,
   type InboxActionResult,
   replayWebhookEvent,
   resolveCancellationRequest,
@@ -42,13 +44,24 @@ export function ResolveRequestButton({
   children: React.ReactNode
 }) {
   const { pending, run } = useInboxAction()
+  if (outcome === "executed") {
+    // Changes the member's subscription in Stripe, so it asks first.
+    return (
+      <ConfirmDialog
+        trigger={
+          <Button variant="dark" size="sm" disabled={pending}>
+            {pending ? "Saving…" : children}
+          </Button>
+        }
+        title="Cancel this membership?"
+        description="Stripe cancels it at the end of the paid period, and the member gets the confirmation email."
+        confirmLabel="Cancel membership"
+        onConfirm={() => run(() => resolveCancellationRequest(requestId, outcome))}
+      />
+    )
+  }
   return (
-    <Button
-      variant={outcome === "executed" ? "dark" : "outline"}
-      size="sm"
-      disabled={pending}
-      onClick={() => run(() => resolveCancellationRequest(requestId, outcome))}
-    >
+    <Button variant="outline" size="sm" disabled={pending} onClick={() => run(() => resolveCancellationRequest(requestId, outcome))}>
       {pending ? "Saving…" : children}
     </Button>
   )
@@ -57,9 +70,35 @@ export function ResolveRequestButton({
 export function DeclineWithdrawalButton({ requestId, label }: { requestId: string; label: string }) {
   const { pending, run } = useInboxAction()
   return (
-    <Button variant="outline" size="sm" disabled={pending} onClick={() => run(() => resolveWithdrawalRequest(requestId, "decline"))}>
-      {pending ? "Saving…" : label}
-    </Button>
+    <ConfirmDialog
+      trigger={
+        <Button variant="outline" size="sm" disabled={pending}>
+          {pending ? "Saving…" : label}
+        </Button>
+      }
+      title="Decline this withdrawal?"
+      description="The member gets an email with the reason and how to cancel instead, and the request closes."
+      confirmLabel="Decline and email"
+      onConfirm={() => run(() => resolveWithdrawalRequest(requestId, "decline"))}
+    />
+  )
+}
+
+/** Closes a request without doing anything (forged, duplicate, handled in Stripe). */
+export function DismissRequestButton({ requestId }: { requestId: string }) {
+  const { pending, run } = useInboxAction()
+  return (
+    <ConfirmDialog
+      trigger={
+        <Button variant="ghost" size="sm" disabled={pending}>
+          Dismiss
+        </Button>
+      }
+      title="Dismiss this request?"
+      description="Use it for requests that need nothing: forged, a duplicate, or already handled in Stripe. Nothing changes in Stripe and no email goes out."
+      confirmLabel="Dismiss"
+      onConfirm={() => run(() => dismissRequest(requestId))}
+    />
   )
 }
 

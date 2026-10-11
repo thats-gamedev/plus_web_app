@@ -6,7 +6,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 /**
  * Carries out an accepted withdrawal: refunds the last paid invoice of each
  * of the member's subscriptions that hasn't ended, then ends them now (not at
- * period end). The webhook then revokes access and the codes. Callers must
+ * period end). If the membership already ended (cancelled in the first 14
+ * days), the right to withdraw still holds: the latest subscription's last
+ * payment is refunded. The webhook then revokes access and the codes. Callers must
  * have authorised it (the admin, after checking the request).
  *
  * Safe to retry: the refund uses an idempotency key per request and invoice,
@@ -16,13 +18,15 @@ export async function refundAndEnd(
   userId: string,
   requestId: string
 ): Promise<{ ok: true; refunded: string | null } | { ok: false; message: string }> {
-  const { data: subs, error } = await createAdminClient()
+  const { data: all, error } = await createAdminClient()
     .from("subscriptions")
-    .select("stripe_subscription_id")
+    .select("stripe_subscription_id, ended_at")
     .eq("user_id", userId)
-    .is("ended_at", null)
+    .order("created_at", { ascending: false })
   if (error) return { ok: false, message: `Couldn't load the subscription: ${error.message}` }
-  if (!subs.length) return { ok: false, message: "This member has no running subscription." }
+  const running = all.filter((s) => !s.ended_at)
+  const subs = running.length ? running : all.slice(0, 1)
+  if (!subs.length) return { ok: false, message: "This member has never had a subscription." }
 
   const stripe = getStripe()
   const refunds: { amount: number; currency: string }[] = []

@@ -518,7 +518,7 @@ export type Database = {
       is_plus: { Args: { uid: string }; Returns: boolean }
     }
     Enums: {
-      cancellation_status: "received" | "verified" | "executed" | "no_match" | "declined"
+      cancellation_status: "received" | "verified" | "executed" | "no_match" | "declined" | "dismissed"
       code_kind: "merch" | "promotion"
       contract_request_kind: "cancellation" | "withdrawal"
       code_status: "active" | "pending_sync" | "revoked"
@@ -676,7 +676,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      cancellation_status: ["received", "verified", "executed", "no_match", "declined"],
+      cancellation_status: ["received", "verified", "executed", "no_match", "declined", "dismissed"],
       code_kind: ["merch", "promotion"],
       contract_request_kind: ["cancellation", "withdrawal"],
       code_status: ["active", "pending_sync", "revoked"],

@@ -85,7 +85,7 @@ export async function handleCancellationRequest(input: CancelRequestInput, deps:
 export type StoredRequest = {
   id: string
   userId: string | null
-  status: "received" | "verified" | "executed" | "no_match" | "declined"
+  status: "received" | "verified" | "executed" | "no_match" | "declined" | "dismissed"
   tokenExpiresAt: string | null
   executedAt: string | null
   createdAt: string

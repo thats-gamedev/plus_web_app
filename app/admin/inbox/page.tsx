@@ -4,6 +4,7 @@ import { MailWarningIcon, RefreshCwIcon, Undo2Icon, UserCheckIcon, UserXIcon } f
 import { cn } from "cn"
 import {
   DeclineWithdrawalButton,
+  DismissRequestButton,
   RefundWithdrawalButton,
   ReplayButton,
   ResendReceiptButton,
@@ -135,7 +136,8 @@ function OpenItems({
                     </p>
                   </div>
                   {found ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <DismissRequestButton requestId={r.id} />
                       {r.userId && (
                         <Link href={`/admin/members?member=${r.userId}`} className="self-center text-sm font-semibold text-brand hover:underline">
                           Open member
@@ -146,9 +148,12 @@ function OpenItems({
                       </ResolveRequestButton>
                     </div>
                   ) : (
-                    <ResolveRequestButton requestId={r.id} outcome="no_match">
-                      Send no-match reply
-                    </ResolveRequestButton>
+                    <div className="flex flex-wrap gap-2">
+                      <DismissRequestButton requestId={r.id} />
+                      <ResolveRequestButton requestId={r.id} outcome="no_match">
+                        Send no-match reply
+                      </ResolveRequestButton>
+                    </div>
                   )}
                 </li>
               )
@@ -269,6 +274,7 @@ function Withdrawals({ withdrawals }: { withdrawals: WithdrawalRequest[] }) {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <DismissRequestButton requestId={w.id} />
                 {!w.userId ? (
                   <WithdrawalNoMatchButton requestId={w.id} />
                 ) : (

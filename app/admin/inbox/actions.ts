@@ -18,6 +18,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 export type InboxActionResult = { ok: boolean; message: string }
 
+const EMAIL_FAILED = "The email couldn't be sent, so the request stays open. Check the email setup (Resend) and try again."
+
 /**
  * Re-runs a stored Stripe event through the normal webhook processing.
  * Safe to repeat: processing re-reads the subscription from Stripe and
@@ -69,15 +71,19 @@ export async function resolveCancellationRequest(
   if (outcome === "executed") {
     if (!request.user_id) return { ok: false, message: "No account is linked to this request." }
     const result = await cancelAtPeriodEnd(request.user_id)
-    if (!result.ok) return result
+    if (!result.ok) {
+      return { ok: false, message: `${result.message} If it already ended or was handled in Stripe, dismiss the request.` }
+    }
   } else {
-    await sendEmailSafely({
+    const sent = await sendEmailSafely({
       to: request.email,
       userId: null,
       kind: "cancellation_no_match",
       refId: request.id,
       content: cancellationNoMatchEmail({ email: request.email, siteUrl: await getSiteUrl() }),
     })
+    // The request stays open until the reply really went out.
+    if (sent === "failed") return { ok: false, message: EMAIL_FAILED }
   }
 
   const { error } = await db
@@ -123,13 +129,14 @@ export async function resolveWithdrawalRequest(
   const siteUrl = await getSiteUrl()
 
   if (outcome === "no_match") {
-    await sendEmailSafely({
+    const sent = await sendEmailSafely({
       to: request.email,
       userId: null,
       kind: "cancellation_no_match",
       refId: request.id,
       content: cancellationNoMatchEmail({ email: request.email, siteUrl, kind: "withdrawal" }),
     })
+    if (sent === "failed") return { ok: false, message: EMAIL_FAILED }
     return closeRequest(db, request.id, "no_match", "No-match reply sent.")
   }
 
@@ -140,7 +147,7 @@ export async function resolveWithdrawalRequest(
   if (outcome === "refund") {
     const result = await refundAndEnd(request.user_id, request.id)
     if (!result.ok) return result
-    await sendEmailSafely({
+    const sent = await sendEmailSafely({
       to: profile.email,
       userId: request.user_id,
       kind: "withdrawal_confirmed",
@@ -151,7 +158,9 @@ export async function resolveWithdrawalRequest(
       db,
       request.id,
       "executed",
-      result.refunded ? `Refunded ${result.refunded} and ended the membership.` : "Ended the membership; there was nothing to refund."
+      (result.refunded ? `Refunded ${result.refunded} and ended the membership.` : "Ended the membership; there was nothing to refund.") +
+        // The money is back either way; the member still needs to hear it.
+        (sent === "failed" ? " The confirmation email failed, so tell the member yourself." : "")
     )
   }
 
@@ -176,7 +185,7 @@ export async function resolveWithdrawalRequest(
           : "This account has no subscription to withdraw from. Send the no-match reply instead.",
     }
   }
-  await sendEmailSafely({
+  const sent = await sendEmailSafely({
     to: profile.email,
     userId: request.user_id,
     kind: "withdrawal_declined",
@@ -189,13 +198,24 @@ export async function resolveWithdrawalRequest(
       siteUrl,
     }),
   })
+  if (sent === "failed") return { ok: false, message: EMAIL_FAILED }
   return closeRequest(db, request.id, "declined", "Declined; the member got the reason and the cancel link.")
+}
+
+/**
+ * Closes a cancellation or withdrawal request that needs no action: forged
+ * (e.g. someone typed a member's email while logged out), a duplicate, or
+ * already handled in Stripe. Nothing changes in Stripe and no email goes out.
+ */
+export async function dismissRequest(requestId: string): Promise<InboxActionResult> {
+  await requireAdmin()
+  return closeRequest(createAdminClient(), requestId, "dismissed", "Dismissed. Nothing was changed or sent.")
 }
 
 async function closeRequest(
   db: ReturnType<typeof createAdminClient>,
   id: string,
-  status: "executed" | "declined" | "no_match",
+  status: "executed" | "declined" | "no_match" | "dismissed",
   message: string
 ): Promise<InboxActionResult> {
   const { error } = await db
