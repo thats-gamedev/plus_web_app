@@ -5,6 +5,7 @@ import { CodeCard, CodingAppCard } from "@/components/perks/code-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { requirePlus } from "@/lib/dal/auth"
 import { getMemberCodes } from "@/lib/dal/perks"
+import { Stagger, StaggerItem } from "@/components/ui/motion"
 
 export const metadata: Metadata = { title: "Perks" }
 
@@ -27,11 +28,17 @@ async function Perks() {
   const codes = await getMemberCodes()
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <CodeCard kind="merch" code={codes.find((c) => c.kind === "merch")} />
-      <CodeCard kind="promotion" code={codes.find((c) => c.kind === "promotion")} />
-      <CodingAppCard />
-    </div>
+    <Stagger when="mount" stagger={0.06} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <StaggerItem variant="subtle" className="grid">
+        <CodeCard kind="merch" code={codes.find((c) => c.kind === "merch")} />
+      </StaggerItem>
+      <StaggerItem variant="subtle" className="grid">
+        <CodeCard kind="promotion" code={codes.find((c) => c.kind === "promotion")} />
+      </StaggerItem>
+      <StaggerItem variant="subtle" className="grid">
+        <CodingAppCard />
+      </StaggerItem>
+    </Stagger>
   )
 }
 

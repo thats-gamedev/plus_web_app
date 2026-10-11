@@ -1,6 +1,6 @@
 import { PlanCards } from "@/components/billing/plan-card"
 import { Faq } from "@/components/landing/faq"
-import { LandingMotion, Reveal } from "@/components/landing/motion"
+import { LandingMotion, Reveal } from "@/components/ui/motion"
 import { CodeYourHero, CtaBand, DropTeaser, FreeList, Hero, StatsStrip, WhatsInside } from "@/components/landing/sections"
 import { getLandingData } from "@/lib/dal/public"
 

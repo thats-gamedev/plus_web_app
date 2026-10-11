@@ -19,6 +19,7 @@ import { parseConsent } from "@/lib/billing/consent"
 import { getIsPlus, getProfile, requireUser } from "@/lib/dal/auth"
 import { getCurrentDrop, getRecentResources } from "@/lib/dal/content"
 import { parsePlan } from "@/lib/plans"
+import { Stagger, StaggerItem } from "@/components/ui/motion"
 
 export const metadata: Metadata = { title: "Home" }
 
@@ -79,13 +80,13 @@ async function Home({ searchParams }: Pick<PageProps<"/app">, "searchParams">) {
           </Link>
         </div>
         {recent.length > 0 ? (
-          <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <Stagger as="ul" when="mount" stagger={0.05} className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {recent.map((resource) => (
-              <li key={resource.id}>
+              <StaggerItem as="li" variant="subtle" key={resource.id}>
                 <ContentCard resource={resource} now={now} />
-              </li>
+              </StaggerItem>
             ))}
-          </ul>
+          </Stagger>
         ) : (
           <p className="rounded-card border border-border bg-card p-6 text-muted-foreground">
             New lists, e-books and guides show up here as soon as they are published.
@@ -129,13 +130,13 @@ async function NewMerch() {
           Open shop
         </Link>
       </div>
-      <ul className="grid grid-cols-2 gap-3 md:gap-4">
+      <Stagger as="ul" when="mount" stagger={0.05} className="grid grid-cols-2 gap-3 md:gap-4">
         {products.map((product, index) => (
-          <li key={product.id}>
+          <StaggerItem as="li" variant="subtle" key={product.id}>
             <ProductCard product={product} index={index} percent={percent} code={code} shopUrl={config.shopUrl} compact />
-          </li>
+          </StaggerItem>
         ))}
-      </ul>
+      </Stagger>
     </section>
   )
 }

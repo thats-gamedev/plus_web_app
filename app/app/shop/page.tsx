@@ -8,6 +8,7 @@ import { requirePlus } from "@/lib/dal/auth"
 import { getMemberCodes } from "@/lib/dal/perks"
 import type { ShopProduct } from "@/lib/fourthwall/products"
 import { getShopProducts, shopConfig } from "@/lib/fourthwall/storefront"
+import { Stagger, StaggerItem } from "@/components/ui/motion"
 
 export const metadata: Metadata = { title: "Shop" }
 
@@ -46,9 +47,9 @@ async function Shop() {
     <>
       <CodeBanner code={code} percent={percent} />
       {config && products && products.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Stagger as="ul" when="mount" stagger={0.05} className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {products.map((product, index) => (
-            <li key={product.id}>
+            <StaggerItem as="li" variant="subtle" key={product.id}>
               <ProductCard
                 product={product}
                 index={index}
@@ -56,9 +57,9 @@ async function Shop() {
                 code={code}
                 shopUrl={config.shopUrl}
               />
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
       ) : (
         <div className="rounded-card border border-dashed border-border bg-card p-6">
           <p className="font-semibold">

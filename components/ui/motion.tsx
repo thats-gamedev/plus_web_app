@@ -3,7 +3,7 @@
 import { MotionConfig, motion, type Variants } from "motion/react"
 import { useMediaQuery } from "@/lib/use-media-query"
 
-// Motion for the landing page. The sections stay server components and wrap
+// Motion for the landing page and the member area. Server components wrap
 // their parts in these. Everything respects the visitor's "reduce motion"
 // setting (MotionConfig reducedMotion="user"): then elements appear without
 // moving.
@@ -17,6 +17,26 @@ export function LandingMotion({ children }: { children: React.ReactNode }) {
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
+}
+
+// For the app UI: a shorter, quicker rise than on the landing page.
+const subtle: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: EASE } },
+}
+
+/**
+ * The member area's page transition (app/app/template.tsx re-mounts it on
+ * every navigation): the page fades in and rises a few pixels.
+ */
+export function PageTransition({ children }: { children: React.ReactNode }) {
+  return (
+    <MotionConfig reducedMotion="user">
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE }}>
+        {children}
+      </motion.div>
+    </MotionConfig>
+  )
 }
 
 // The hero heading is the page's largest paint (LCP): it only moves, it
@@ -86,11 +106,12 @@ export function StaggerItem({
   children: React.ReactNode
   className?: string
   as?: "div" | "li"
-  variant?: "fadeUp" | "riseOnly"
+  variant?: "fadeUp" | "riseOnly" | "subtle"
 }) {
   const Component = motion[as]
+  const variants = variant === "riseOnly" ? riseOnly : variant === "subtle" ? subtle : fadeUp
   return (
-    <Component className={className} variants={variant === "riseOnly" ? riseOnly : fadeUp}>
+    <Component className={className} variants={variants}>
       {children}
     </Component>
   )

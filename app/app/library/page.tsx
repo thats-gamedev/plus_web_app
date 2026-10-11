@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { hasActiveFilters, LIBRARY_PATH, parseLibraryFilters } from "@/lib/content/library-filters"
 import { requirePlus } from "@/lib/dal/auth"
 import { getLibrary } from "@/lib/dal/content"
+import { Stagger, StaggerItem } from "@/components/ui/motion"
 
 export const metadata: Metadata = { title: "Library" }
 
@@ -33,13 +34,13 @@ async function Library({ searchParams }: Pick<PageProps<"/app/library">, "search
     <>
       <LibraryToolbar filters={filters} count={resources.length} />
       {resources.length > 0 ? (
-        <ul className="grid gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
+        <Stagger as="ul" when="mount" stagger={0.05} className="grid gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
           {resources.map((resource) => (
-            <li key={resource.id}>
+            <StaggerItem as="li" variant="subtle" key={resource.id}>
               <LibraryCard resource={resource} now={now} />
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
       ) : (
         <div className="rounded-card border border-border bg-card px-6 py-12 text-center">
           <p className="text-lg font-semibold">

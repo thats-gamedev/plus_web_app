@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { cn } from "cn"
 import { InstagramIcon } from "@/components/layout/icons"
-import { HeroCard, Reveal, Stagger, StaggerItem } from "@/components/landing/motion"
+import { HeroCard, Reveal, Stagger, StaggerItem } from "@/components/ui/motion"
 import { LockedBlurRows } from "@/components/lists/locked-rows"
 import { ResourceIcon } from "@/components/shared/resource-icon"
 import { Badge } from "@/components/ui/badge"

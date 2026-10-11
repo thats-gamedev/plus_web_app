@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { cn } from "cn"
+import { Stagger, StaggerItem } from "@/components/ui/motion"
 import { ArrowRightIcon, ChevronRightIcon } from "lucide-react"
 import Markdown from "react-markdown"
 import { ResourceIcon } from "@/components/shared/resource-icon"
@@ -44,7 +45,11 @@ export function DropCard({ drop }: { drop: Drop }) {
       </div>
 
       {drop.resources.length > 0 ? (
-        <ul
+        <Stagger
+          as="ul"
+          when="mount"
+          stagger={0.06}
+          delay={0.1}
           aria-label={`${drop.resources.length} resources in this drop`}
           className={cn(
             "divide-y divide-ink-border md:space-y-3 md:divide-y-0",
@@ -53,7 +58,7 @@ export function DropCard({ drop }: { drop: Drop }) {
           )}
         >
           {drop.resources.map((resource) => (
-            <li key={resource.id}>
+            <StaggerItem as="li" variant="subtle" key={resource.id}>
               <Link
                 href={`/app/library/${resource.slug}`}
                 className="group flex items-center gap-3 py-3.5 md:gap-4 md:rounded-2xl md:border md:border-ink-border md:bg-ink-2 md:px-4 md:py-4 md:transition-colors md:hover:border-ink-muted"
@@ -71,9 +76,9 @@ export function DropCard({ drop }: { drop: Drop }) {
                   className="hidden size-4 text-ink-muted transition-transform group-hover:translate-x-0.5 md:block"
                 />
               </Link>
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
       ) : (
         <p className="self-center text-ink-muted">The first resources of this drop go live soon.</p>
       )}
