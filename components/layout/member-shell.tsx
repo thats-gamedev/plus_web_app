@@ -43,11 +43,13 @@ function ActiveSidebarLinks() {
 
 // The user parts are slots: Server Components that read the session behind
 // <Suspense>, so the rest of the shell stays in the static shell.
-export function MemberSidebar({ userSlot, dropSlot }: { userSlot: React.ReactNode; dropSlot?: React.ReactNode }) {
+export function MemberSidebar({ userSlot }: { userSlot: React.ReactNode }) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
-      <div className="px-6 pt-6 pb-7">
-        <Logo href="/app" className="text-base" />
+      {/* The logo's row is centred on the page title next to it (52px down:
+          the main area's 32px padding plus half the 40px title line). */}
+      <div className="flex h-[104px] shrink-0 items-center px-6">
+        <Logo href="/app" />
       </div>
       <nav aria-label="Member" className="flex flex-1 flex-col gap-1 px-3">
         <Suspense fallback={<SidebarLinks pathname={null} />}>
@@ -55,10 +57,7 @@ export function MemberSidebar({ userSlot, dropSlot }: { userSlot: React.ReactNod
         </Suspense>
       </nav>
       {/* The statutory cancel and withdraw links live on the Account page. */}
-      <div className="space-y-2 p-3">
-        {dropSlot}
-        {userSlot}
-      </div>
+      <div className="p-3">{userSlot}</div>
     </aside>
   )
 }

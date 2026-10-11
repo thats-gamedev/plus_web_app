@@ -1,11 +1,10 @@
 import Link from "next/link"
-import { ArrowRightIcon, LogOutIcon } from "lucide-react"
+import { LogOutIcon } from "lucide-react"
 import { cn } from "cn"
 import { signOut } from "@/app/(auth)/actions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { isLiveStatus } from "@/lib/billing/status"
 import { getMembership, getProfile, requireUser } from "@/lib/dal/auth"
-import { getCurrentDrop } from "@/lib/dal/content"
 import { PLANS } from "@/lib/plans"
 
 // Session-dependent parts of the member shell. Render them inside <Suspense>.
@@ -68,30 +67,6 @@ export async function SidebarUser() {
         <span className="sr-only">Log out</span>
       </LogoutButton>
     </div>
-  )
-}
-
-/**
- * "This month" in the sidebar: the current drop, one click from every page.
- * Nothing for non-members or before the first drop.
- */
-export async function SidebarDrop() {
-  const drop = await getCurrentDrop()
-  if (!drop) return null
-  const count = drop.resources.length
-
-  return (
-    <Link
-      href="/app"
-      className="group block rounded-xl bg-ink p-3.5 text-white transition-colors hover:bg-ink-2"
-    >
-      <span className="text-xs font-semibold text-brand">This month</span>
-      <span className="mt-1 block truncate font-semibold">{drop.theme ?? drop.title}</span>
-      <span className="mt-0.5 flex items-center justify-between text-xs text-ink-muted">
-        {count === 1 ? "1 new resource" : `${count} new resources`}
-        <ArrowRightIcon aria-hidden className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-      </span>
-    </Link>
   )
 }
 

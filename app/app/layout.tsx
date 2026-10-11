@@ -5,7 +5,6 @@ import {
   MemberSidebar,
 } from "@/components/layout/member-shell"
 import {
-  SidebarDrop,
   SidebarUser,
   SidebarUserSkeleton,
   TopBarAvatar,
@@ -16,11 +15,6 @@ export default function MemberLayout({ children }: LayoutProps<"/app">) {
   return (
     <div className="flex min-h-dvh">
       <MemberSidebar
-        dropSlot={
-          <Suspense>
-            <SidebarDrop />
-          </Suspense>
-        }
         userSlot={
           <Suspense fallback={<SidebarUserSkeleton />}>
             <SidebarUser />
