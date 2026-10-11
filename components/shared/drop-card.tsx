@@ -49,7 +49,7 @@ export function DropCard({ drop }: { drop: Drop }) {
           className={cn(
             "divide-y divide-ink-border md:space-y-3 md:divide-y-0",
             scrolls &&
-              "max-h-[164px] overflow-y-auto overscroll-contain pb-6 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] [scrollbar-color:var(--ink-border)_transparent] [scrollbar-width:thin] md:max-h-[268px] md:pr-2"
+              "max-h-[164px] overflow-y-auto overscroll-contain pb-6 [mask-image:linear-gradient(to_bottom,black_80%,transparent)] md:max-h-[268px] md:pr-2"
           )}
         >
           {drop.resources.map((resource) => (

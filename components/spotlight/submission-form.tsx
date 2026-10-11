@@ -85,7 +85,7 @@ export function SubmissionForm({ userId, monthLabel }: { userId: string; monthLa
       className="flex flex-col rounded-card border border-border bg-card lg:max-h-[calc(100dvh-10rem)]"
       noValidate
     >
-      <div className="min-h-0 flex-1 space-y-4 p-5 [scrollbar-width:thin] lg:overflow-y-auto lg:overscroll-contain md:p-6">
+      <div className="min-h-0 flex-1 space-y-4 p-5 lg:overflow-y-auto lg:overscroll-contain md:p-6">
         <p className="hidden text-xs font-semibold text-muted-foreground md:block">{monthLabel} submission</p>
         <input type="hidden" name="mediaPaths" value={JSON.stringify(uploads.map((u) => u.path))} />
         <input type="hidden" name="credits" value={JSON.stringify(creditList)} />

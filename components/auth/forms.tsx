@@ -38,7 +38,7 @@ const formLayout = "flex min-h-0 flex-col"
 
 function FormFields({ children }: { children: React.ReactNode }) {
   // The small inset keeps the fields' focus rings from being clipped.
-  return <div className="-mx-1 min-h-0 space-y-4 overflow-y-auto overscroll-contain px-1 py-1 [scrollbar-width:thin]">{children}</div>
+  return <div className="-mx-1 min-h-0 space-y-4 overflow-y-auto overscroll-contain px-1 py-1">{children}</div>
 }
 
 function FormActions({ children }: { children: React.ReactNode }) {
