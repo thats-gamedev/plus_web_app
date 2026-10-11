@@ -84,7 +84,7 @@ export function MemberDrawer({ open, title, children }: { open: boolean; title: 
   const { write } = useParamWriter()
   return (
     <Sheet open={open} onOpenChange={(next) => !next && write({ member: null })}>
-      <SheetContent side="right" className="w-full gap-0 overflow-y-auto p-0 sm:max-w-md">
+      <SheetContent side="right" className="w-full gap-0 overflow-hidden p-0 sm:max-w-md">
         <SheetTitle className="sr-only">{title}</SheetTitle>
         {children}
       </SheetContent>

@@ -124,51 +124,55 @@ function MemberDetailView({ detail }: { detail: NonNullable<Awaited<ReturnType<t
   const timeline = memberTimeline(member, codes, emails, (plan) => PLANS[plan].name)
 
   return (
-    <div className="flex min-h-full flex-col p-6">
-      <div className="pr-8">
-        <h2 className="truncate text-xl font-semibold">{member.email}</h2>
-        <p className="mt-1 font-mono text-xs text-muted-foreground">
-          {[member.stripeCustomerId, `joined ${formatDay(member.createdAt)}`].filter(Boolean).join(" · ")}
-        </p>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-        {state === "none" ? (
-          <Badge variant="muted">No membership</Badge>
-        ) : (
-          <Badge variant={membershipBadges[state].variant}>{membershipBadges[state].label}</Badge>
-        )}
-        {sub && (
-          <span className="text-muted-foreground">
-            {PLANS[sub.plan].name}
-            {sub.currentPeriodEnd && state !== "ended" && ` · ${formatDay(sub.currentPeriodEnd)}`}
-          </span>
-        )}
-      </div>
-
-      <h3 className="mt-6 text-sm font-semibold text-muted-foreground">Codes</h3>
-      {liveCodes.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">No live codes.</p>
-      ) : (
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {liveCodes.map((code) => (
-            <div key={code.code} className="rounded-xl bg-muted p-3">
-              <p className="flex items-center justify-between text-xs text-muted-foreground">
-                {code.kind === "merch" ? "Merch" : "Promo"} {code.percent}%
-                <span className={cn("size-2 rounded-full", code.status === "active" ? "bg-success" : "bg-warning")} aria-hidden />
-                <span className="sr-only">{code.status === "active" ? "active" : "pending sync"}</span>
-              </p>
-              <p className="mt-1 font-mono text-sm">{code.code}</p>
-            </div>
-          ))}
+    // Header and codes stay put, the activity list scrolls, and the actions
+    // stay fixed at the bottom of the panel.
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="shrink-0 px-6 pt-6">
+        <div className="pr-8">
+          <h2 className="truncate text-xl font-semibold">{member.email}</h2>
+          <p className="mt-1 font-mono text-xs text-muted-foreground">
+            {[member.stripeCustomerId, `joined ${formatDay(member.createdAt)}`].filter(Boolean).join(" · ")}
+          </p>
         </div>
-      )}
 
-      <h3 className="mt-6 text-sm font-semibold text-muted-foreground">Activity</h3>
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          {state === "none" ? (
+            <Badge variant="muted">No membership</Badge>
+          ) : (
+            <Badge variant={membershipBadges[state].variant}>{membershipBadges[state].label}</Badge>
+          )}
+          {sub && (
+            <span className="text-muted-foreground">
+              {PLANS[sub.plan].name}
+              {sub.currentPeriodEnd && state !== "ended" && ` · ${formatDay(sub.currentPeriodEnd)}`}
+            </span>
+          )}
+        </div>
+
+        <h3 className="mt-6 text-sm font-semibold text-muted-foreground">Codes</h3>
+        {liveCodes.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">No live codes.</p>
+        ) : (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {liveCodes.map((code) => (
+              <div key={code.code} className="rounded-xl bg-muted p-3">
+                <p className="flex items-center justify-between text-xs text-muted-foreground">
+                  {code.kind === "merch" ? "Merch" : "Promo"} {code.percent}%
+                  <span className={cn("size-2 rounded-full", code.status === "active" ? "bg-success" : "bg-warning")} aria-hidden />
+                  <span className="sr-only">{code.status === "active" ? "active" : "pending sync"}</span>
+                </p>
+                <p className="mt-1 font-mono text-sm">{code.code}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <h3 className="mt-6 text-sm font-semibold text-muted-foreground">Activity</h3>
+      </div>
       {timeline.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">No activity yet.</p>
+        <p className="mt-2 flex-1 px-6 text-sm text-muted-foreground">No activity yet.</p>
       ) : (
-        <ol className="mt-3 space-y-4">
+        <ol className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-6 pb-6">
           {timeline.map((entry, i) => {
             const Icon = timelineIcons[entry.kind]
             return (
@@ -189,7 +193,7 @@ function MemberDetailView({ detail }: { detail: NonNullable<Awaited<ReturnType<t
         </ol>
       )}
 
-      <div className="mt-auto space-y-2 pt-8">
+      <div className="shrink-0 space-y-2 border-t border-border px-6 pt-4 pb-6">
         {member.stripeCustomerId && (
           <a
             href={stripeDashboardUrl(`customers/${member.stripeCustomerId}`)}
