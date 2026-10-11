@@ -157,6 +157,16 @@
   h4 {
     @apply font-heading tracking-tight;
   }
+  /* Thin scrollbars in the brand's grey on a transparent track (standard
+     properties, used by Chrome, Edge and Firefox); light on dark surfaces. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--ink) 28%, transparent) transparent;
+  }
+  :is(.bg-ink, .bg-ink-2),
+  :is(.bg-ink, .bg-ink-2) * {
+    scrollbar-color: rgb(255 255 255 / 0.28) transparent;
+  }
   /* Selected text in the brand's dark grey instead of the browser's blue;
      inverted on dark surfaces, where dark grey wouldn't show. */
   ::selection {

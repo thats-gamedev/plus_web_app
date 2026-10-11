@@ -1,10 +1,11 @@
 import Link from "next/link"
-import { LogOutIcon } from "lucide-react"
+import { ArrowRightIcon, LogOutIcon } from "lucide-react"
 import { cn } from "cn"
 import { signOut } from "@/app/(auth)/actions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { isLiveStatus } from "@/lib/billing/status"
 import { getMembership, getProfile, requireUser } from "@/lib/dal/auth"
+import { getCurrentDrop } from "@/lib/dal/content"
 import { PLANS } from "@/lib/plans"
 
 // Session-dependent parts of the member shell. Render them inside <Suspense>.
@@ -50,11 +51,11 @@ export async function SidebarUser() {
   const user = await getShellUser()
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1 rounded-xl border border-border p-1.5">
       {/* Name and avatar open the account settings; Log out stays separate. */}
       <Link
         href="/app/account"
-        className="-my-1.5 -ml-1.5 flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-muted"
       >
         <Avatar name={user.displayName} />
         <span className="min-w-0 flex-1 text-sm">
@@ -70,9 +71,33 @@ export async function SidebarUser() {
   )
 }
 
+/**
+ * "This month" in the sidebar: the current drop, one click from every page.
+ * Nothing for non-members or before the first drop.
+ */
+export async function SidebarDrop() {
+  const drop = await getCurrentDrop()
+  if (!drop) return null
+  const count = drop.resources.length
+
+  return (
+    <Link
+      href="/app"
+      className="group block rounded-xl bg-ink p-3.5 text-white transition-colors hover:bg-ink-2"
+    >
+      <span className="text-xs font-semibold text-brand">This month</span>
+      <span className="mt-1 block truncate font-semibold">{drop.theme ?? drop.title}</span>
+      <span className="mt-0.5 flex items-center justify-between text-xs text-ink-muted">
+        {count === 1 ? "1 new resource" : `${count} new resources`}
+        <ArrowRightIcon aria-hidden className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </Link>
+  )
+}
+
 export function SidebarUserSkeleton() {
   return (
-    <div aria-hidden className="flex items-center gap-3">
+    <div aria-hidden className="flex items-center gap-3 rounded-xl border border-border p-3">
       <Skeleton className="size-9 rounded-full" />
       <div className="flex-1 space-y-1.5">
         <Skeleton className="h-3.5 w-20" />

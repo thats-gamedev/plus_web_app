@@ -27,7 +27,7 @@ function SidebarLinks({ pathname }: { pathname: string | null }) {
         aria-current={active ? "page" : undefined}
         className={cn(
           "flex h-11 items-center gap-3 rounded-lg px-3 font-medium transition-colors [&_svg]:size-[18px]",
-          active ? "bg-ink text-white" : "text-foreground hover:bg-muted"
+          active ? "bg-ink text-white" : "text-foreground hover:bg-muted [&_svg]:text-muted-foreground hover:[&_svg]:text-foreground"
         )}
       >
         <item.icon aria-hidden />
@@ -43,7 +43,7 @@ function ActiveSidebarLinks() {
 
 // The user parts are slots: Server Components that read the session behind
 // <Suspense>, so the rest of the shell stays in the static shell.
-export function MemberSidebar({ userSlot }: { userSlot: React.ReactNode }) {
+export function MemberSidebar({ userSlot, dropSlot }: { userSlot: React.ReactNode; dropSlot?: React.ReactNode }) {
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
       <div className="px-6 pt-6 pb-7">
@@ -55,7 +55,10 @@ export function MemberSidebar({ userSlot }: { userSlot: React.ReactNode }) {
         </Suspense>
       </nav>
       {/* The statutory cancel and withdraw links live on the Account page. */}
-      <div className="mx-3 border-t border-border px-3 py-4">{userSlot}</div>
+      <div className="space-y-2 p-3">
+        {dropSlot}
+        {userSlot}
+      </div>
     </aside>
   )
 }
