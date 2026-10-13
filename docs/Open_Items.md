@@ -12,7 +12,7 @@ Sources (details live there, every open task lives here):
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-12 (full audit done and its fixes applied; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
+_Last updated: 2026-10-13 (prod database migrated and smoke-tested; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
 
 **Contents**
 1. Before deployment and launch (the checklist)
@@ -34,7 +34,6 @@ Everything that has to be true, in order. Details for each step are in the secti
 ### A. Before the first production deploy
 
 - [ ] **Accounts exist** (section 3): domain, Vercel project connected to the GitHub repo, Supabase **prod** project in an EU region, Resend with the domain verified, Cloudflare Turnstile keys, Stripe live account.
-- [ ] **Supabase prod database:** apply every file in `supabase/migrations/` in order. **Never run `supabase/seed.sql` there** (it creates test users with a known password).
 - [ ] **Supabase prod Auth settings,** as in the README's "Supabase Auth settings" table: Site URL and redirect URLs on the real domain, the two email templates, confirm email on, Turnstile CAPTCHA, SMTP via Resend, raised email rate limit.
 - [ ] **Your admin account on prod:** sign up on the live site, then `update public.profiles set role = 'admin' where email = '…'`.
 - [ ] **Stripe live setup** (section 3, Stripe): product with both prices (tax-inclusive, tax code), Terms of service URL pointing at the real `/terms`, Customer Portal saved, Stripe emails on, live webhook endpoint.
@@ -95,7 +94,7 @@ Everything that has to be true, in order. Details for each step are in the secti
 ### Phase 0 prerequisites (from the plan)
 
 - [ ] Gewerbe registration and tax number
-- [ ] Supabase **prod** project in an EU region (dev exists: `shzzdyjdhnprpksrfjcd`)
+- [ ] Supabase **prod** project (`pvjqvqrfmezqnistanby`, schema applied 2026-10-13): confirm in the dashboard that it's in an EU region (the connector can't show the region). **Never run `supabase/seed.sql` there** (it creates test users with a known password).
 - [ ] Vercel project, connected to the GitHub repo
 - [ ] Domain
 - [ ] Cloudflare Turnstile site key, with the secret entered in Supabase Auth settings
@@ -310,7 +309,7 @@ None of this exists in production as long as the seed isn't run there; it's abou
 - [ ] **Spotlight `admin_note` is readable by the member.** Members can select every column of their own submission, including `admin_note`. Nothing writes or shows it yet, but don't put private notes there, or revoke the column for members.
 - [ ] **Spotlight images removed before submitting** stay in the member's Storage folder (members have no delete permission). Harmless, but they count toward storage.
 - [ ] **Spotlight months are UTC.** A submission at 00:30 Berlin time on the 1st still counts for the previous month (the database's `now()` is UTC).
-- [ ] **The Supabase connector's `apply_migration` still fails** ("Invalid or expired requestState"). The migrations of 2026-10-11/12 were applied to dev with `execute_sql` and recorded in `supabase_migrations.schema_migrations` by hand, so `supabase db push` sees them as applied. Production gets every file in `supabase/migrations/` the normal way (section 1). Reconnect the connector if it's needed again.
+- [ ] **The dev connector's `apply_migration` failed** ("Invalid or expired requestState") on 2026-10-11/12, so those migrations were applied to dev with `execute_sql` and recorded in `supabase_migrations.schema_migrations` by hand. The function bodies on dev lack the SQL comments of the files as a result (logic identical, checked against prod 2026-10-13). The prod connector works; try reconnecting the dev one before the next migration.
 - [ ] **Staggered cards start invisible.** The member grids (Home, Library, Shop, Perks, drop rows) fade their cards in, so the server HTML has them at opacity 0 until JavaScript runs. On a slow phone they appear a moment later. The page itself is visible; switch the `subtle` variant in `components/ui/motion.tsx` to rise-only if Lighthouse complains.
 - [ ] **Implementation plan checkboxes** were never ticked. This file is the record of what's open; tick the plan too, or leave it as the original plan.
 
@@ -324,7 +323,7 @@ Not tasks, but things to remember while building.
 - **`usePathname()` needs `<Suspense>`.** Client components that read it on dynamic routes need a `<Suspense>` boundary (see `components/layout/member-shell.tsx`).
 - **Supabase query builders are thenables.** Never return one from an `async` helper, because awaiting it runs the query (see `publishedResources` in `lib/dal/content.ts`).
 - **Members read `resources` by column list.** Every new column needs a `grant select (…)` (see `supabase/migrations/20261008221422_resource_counts.sql`).
-- **New migrations only reach the dev project.** Production needs all of `supabase/migrations/` applied when it's set up (section 1).
+- **New migrations go to both projects.** Dev (`supabase`) and prod (`supabase-prod`) are separate connectors; apply every new file to both, one at a time and in order. The connector's `apply_migration` records the current time as the version, not the filename's; afterwards set `supabase_migrations.schema_migrations.version` to the filename's timestamp (by `name`), or `supabase db push` would try to run the file again.
 - **`"use cache"` caches results, not errors.** Throw on failure inside a cached function (see `lib/fourthwall/storefront.ts`), or the failure is served for the whole cache lifetime.
 - **Don't change packages while `next dev` runs.** Turbopack keeps failed module lookups in its disk cache (`.next/dev/cache`), so a package that was briefly missing stays "Can't resolve" even after a restart. Stop the dev server, delete `.next/dev`, start it again.
 - **Edit files with the editor tool, not PowerShell `Get-Content`/`WriteAllText`.** PowerShell 5.1 reads UTF-8 as ANSI and mangles `€` and `·`.

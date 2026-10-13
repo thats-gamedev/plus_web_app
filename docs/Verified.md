@@ -114,3 +114,9 @@ Type check, lint, 244 unit tests and `next build` pass. Every route was loaded a
 - Error pages for the member area, admin and public pages, a global fallback, and a branded 404 for unknown URLs and unknown public lists (checked in the browser).
 - The sign-up trigger stores `terms_accepted_at` with the database's time and ignores a client-supplied date (rolled-back test).
 - The Supabase security advisor shows only the three known findings (the two teaser views, `is_plus`/`is_admin` callable, leaked-password protection off).
+
+**Production database (2026-10-13)**
+All 19 files in `supabase/migrations/` applied to the prod project `pvjqvqrfmezqnistanby` through the `supabase-prod` connector; the seed was not run. The recorded versions were set to the filenames' timestamps, so `supabase db push` sees all 19 as applied.
+- Schema matches dev: columns, constraints, enums, indexes, triggers, policies (public and storage), table, column and function grants, views, RLS flags and storage buckets compared by checksum. Only two function bodies differ, by SQL comments (dev's copies were applied by hand).
+- Smoke test in a rolled-back transaction: the sign-up trigger creates the profile (trimmed name, `terms_accepted_at` only with the box ticked); an email change syncs to the profile; `is_plus` turns true with an active subscription; a resource in a future drop stays hidden from members and teasers and goes live with the drop; a member sees only their own profile, can't change `role` or `terms_accepted_at` or read `draft_content`, but can rename themselves; a non-member sees no resources or subscriptions; anon can't read profiles or call `is_admin` but can read the teaser views. Afterwards: 0 users, 0 rows.
+- Supabase advisors on prod: security shows only the expected two teaser views and `is_plus`/`is_admin` callable by signed-in users; performance shows only unused indexes (empty database).
