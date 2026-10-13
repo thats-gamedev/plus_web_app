@@ -12,7 +12,7 @@ Sources (details live there, every open task lives here):
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-13 (prod database migrated and smoke-tested; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
+_Last updated: 2026-10-13 (prod database migrated, smoke-tested, EU region confirmed; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
 
 **Contents**
 1. Before deployment and launch (the checklist)
@@ -94,7 +94,6 @@ Everything that has to be true, in order. Details for each step are in the secti
 ### Phase 0 prerequisites (from the plan)
 
 - [ ] Gewerbe registration and tax number
-- [ ] Supabase **prod** project (`pvjqvqrfmezqnistanby`, schema applied 2026-10-13): confirm in the dashboard that it's in an EU region (the connector can't show the region). **Never run `supabase/seed.sql` there** (it creates test users with a known password).
 - [ ] Vercel project, connected to the GitHub repo
 - [ ] Domain
 - [ ] Cloudflare Turnstile site key, with the secret entered in Supabase Auth settings
@@ -323,6 +322,7 @@ Not tasks, but things to remember while building.
 - **`usePathname()` needs `<Suspense>`.** Client components that read it on dynamic routes need a `<Suspense>` boundary (see `components/layout/member-shell.tsx`).
 - **Supabase query builders are thenables.** Never return one from an `async` helper, because awaiting it runs the query (see `publishedResources` in `lib/dal/content.ts`).
 - **Members read `resources` by column list.** Every new column needs a `grant select (…)` (see `supabase/migrations/20261008221422_resource_counts.sql`).
+- **Never run `supabase/seed.sql` on prod** (`pvjqvqrfmezqnistanby`); it creates test users with a known password.
 - **New migrations go to both projects.** Dev (`supabase`) and prod (`supabase-prod`) are separate connectors; apply every new file to both, one at a time and in order. The connector's `apply_migration` records the current time as the version, not the filename's; afterwards set `supabase_migrations.schema_migrations.version` to the filename's timestamp (by `name`), or `supabase db push` would try to run the file again.
 - **`"use cache"` caches results, not errors.** Throw on failure inside a cached function (see `lib/fourthwall/storefront.ts`), or the failure is served for the whole cache lifetime.
 - **Don't change packages while `next dev` runs.** Turbopack keeps failed module lookups in its disk cache (`.next/dev/cache`), so a package that was briefly missing stays "Can't resolve" even after a restart. Stop the dev server, delete `.next/dev`, start it again.
