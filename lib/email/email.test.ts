@@ -143,8 +143,28 @@ describe("templates", () => {
     expect(email.text).toContain("See the guide (https://plus.example/g?a=1&b=2) and this.")
   })
 
+  const contract = { plan: "Founding monthly", price: "$7.99/mo", waiverConsentAt: "2026-10-14T09:30:00.000Z" }
+
   it("greets by name when there is one", () => {
-    expect(welcomeEmail({ name: "Mara", siteUrl: "https://x", dropTitle: null }).text.startsWith("Hey Mara,")).toBe(true)
-    expect(welcomeEmail({ name: "", siteUrl: "https://x", dropTitle: null }).text.startsWith("Hey,")).toBe(true)
+    expect(welcomeEmail({ name: "Mara", siteUrl: "https://x", dropTitle: null, contract }).text.startsWith("Hey Mara,")).toBe(true)
+    expect(welcomeEmail({ name: "", siteUrl: "https://x", dropTitle: null, contract }).text.startsWith("Hey,")).toBe(true)
+  })
+
+  it("confirms the contract and the withdrawal waiver with its time", () => {
+    const email = welcomeEmail({ name: "Mara", siteUrl: "https://x", dropTitle: null, contract })
+    for (const body of [email.html, email.text]) {
+      expect(body).toContain("Founding monthly")
+      expect(body).toContain("$7.99/mo")
+      expect(body).toContain("lose your right of withdrawal once access starts")
+      expect(body).toContain("14 October 2026 at 11:30 CEST")
+      expect(body).toContain("https://x/terms")
+      expect(body).toContain("https://x/withdrawal")
+    }
+  })
+
+  it("leaves the waiver out when its time is unknown", () => {
+    const email = welcomeEmail({ name: "", siteUrl: "https://x", dropTitle: null, contract: { ...contract, waiverConsentAt: null } })
+    expect(email.text).toContain("Founding monthly")
+    expect(email.text).not.toContain("right of withdrawal")
   })
 })

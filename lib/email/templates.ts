@@ -73,8 +73,34 @@ function stamp(iso: string): string {
   })
 }
 
-export function welcomeEmail({ name, siteUrl, dropTitle }: { name: string; siteUrl: string; dropTitle: string | null }): EmailContent {
+/** The plan bought, and when the § 356 (5) BGB waiver was ticked (null if unknown). */
+export type WelcomeContract = { plan: string; price: string; waiverConsentAt: string | null }
+
+const WAIVER_TEXT =
+  "You asked us to give you access right away, before the 14-day withdrawal period ends, and acknowledged that you lose your right of withdrawal once access starts."
+
+/**
+ * The welcome email doubles as the contract confirmation on a durable medium
+ * (§ 312f BGB). For the right of withdrawal to end early, it has to confirm
+ * the waiver (§ 356 (5) No. 3 BGB), so it repeats the waiver with its time.
+ */
+export function welcomeEmail({
+  name,
+  siteUrl,
+  dropTitle,
+  contract,
+}: {
+  name: string
+  siteUrl: string
+  dropTitle: string | null
+  contract: WelcomeContract
+}): EmailContent {
   const hey = name ? `Hey ${name},` : "Hey,"
+  const waiver = contract.waiverConsentAt ? `${WAIVER_TEXT} (${stamp(contract.waiverConsentAt)})` : null
+  const contractRows: [string, string][] = [
+    ["Membership", contract.plan],
+    ["Price", contract.price],
+  ]
   return {
     subject: "Welcome to That's Game Dev Plus",
     html: layout({
@@ -91,9 +117,15 @@ export function welcomeEmail({ name, siteUrl, dropTitle }: { name: string; siteU
         p(`Your member codes for the merch shop and promotions are on the ${link(`${siteUrl}/app/perks`, "Perks page")}.`) +
         small(
           `You can cancel any time under ${link(`${siteUrl}/app/account`, "Account")} or with the link “Cancel contracts here” at the bottom of every page. You keep access until the end of the period you paid for.`
+        ) +
+        `<p style="margin:24px 0 8px;font-size:14px;font-weight:600;color:${C.ink}">Your contract</p>` +
+        detailsTable(contractRows) +
+        (waiver ? small(escapeHtml(waiver)) : "") +
+        small(
+          `Our ${link(`${siteUrl}/terms`, "terms")} and ${link(`${siteUrl}/withdrawal`, "withdrawal policy")} apply. Stripe sends the receipt for your payment.`
         ),
     }),
-    text: `${hey} your membership is active.\n\n${dropTitle ? `This month's drop is live: ${dropTitle}.\n\n` : ""}Open your dashboard: ${siteUrl}/app\nYour member codes: ${siteUrl}/app/perks\n\nCancel any time under Account (${siteUrl}/app/account) or at ${siteUrl}/cancel. You keep access until the end of the period you paid for.`,
+    text: `${hey} your membership is active.\n\n${dropTitle ? `This month's drop is live: ${dropTitle}.\n\n` : ""}Open your dashboard: ${siteUrl}/app\nYour member codes: ${siteUrl}/app/perks\n\nCancel any time under Account (${siteUrl}/app/account) or at ${siteUrl}/cancel. You keep access until the end of the period you paid for.\n\nYour contract\n${contractRows.map(([k, v]) => `${k}: ${v}`).join("\n")}\n${waiver ? `\n${waiver}\n` : ""}\nOur terms (${siteUrl}/terms) and withdrawal policy (${siteUrl}/withdrawal) apply. Stripe sends the receipt for your payment.`,
   }
 }
 

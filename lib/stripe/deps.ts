@@ -3,6 +3,7 @@ import { isLiveStatus } from "@/lib/billing/status"
 import { syncCodes } from "@/lib/codes/store"
 import { sendEmailSafely } from "@/lib/email"
 import { cancellationConfirmedEmail, welcomeEmail } from "@/lib/email/templates"
+import { PLANS } from "@/lib/plans"
 import { getSiteUrl } from "@/lib/site-url"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripe, planForPrice } from "./client"
@@ -50,15 +51,29 @@ export function createWebhookDeps(secret: string | null): WebhookDeps {
       await syncCodes(userId)
     },
 
+    // The subscription row was saved just before, so plan and waiver time
+    // come from it (the waiver time from the Stripe metadata).
     onCheckoutCompleted: async (userId, subscriptionId) => {
       const profile = await profileFor(userId)
       if (!profile) return
+      const { data: sub } = await createAdminClient()
+        .from("subscriptions")
+        .select("plan, waiver_consent_at")
+        .eq("stripe_subscription_id", subscriptionId)
+        .maybeSingle()
+      if (!sub) return
+      const plan = PLANS[sub.plan]
       await sendEmailSafely({
         to: profile.email,
         userId,
         kind: "welcome",
         refId: subscriptionId,
-        content: welcomeEmail({ name: profile.display_name, siteUrl: await getSiteUrl(), dropTitle: await currentDropTitle() }),
+        content: welcomeEmail({
+          name: profile.display_name,
+          siteUrl: await getSiteUrl(),
+          dropTitle: await currentDropTitle(),
+          contract: { plan: plan.name, price: `${plan.price}${plan.interval}`, waiverConsentAt: sub.waiver_consent_at },
+        }),
       })
     },
 
