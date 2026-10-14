@@ -1,6 +1,5 @@
 import Stripe from "stripe"
 import { beforeEach, describe, expect, it } from "vitest"
-import { parseConsent } from "@/lib/billing/consent"
 import { isLiveStatus } from "@/lib/billing/status"
 import type { PlanId } from "@/lib/plans"
 import { type SubscriptionRow, toSubscriptionRow } from "./subscription"
@@ -314,22 +313,5 @@ describe("isLiveStatus (mirrors public.is_plus)", () => {
     ["paused", false],
   ])("%s → %s", (status, expected) => {
     expect(isLiveStatus(status)).toBe(expected)
-  })
-})
-
-describe("parseConsent", () => {
-  const now = new Date("2026-10-06T12:00:00Z")
-
-  it("accepts a tick from the last 24 hours", () => {
-    expect(parseConsent("2026-10-06T11:59:00.000Z", now)).toBe("2026-10-06T11:59:00.000Z")
-    expect(parseConsent("2026-10-05T12:30:00Z", now)).toBe("2026-10-05T12:30:00.000Z")
-  })
-
-  it("rejects old, future, invalid or missing values", () => {
-    expect(parseConsent("2026-10-05T11:00:00Z", now)).toBeNull()
-    expect(parseConsent("2026-10-06T12:30:00Z", now)).toBeNull()
-    expect(parseConsent("yesterday", now)).toBeNull()
-    expect(parseConsent("", now)).toBeNull()
-    expect(parseConsent(undefined, now)).toBeNull()
   })
 })

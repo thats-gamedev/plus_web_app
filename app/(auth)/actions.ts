@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation"
 import { type FormState, readFields } from "@/lib/auth/form-state"
 import { safeNextPath, withParams } from "@/lib/auth/redirects"
-import { parseConsent } from "@/lib/billing/consent"
 import {
   fieldErrors,
   forgotPasswordSchema,
@@ -43,17 +42,13 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     "password",
     "acceptTerms",
     "plan",
-    "consent",
     "captchaToken",
   ])
   const values = { displayName: raw.displayName, email: raw.email }
 
-  // After confirming, the member lands on the paywall with the plan they
-  // picked, its waiver tick kept, one click away from checkout.
-  const landing = withParams("/app", {
-    plan: parsePlan(raw.plan),
-    consent: parseConsent(raw.consent),
-  })
+  // After confirming, the member lands on the paywall, one click away from
+  // checkout.
+  const landing = withParams("/app", { plan: parsePlan(raw.plan) })
 
   const parsed = signUpSchema.safeParse(raw)
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error), values }
@@ -64,7 +59,8 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     password: parsed.data.password,
     options: {
       // display_name is read by the handle_new_user trigger to fill
-      // profiles.display_name; terms_accepted_at records the sign-up checkbox.
+      // profiles.display_name; terms_accepted_at records the sign-up checkbox
+      // (terms and withdrawal policy with its waiver; privacy policy read).
       data: { display_name: parsed.data.displayName, terms_accepted_at: new Date().toISOString() },
       // The confirmation link verifies the email and signs the user in.
       emailRedirectTo: await authCallbackUrl(landing),

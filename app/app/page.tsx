@@ -15,10 +15,8 @@ import type { ShopProduct } from "@/lib/fourthwall/products"
 import { getShopProducts, shopConfig } from "@/lib/fourthwall/storefront"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { parseConsent } from "@/lib/billing/consent"
 import { getIsPlus, getProfile, requireUser } from "@/lib/dal/auth"
 import { getCurrentDrop, getNextDropAt, getRecentResources } from "@/lib/dal/content"
-import { parsePlan } from "@/lib/plans"
 import { Stagger, StaggerItem } from "@/components/ui/motion"
 
 export const metadata: Metadata = { title: "Home" }
@@ -27,31 +25,22 @@ export const metadata: Metadata = { title: "Home" }
 const TIME_ZONE = "Europe/Berlin"
 const RECENT_COUNT = 6
 
-export default function MemberHomePage({ searchParams }: PageProps<"/app">) {
+export default function MemberHomePage() {
   return (
     <Suspense fallback={<HomeSkeleton />}>
-      <Home searchParams={searchParams} />
+      <Home />
     </Suspense>
   )
 }
 
 // Members see their home; everyone else signed in sees the paywall. Other
 // member pages use requirePlus(), which sends non-members back here.
-async function Home({ searchParams }: Pick<PageProps<"/app">, "searchParams">) {
+async function Home() {
   await requireUser()
   const [isPlus, profile] = await Promise.all([getIsPlus(), getProfile()])
   const name = profile?.displayName ?? ""
 
-  if (!isPlus) {
-    const params = await searchParams
-    return (
-      <Paywall
-        name={name}
-        selected={parsePlan(params.plan)}
-        consentAt={parseConsent(params.consent)}
-      />
-    )
-  }
+  if (!isPlus) return <Paywall name={name} />
 
   const [drop, recent] = await Promise.all([getCurrentDrop(), getRecentResources(RECENT_COUNT)])
   const now = new Date()

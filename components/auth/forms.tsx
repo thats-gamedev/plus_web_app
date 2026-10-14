@@ -79,6 +79,10 @@ function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChang
           <Link href="/terms" target="_blank" className="font-medium text-foreground underline hover:text-brand">
             Terms
           </Link>{" "}
+          and the{" "}
+          <Link href="/withdrawal" target="_blank" className="font-medium text-foreground underline hover:text-brand">
+            Withdrawal policy
+          </Link>{" "}
           and have read the{" "}
           <Link href="/privacy" target="_blank" className="font-medium text-foreground underline hover:text-brand">
             Privacy policy
@@ -126,8 +130,7 @@ export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, idleState)
   const params = useSearchParams()
   const plan = parsePlan(params.get("plan"))
-  const consent = params.get("consent")
-  const loginHref = withParams("/login", { next: withParams("/app", { plan, consent }) })
+  const loginHref = withParams("/login", { next: withParams("/app", { plan }) })
   const errors = state.fieldErrors ?? {}
   // Kept across a failed submit (see TermsCheckbox).
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -167,7 +170,6 @@ export function SignUpForm() {
     >
       {/* Carried through email confirmation to the paywall and checkout. */}
       {plan && <input type="hidden" name="plan" value={plan} />}
-      {consent && <input type="hidden" name="consent" value={consent} />}
       <FormFields>
         <FormField
           name="displayName"

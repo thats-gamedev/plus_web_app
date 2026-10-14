@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation"
 import Stripe from "stripe"
-import { parseConsent } from "@/lib/billing/consent"
 import { type FormState, readFields } from "@/lib/auth/form-state"
 import { withParams } from "@/lib/auth/redirects"
 import { getIsPlus, getProfile, getUser, requireUser, type SessionUser } from "@/lib/dal/auth"
@@ -44,18 +43,22 @@ function isMissingCustomer(error: unknown) {
 }
 
 export async function startCheckout(_prev: FormState, formData: FormData): Promise<FormState> {
-  const raw = readFields(formData, ["plan", "consentAt"])
+  const raw = readFields(formData, ["plan"])
   const plan = parsePlan(raw.plan)
   if (!plan) return { status: "error", message: "Pick a plan to continue." }
 
-  const consentAt = parseConsent(raw.consentAt)
-  if (!consentAt) {
-    return { status: "error", message: "Tick the box above to confirm immediate access." }
-  }
-
   const user = await getUser()
-  if (!user) redirect(withParams("/signup", { plan, consent: consentAt }))
+  if (!user) redirect(withParams("/signup", { plan }))
   if (await getIsPlus()) redirect("/app")
+
+  // The § 356 (5) BGB waiver is part of the sign-up checkbox (see the
+  // withdrawal policy), so its time is when the terms were accepted.
+  const { data: acceptance } = await createAdminClient()
+    .from("profiles")
+    .select("terms_accepted_at")
+    .eq("id", user.id)
+    .maybeSingle()
+  const waiverConsentAt = acceptance?.terms_accepted_at ?? null
 
   let url: string | null = null
   try {
@@ -73,7 +76,9 @@ export async function startCheckout(_prev: FormState, formData: FormData): Promi
         client_reference_id: user.id,
         line_items: [{ price: priceIdForPlan(plan), quantity: 1 }],
         metadata: { user_id: user.id },
-        subscription_data: { metadata: { user_id: user.id, waiver_consent_at: consentAt } },
+        subscription_data: {
+          metadata: { user_id: user.id, ...(waiverConsentAt && { waiver_consent_at: waiverConsentAt }) },
+        },
         automatic_tax: { enabled: true },
         customer_update: { address: "auto" },
         consent_collection: { terms_of_service: "required" },

@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useState } from "react"
+import { useActionState } from "react"
 import { CheckIcon } from "lucide-react"
 import { cn } from "cn"
 import { Badge } from "@/components/ui/badge"
 import { Banner } from "@/components/ui/banner"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { startCheckout } from "@/lib/billing/actions"
 import { idleState } from "@/lib/auth/form-state"
 import { PLAN_BENEFITS, type PlanId } from "@/lib/plans"
@@ -45,15 +44,13 @@ const COPY: Record<
 }
 
 /**
- * Pricing card (LW5, MW3). Join stays disabled until the § 356 (5) BGB
- * waiver is ticked; the tick time is sent along and stored on the
- * subscription. Logged-out visitors are sent to sign-up with plan and tick.
+ * Pricing card (LW5, MW3). On the landing page, Join leads to sign-up with
+ * the plan; on the paywall (checkout), it opens Stripe Checkout. Everything
+ * is accepted with the sign-up checkbox, so the cards ask for nothing.
  */
-export function PlanCard({ plan, consentAt: initialConsent = null }: { plan: PlanId; consentAt?: string | null }) {
+export function PlanCard({ plan, checkout = false }: { plan: PlanId; checkout?: boolean }) {
   const copy = COPY[plan]
   const [state, action, pending] = useActionState(startCheckout, idleState)
-  const [consentAt, setConsentAt] = useState<string | null>(initialConsent)
-  const checkboxId = `waiver-${plan}`
 
   return (
     <div
@@ -80,53 +77,44 @@ export function PlanCard({ plan, consentAt: initialConsent = null }: { plan: Pla
         ))}
       </ul>
 
-      <form action={action} className="mt-auto space-y-4">
-        <input type="hidden" name="plan" value={plan} />
-        <input type="hidden" name="consentAt" value={consentAt ?? ""} />
-        <div className="flex items-start gap-3 rounded-lg bg-muted/60 p-3">
-          <Checkbox
-            id={checkboxId}
-            checked={consentAt !== null}
-            onCheckedChange={(checked) => setConsentAt(checked === true ? new Date().toISOString() : null)}
-            className="mt-0.5"
-          />
-          <label htmlFor={checkboxId} className="text-xs leading-relaxed text-muted-foreground">
-            I want access right away and understand that my 14-day right of withdrawal ends once
-            access starts.{" "}
-            <Link href="/withdrawal" className="underline hover:text-foreground">
-              Withdrawal policy
-            </Link>
-          </label>
-        </div>
-        {state.message && <Banner variant="danger">{state.message}</Banner>}
-        <Button
-          type="submit"
-          size="lg"
-          variant={copy.featured ? "default" : "dark"}
-          className="w-full"
-          disabled={consentAt === null || pending}
+      {checkout ? (
+        <form action={action} className="mt-auto space-y-4">
+          <input type="hidden" name="plan" value={plan} />
+          {state.message && <Banner variant="danger">{state.message}</Banner>}
+          <Button
+            type="submit"
+            size="lg"
+            variant={copy.featured ? "default" : "dark"}
+            className="w-full"
+            disabled={pending}
+          >
+            {pending ? "Opening checkout…" : copy.cta}
+          </Button>
+        </form>
+      ) : (
+        <Link
+          href={`/signup?plan=${plan}`}
+          className={buttonVariants({ size: "lg", variant: copy.featured ? "default" : "dark", className: "mt-auto w-full" })}
         >
-          {pending ? "Opening checkout…" : copy.cta}
-        </Button>
-      </form>
+          {copy.cta}
+        </Link>
+      )}
     </div>
   )
 }
 
 /** Both founding plans side by side, with the VAT note (pricing section, paywall). */
 export function PlanCards({
-  selected,
-  consentAt,
+  checkout = false,
 }: {
-  /** Plan the visitor already picked; it keeps their earlier waiver tick. */
-  selected?: PlanId | null
-  consentAt?: string | null
+  /** On the paywall: Join opens Stripe Checkout. */
+  checkout?: boolean
 }) {
   return (
     <div>
       <div className="mx-auto grid max-w-3xl gap-5 md:grid-cols-2">
         {(Object.keys(COPY) as PlanId[]).map((plan) => (
-          <PlanCard key={plan} plan={plan} consentAt={plan === selected ? consentAt : null} />
+          <PlanCard key={plan} plan={plan} checkout={checkout} />
         ))}
       </div>
       <p className="mt-5 text-center text-sm text-muted-foreground">Cancel anytime · Prices include VAT</p>

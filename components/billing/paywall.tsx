@@ -1,17 +1,8 @@
 import { LockIcon } from "lucide-react"
 import { PlanCards } from "@/components/billing/plan-card"
-import type { PlanId } from "@/lib/plans"
 
 /** What a signed-in non-member sees on /app (MW3, MM4). */
-export function Paywall({
-  name,
-  selected,
-  consentAt,
-}: {
-  name: string
-  selected: PlanId | null
-  consentAt: string | null
-}) {
+export function Paywall({ name }: { name: string }) {
   return (
     <div className="py-4 md:py-10">
       <div className="mx-auto max-w-2xl text-center">
@@ -27,7 +18,7 @@ export function Paywall({
         </p>
       </div>
       <div className="mt-8">
-        <PlanCards selected={selected} consentAt={consentAt} />
+        <PlanCards checkout />
       </div>
     </div>
   )
