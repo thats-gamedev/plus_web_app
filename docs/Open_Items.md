@@ -12,7 +12,7 @@ Sources (details live there, every open task lives here):
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-13 (prod database migrated, smoke-tested, EU region confirmed; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
+_Last updated: 2026-10-14 (terms, privacy and withdrawal written out; the waiver is part of the sign-up checkbox, and the welcome email confirms it; prod database migrated; Phase 6 waits on Fourthwall credentials, emails wait on Resend; Phase 11 needs its browser check)_
 
 **Contents**
 1. Before deployment and launch (the checklist)
@@ -44,7 +44,7 @@ Everything that has to be true, in order. Details for each step are in the secti
 ### B. Before going public
 
 - [ ] **Phase 11 checked** on a real phone and desktop against the mockups, with the Join flow end to end (section 4).
-- [ ] **Final legal texts** replace the drafts, and the "Draft" banner is removed (section 2).
+- [ ] **Provider details and imprint filled in** (the "Draft" banner then disappears), and the written legal texts **reviewed** (section 2).
 - [ ] **Legal check** of the statutory flows done, and the Managed Payments questions answered (section 2).
 - [ ] **Contact address** chosen and set as `NEXT_PUBLIC_CONTACT_EMAIL` (section 2).
 - [ ] **Real content:** at least one published list of each kind, the real e-book PDF, covers, and the first drop with its text (section 7 lists the dev placeholders that must not be copied over).
@@ -58,7 +58,7 @@ Everything that has to be true, in order. Details for each step are in the secti
 ## 2. Decisions, legal and paperwork (you)
 
 - [ ] **Managed Payments and the law.** Stripe is the merchant of record (Managed Payments), not us. Check with the tax advisor:
-  - whether the § 356 (5) BGB waiver checkbox on the plan cards is still needed, or is now Stripe's job
+  - whether the § 356 (5) BGB waiver is still needed at all, or is now Stripe's job
   - how the terms, withdrawal policy and privacy policy have to name Stripe as the seller
   - that the product tax code `txcd_10701401` (Website Information Services – Personal Use) fits the membership
 - [ ] **VAT setup** (spec open decision: "OSS registration or small-business rule"). It's probably moot under Managed Payments; confirm with the tax advisor and close it.
@@ -70,20 +70,23 @@ Everything that has to be true, in order. Details for each step are in the secti
   - **English wording.** The law names German labels ("Verträge hier kündigen", "jetzt kündigen" for § 312k; "Vertrag widerrufen" for § 356a). We use the English equivalents: "Cancel contracts here" and "Cancel now", "Withdraw from contract here" and "Confirm withdrawal". Confirm that's enough for an English-language site that sells to German consumers.
   - **The `/cancel` verification step.** A logged-out request only cancels after the emailed link is confirmed. The spec warns the declaration may already count on submission, so the inbox treats unconfirmed requests from a matching account ("Account found") as due within 2 business days.
   - **The `/cancel/confirm` button.** Opening the link only shows a "Confirm cancellation" button; the click cancels. This stops mail scanners from cancelling anyone, but it's one more step for the member.
-  - **Withdrawals are judged by hand.** Nothing happens automatically; the admin refunds or declines within 2 business days. "Decline" is only offered when the waiver is on record or 14 days have passed. Check the decline email's wording, and that the § 356 (5) BGB waiver at checkout (with the contract confirmation email) is enough to decline.
+  - **Withdrawals are judged by hand.** Nothing happens automatically; the admin refunds or declines within 2 business days. "Decline" is only offered when the waiver is on record or 14 days have passed. Check the decline email's wording, and that the § 356 (5) BGB waiver given at sign-up (with the contract confirmation email) is enough to decline.
   - **Refund amount.** "Refund & end now" refunds the whole last payment. The law may allow keeping a share for the days used; we don't.
   - **The rate limit.** At most 3 requests per email per hour, 5 per visitor (hashed IP) per hour and 30 per minute overall, shared by cancellations and withdrawals. A flood of fake requests could briefly block real ones. There's no CAPTCHA on these forms on purpose (one more hurdle on a statutory button); ask whether one would be acceptable if abuse shows up.
   - **Logged-out withdrawals aren't verified.** Anyone can type a member's email at `/withdraw`; the request is only linked to that account as a hint, and the admin can "Dismiss" one that wasn't sent by the member. Ask whether an emailed confirmation step (as on `/cancel`) is wanted.
   - **Contract links in the member area only on Account** (and on `/app/more` on phones), not on every member page (owner's decision, 2026-10-10). Ask whether one click away is enough.
   - **No legal links on login, sign-up and the password pages** (owner's decision, 2026-10-10). Ask whether the imprint and the cancel and withdraw links must appear there too; if so, add them back as one small line (`LegalLinks` in `components/layout/site-footer.tsx`).
-  - **The sign-up checkbox wording:** "I agree to the Terms and have read the Privacy policy", required, with the acceptance time stored (`profiles.terms_accepted_at`, set by the database at sign-up). Stripe Checkout asks for the terms again at purchase.
-- [ ] **Final legal texts** (in English, under German law). `/imprint`, `/privacy`, `/terms` and `/withdrawal` are English drafts with a "Draft" banner; every missing value is highlighted in `[…]`. Replace them with generated or lawyer-reviewed texts and remove the banner (`components/legal/legal-page.tsx`). Generators such as eRecht24 or IT-Recht Kanzlei offer English versions. Points the drafts leave open:
-  - name, address, contact and VAT ID (or small-business rule) in the imprint
-  - how Stripe Managed Payments appears as seller in the terms, privacy policy and withdrawal policy
-  - each processor's region and transfer safeguard, checked against its DPA
-  - retention periods
-  - the annual plan's renewal and notice period (§ 309 Nr. 9 BGB)
-  - whether the membership counts as digital content or a digital service for the withdrawal text
+  - **The sign-up checkbox carries the withdrawal waiver (owner's decision, 2026-10-14; risk accepted).** One required box: "I agree to the Terms and the Withdrawal policy and have read the Privacy policy". The waiver itself (immediate access, losing the right of withdrawal, for every membership bought later) is only written in the withdrawal policy, in bold. Its time is `profiles.terms_accepted_at` (set by the database at sign-up), which checkout passes to Stripe as `waiver_consent_at`. § 356 (5) BGB wants the consumer's *express* consent and acknowledgement, given for the contract; a waiver accepted by reference, bundled with the terms and given before any purchase is likely invalid. Then every member keeps the 14-day right of withdrawal with a full refund, and "Decline" in the inbox would be wrong within 14 days. The safer form is a second, separate box on sign-up (or on the paywall) with the waiver written out. Stripe Checkout asks for the terms again at purchase.
+- [ ] **Provider details and imprint.** Terms, privacy policy and withdrawal policy are written out in full (2026-10-14); they only miss who runs the site. Fill in `PROVIDER` (name, street, postcode and city) in `components/legal/legal-page.tsx`, and the imprint's own fields in `app/(public)/imprint/page.tsx`: name, address, a second fast contact (phone or form), VAT ID or the small-business rule (§ 19 UStG), the person responsible under § 18 (2) MStV. The "Draft" banner disappears from terms, privacy and withdrawal once `PROVIDER` is complete; on the imprint, remove the `draft` prop when it's done.
+- [ ] **Review of the written legal texts** (`/terms`, `/privacy`, `/withdrawal`; Claude wrote them, a lawyer or legal service hasn't checked them). Judgment calls to look at:
+  - **Stripe as reseller.** The terms and privacy policy say Stripe sells the membership as merchant of record and we provide it; check against Managed Payments' actual contract (and which Stripe entity is the seller).
+  - **Digital content.** The withdrawal policy treats the membership as digital content (§ 356 (5) BGB), not a digital service (§ 356 (4) BGB, with compensation for the time used).
+  - **Contract confirmation.** The welcome email now confirms plan, price and the waiver with its time (§ 312f, § 356 (5) No. 3 BGB) and links the terms and withdrawal policy. A durable medium may need the terms themselves (in the email or as a PDF), not a link.
+  - **Checkout button.** Stripe Checkout's button reads "Subscribe"; § 312j (3) BGB wants "order with obligation to pay" or an unambiguous equivalent. Check whether "Subscribe" (with the amount next to it) is enough.
+  - **Annual plan renews by a full year, no refunds (owner's decision, 2026-10-14; risk accepted).** § 309 No. 9 BGB only lets a consumer contract continue past its first term for an indefinite period with at most one month's notice; a yearly renewal clause is likely void, and members could then cancel monthly and claim the prepaid rest. Ask whether to keep it; the compliant alternatives are switching to monthly billing after the first year, or ending the annual plan after 12 months.
+  - **Terms clauses:** minimum age 18; content licence (prompts usable commercially, e-books kept after the end); Spotlight licence and removal on request; content changes with 4 weeks' notice and a free exit (§ 327r BGB); liability; changes to the terms only with consent.
+  - **Privacy:** the processors' regions and safeguards against each DPA (Vercel functions run in the USA by default; Resend in the USA unless its EU region is used); the retention periods (section 8).
+
 - [ ] **Contact address.** Pick the address for questions and GDPR requests (it must match the privacy policy) and set `NEXT_PUBLIC_CONTACT_EMAIL` in `.env.local` and on Vercel. Until then, "Contact us" and "Request data export or deletion" use the placeholder `hello@example.com`.
 - [ ] **Price of the post-launch annual plan**, alongside $12.99 monthly (spec open decision).
 - [ ] **Real follower number** for the landing page stats strip: set `INSTAGRAM_FOLLOWERS` (e.g. `48K`) in `.env.local` and on Vercel. While it's empty the strip leaves the followers item out (real numbers only). It's read at build time, so redeploy after changing it.
@@ -138,7 +141,7 @@ Without `RESEND_API_KEY` every app email is printed to the dev server console an
   - optional `EMAIL_REPLY_TO`, if `EMAIL_FROM` isn't an inbox you read (the emails invite replies)
   - `UNSUBSCRIBE_SECRET` (a long random string; `.env.local` has one, production needs its own). Changing it later breaks the unsubscribe links in emails already sent.
 - [ ] **Supabase Auth SMTP via Resend.** Sign-up confirmation and password reset still go through Supabase's built-in mailer, which is rate-limited and not meant for production. Enter Resend's SMTP details in Supabase Auth settings (host `smtp.resend.com`, port 465, user `resend`, the API key as password), or use Supabase's Resend integration. Then raise Supabase's auth email rate limit. This alone doesn't make the app emails real; they need the env vars above.
-- [ ] **One real email of each kind**, checked in Gmail and Outlook (layout, links, the unsubscribe link and the one-click unsubscribe in Gmail): welcome, cancellation receipt, verify link, cancellation confirmed, no-match reply, withdrawal receipt / confirmed / declined, drop announcement, Spotlight featured, plus Supabase's confirmation and reset emails.
+- [ ] **One real email of each kind**, checked in Gmail and Outlook (layout, links, the unsubscribe link and the one-click unsubscribe in Gmail): welcome (with the "Your contract" block and the waiver time), cancellation receipt, verify link, cancellation confirmed, no-match reply, withdrawal receipt / confirmed / declined, drop announcement, Spotlight featured, plus Supabase's confirmation and reset emails.
 
 ### Vercel and production env
 
@@ -161,7 +164,7 @@ From `docs/Implementation_Plan.md`. Phases 1–11 are built; their leftovers are
 The landing page (all 11 sections), `/lists/[slug]`, the sitemap, robots and the share image are built and checked in the server HTML (`docs/Verified.md`). Still open:
 
 - [ ] **Browser check against the mockups** (the Chrome extension timed out again): the landing page LW1–6 / LM1–7 and `/lists/[slug]` LW12 / LM13, on desktop and on a real phone. Look especially at the tilted hero cards, the stats strip, the blurred drop rows, the locked rows with "Unlock all", the FAQ's +/− and the sticky join card.
-- [ ] **Join flow from the landing page:** "Join" → pricing → tick the waiver → sign-up → email confirmation → Checkout → `/app`, on a real phone.
+- [ ] **Join flow from the landing page:** "Join" on a pricing card → sign-up (one checkbox) → email confirmation → paywall → Checkout → `/app`, on a real phone.
 - [ ] **Lighthouse mobile check** of `/` and one `/lists/[slug]` on a production build.
 - [ ] **"Get featured" pictures.** The dark card shows three dashed "member work" boxes as in the mockup. Replace them with real featured Spotlight work (with the member's consent; the images are in the private `spotlight` bucket), or keep them as decoration.
 - [ ] **Hero and "What's inside" use real content:** the three newest published resources (outside the current drop first, then the drop's, labelled "… · October drop" as in the mockup), and real list, prompts and e-book titles. With an empty production database the hero shows no cards and the example chips stay empty; publish content before launch (section 1).
@@ -289,9 +292,8 @@ None of this exists in production as long as the seed isn't run there; it's abou
 
 - [ ] **Failed emails aren't retried.** If Resend fails during the webhook (welcome, cancellation confirmed), a Spotlight feature or an inbox action, the error is logged and the claim released, but nothing sends it again later. Drop announcements can be retried with "Retry sending".
 - [ ] **Unconfirmed `/cancel` links** stay in the inbox as "Account found" requests. The admin should cancel them within 2 business days even without the click (see the legal check in section 2).
-- [ ] **Personal data left after Delete member** (GDPR):
-  - `webhook_events.payload` keeps the raw Stripe events, which contain the member's email and name. Decide whether to scrub them on delete or prune events after a retention period (e.g. 90 days).
-  - `cancellation_requests` (cancellations and withdrawals) keep the name and email (their `user_id` is set to null). They're the legal proof; set a retention period.
+- [ ] **Retention periods from the privacy policy aren't enforced yet.** It promises: `webhook_events` (raw Stripe events with email and name, also after Delete member) deleted after one year; `cancellation_requests` (cancellations and withdrawals, kept as proof) deleted at the end of the third year after the request. Add both to a daily cron (e.g. `/api/cron/snapshot`). Nothing is due before October 2027, but build it before then.
+- [ ] **Resend open and click tracking stay off.** The privacy policy says we don't track opens or clicks; leave both off on the Resend domain.
 - [ ] **The auth picture is loaded from Unsplash.** Login, sign-up and the password pages show a free Unsplash photo by Micke Lindström (`components/auth/auth-art.tsx`), loaded from `images.unsplash.com` as Unsplash's guidelines ask. If the photographer ever removes it, the panel turns plain dark. Swap in your own render there when you have one (and drop the credit).
 - [ ] **Large drop announcements are slow.** Sending two at a time (Resend's rate limit) takes about a minute per 200 members, inside one Server Action. Fine for launch; past a few thousand members, switch to Resend's batch API or a background job.
 - [ ] **Withdrawal refunds only cover the last invoice.** Fine within 14 days (there's only one payment). If an admin accepts a late withdrawal, older payments must be refunded in the Stripe Dashboard.

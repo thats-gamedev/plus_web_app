@@ -63,8 +63,8 @@ update public.profiles set role = 'admin' where email = 'you@example.com';
 
 Access is granted only by the verified Stripe webhook, never by the checkout redirect.
 
-1. **Plan cards** (`components/billing/plan-card.tsx`, on `/#pricing` and the `/app` paywall) need the § 356 (5) BGB waiver ticked before Join. Logged-out visitors go to `/signup?plan=…&consent=…`. After confirming their email they land on the paywall with that plan pre-ticked (valid for 24 h).
-2. **`startCheckout`** (Server Action, `lib/billing/actions.ts`) creates or reuses the Stripe customer (`metadata.user_id`) and opens Checkout with `client_reference_id`, `subscription_data.metadata` (`user_id`, `waiver_consent_at`), automatic tax, address collection and required ToS consent.
+1. **Plan cards** (`components/billing/plan-card.tsx`). On `/#pricing`, Join only leads to `/signup?plan=…` (signed-in visitors are sent on to `/app`); nothing is accepted there. On the `/app` paywall (`checkout`), Join opens Checkout. The sign-up checkbox accepts the terms and the withdrawal policy, which contains the § 356 (5) BGB waiver; after confirming their email, new members land on that paywall.
+2. **`startCheckout`** (Server Action, `lib/billing/actions.ts`) creates or reuses the Stripe customer (`metadata.user_id`) and opens Checkout with `client_reference_id`, `subscription_data.metadata` (`user_id`, and `waiver_consent_at` = the sign-up acceptance time `profiles.terms_accepted_at`), automatic tax, address collection and required ToS consent.
 3. **`POST /api/webhooks/stripe`** verifies the raw body and logs the event in `webhook_events`. Duplicates of processed events are skipped; failed ones are retried. On every `customer.subscription.*` event and on `checkout.session.completed` it re-fetches the subscription from Stripe and upserts `subscriptions`. The logic is in `lib/stripe/webhook.ts` and is unit-tested with fakes.
 4. **`/welcome`** polls `is_plus` every 2 s for up to 60 s, then continues to `/app`.
 5. **`openBillingPortal`** opens the Stripe Customer Portal (`/app/account` → Manage billing).
@@ -106,7 +106,7 @@ If `RESEND_API_KEY` is set without `EMAIL_FROM`, sending fails with a clear erro
 German law, English wording. Both links are in every footer and in the member area's sidebar and More page.
 
 - **"Cancel contracts here" → `/cancel`** (§ 312k BGB): stores the request and sends the receipt at once. Logged in, it cancels at period end right away; logged out, a single-use confirm link goes to the account's email. The flow is `lib/cancel/flow.ts`.
-- **"Withdraw from contract here" → `/withdraw`** (§ 356a BGB, Art. 11a Consumer Rights Directive, since 19 June 2026): "Confirm withdrawal" stores the request and sends the receipt at once. The admin decides in `/admin/inbox`: "Refund & end now" refunds the last payment in Stripe and ends the membership; "Decline" is only offered when the right had expired (waiver at checkout, or after 14 days) and emails the reason. The flow is `lib/cancel/withdrawal.ts`, the refund `lib/billing/withdraw.ts`.
+- **"Withdraw from contract here" → `/withdraw`** (§ 356a BGB, Art. 11a Consumer Rights Directive, since 19 June 2026): "Confirm withdrawal" stores the request and sends the receipt at once. The admin decides in `/admin/inbox`: "Refund & end now" refunds the last payment in Stripe and ends the membership; "Decline" is only offered when the right had expired (waiver accepted at sign-up, or after 14 days) and emails the reason. The flow is `lib/cancel/withdrawal.ts`, the refund `lib/billing/withdraw.ts`.
 
 ## Routes so far
 
