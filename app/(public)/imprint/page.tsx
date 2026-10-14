@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Imprint" }
 // Impressum under German law, written in English like the rest of the site.
 export default function ImprintPage() {
   return (
-    <LegalPage title="Imprint">
+    <LegalPage title="Imprint" draft>
       <LegalSection title="Information under § 5 DDG (German Digital Services Act)">
         <p>
           <Ph>First and last name</Ph>
