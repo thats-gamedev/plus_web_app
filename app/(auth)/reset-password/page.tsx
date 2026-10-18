@@ -7,7 +7,7 @@ import { ResetPasswordForm } from "@/components/auth/forms"
 import { Banner } from "@/components/ui/banner"
 import { getUser } from "@/lib/dal/auth"
 
-export const metadata: Metadata = { title: "Set a new password" }
+export const metadata: Metadata = { title: "Set a new password", robots: { index: false, follow: false } }
 
 // Reached from the reset email via /auth/callback, which signs the user in.
 export default function ResetPasswordPage() {

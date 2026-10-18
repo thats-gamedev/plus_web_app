@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DESCRIPTION, INSTAGRAM_HANDLE, KEYWORDS, SITE_NAME, socialMetadata } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
@@ -22,16 +23,36 @@ const jetbrainsMono = localFont({
   display: "swap",
 });
 
+// Defaults for every page; pages add their own title, description and
+// canonical URL (a canonical here would point every page at the home page).
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "That's Game Dev Plus",
-    template: "%s · That's Game Dev Plus",
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
   },
-  description:
-    "Curated tools, assets, prompts and guides for game devs and 3D artists. Updated every month. From the team behind @thats_gamedev.",
-  openGraph: { siteName: "That's Game Dev Plus", type: "website", locale: "en_US" },
-  twitter: { card: "summary_large_image" },
+  description: DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: KEYWORDS,
+  authors: [{ name: `The team behind ${INSTAGRAM_HANDLE}`, url: "/" }],
+  creator: INSTAGRAM_HANDLE,
+  publisher: SITE_NAME,
+  category: "Game development",
+  // Let search engines show large image previews and full snippets.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
+  formatDetection: { telephone: false, address: false, email: false },
+  ...socialMetadata({ title: SITE_NAME }),
+  // The site as plain Markdown for LLMs (app/llms.txt).
+  alternates: { types: { "text/markdown": "/llms.txt" } },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f3f3f3",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

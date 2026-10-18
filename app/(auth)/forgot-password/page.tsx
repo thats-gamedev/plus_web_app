@@ -4,7 +4,7 @@ import { AuthHeading, AuthShell, RenderPanel } from "@/components/auth/auth-shel
 import { FormSkeleton } from "@/components/auth/form-skeleton"
 import { ForgotPasswordForm } from "@/components/auth/forms"
 
-export const metadata: Metadata = { title: "Reset your password" }
+export const metadata: Metadata = { title: "Reset your password", robots: { index: false, follow: true } }
 
 export default function ForgotPasswordPage() {
   return (

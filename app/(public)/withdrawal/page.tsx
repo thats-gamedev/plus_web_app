@@ -2,8 +2,13 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { LegalPage, LegalSection, ProviderAddress } from "@/components/legal/legal-page"
 import { contactEmail, contactMailto } from "@/lib/site"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = { title: "Withdrawal policy" }
+export const metadata: Metadata = pageMetadata({
+  title: "Withdrawal policy",
+  description: "Your right of withdrawal for the That's Game Dev Plus membership, how to use it, and the model withdrawal form.",
+  path: "/withdrawal",
+})
 
 // Based on the statutory model withdrawal notice (Annex I of Directive
 // 2011/83/EU; Anlage 1 zu Art. 246a § 1 Abs. 2 EGBGB) for digital content, in

@@ -4,7 +4,8 @@ import { AuthHeading, AuthShell, RenderPanel } from "@/components/auth/auth-shel
 import { FormSkeleton } from "@/components/auth/form-skeleton"
 import { LoginForm } from "@/components/auth/forms"
 
-export const metadata: Metadata = { title: "Log in" }
+// Not a landing page for search: out of the index, links still followed.
+export const metadata: Metadata = { title: "Log in", robots: { index: false, follow: true } }
 
 export default function LoginPage() {
   return (

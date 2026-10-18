@@ -2,8 +2,13 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { LEGAL_UPDATED, LegalPage, LegalSection, ProviderAddress } from "@/components/legal/legal-page"
 import { contactEmail, contactMailto } from "@/lib/site"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = { title: "Privacy policy" }
+export const metadata: Metadata = pageMetadata({
+  title: "Privacy policy",
+  description: "What That's Game Dev Plus stores about you, which processors we use and where, and how to export or delete your data.",
+  path: "/privacy",
+})
 
 // Spec "Privacy": must list every processor with its region and name the
 // contact for deletion and export requests. Keep it in step with the code:

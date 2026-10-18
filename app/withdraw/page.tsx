@@ -2,8 +2,13 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { AuthHeading, AuthShell, RenderPanel } from "@/components/auth/auth-shell"
 import { WithdrawForm } from "@/components/cancel/cancel-forms"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = { title: "Withdraw from your contract" }
+export const metadata: Metadata = pageMetadata({
+  title: "Withdraw from your contract",
+  description: "Withdraw from your That's Game Dev Plus contract within the withdrawal period.",
+  path: "/withdraw",
+})
 
 // Withdrawal function (Art. 11a Consumer Rights Directive, § 356a BGB):
 // "Withdraw from contract here" (Account, More) leads here; the button

@@ -1,7 +1,12 @@
 import type { Metadata } from "next"
 import { LegalPage, LegalSection, Ph } from "@/components/legal/legal-page"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = { title: "Imprint" }
+export const metadata: Metadata = pageMetadata({
+  title: "Imprint",
+  description: "Legal notice (Impressum) for That's Game Dev Plus: who runs the site and how to reach us.",
+  path: "/imprint",
+})
 
 // Impressum under German law, written in English like the rest of the site.
 export default function ImprintPage() {

@@ -2,8 +2,13 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { LEGAL_UPDATED, LegalPage, LegalSection, ProviderAddress } from "@/components/legal/legal-page"
 import { contactEmail, contactMailto } from "@/lib/site"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = { title: "Terms" }
+export const metadata: Metadata = pageMetadata({
+  title: "Terms",
+  description: "The terms of the That's Game Dev Plus membership: plans, payment, cancellation and use of the content.",
+  path: "/terms",
+})
 
 // General terms (AGB) under German law, in English. Linked from Stripe
 // Checkout (terms of service consent) and the sign-up checkbox.
