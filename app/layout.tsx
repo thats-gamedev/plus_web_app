@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { DESCRIPTION, INSTAGRAM_HANDLE, KEYWORDS, SITE_NAME, socialMetadata } from "@/lib/seo";
+import { DESCRIPTION, GOOGLE_SITE_VERIFICATION, INSTAGRAM_HANDLE, KEYWORDS, SITE_NAME, socialMetadata } from "@/lib/seo";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
@@ -45,6 +45,8 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
   },
   formatDetection: { telephone: false, address: false, email: false },
+  // Google Search Console: <meta name="google-site-verification"> on every page, the homepage included.
+  verification: { google: GOOGLE_SITE_VERIFICATION },
   ...socialMetadata({ title: SITE_NAME }),
   // The site as plain Markdown for LLMs (app/llms.txt).
   alternates: { types: { "text/markdown": "/llms.txt" } },

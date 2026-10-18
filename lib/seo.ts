@@ -42,6 +42,13 @@ export const SAME_AS = [instagramUrl]
 
 export const INSTAGRAM_HANDLE = "@thats_gamedev"
 
+/**
+ * Google Search Console ownership, by meta tag (app/layout.tsx). The same
+ * property can also verify with the file public/google266e3c494526d3af.html;
+ * keep both, removing either one can unverify the site.
+ */
+export const GOOGLE_SITE_VERIFICATION = "e1GG5bOJETcmrf119dGxe6i6wXi3jA8Ay1wMDwVV4_8"
+
 /** The share image (app/opengraph-image.tsx). */
 const SHARE_IMAGE = { url: "/opengraph-image", width: 1200, height: 630, alt: `${SITE_NAME}: the toolkit we'd hand a friend.` }
 
