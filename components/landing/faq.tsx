@@ -1,22 +1,16 @@
 "use client"
 
-import Link from "next/link"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 // FAQ (LW6): plus/minus instead of the accordion's default chevrons.
-const QUESTIONS: { q: string; a: React.ReactNode }[] = [
+const QUESTIONS: { q: string; a: string }[] = [
   {
     q: "What do I get each month?",
     a: "A new drop, usually an updated list, a prompts list and a short guide, on top of the full library. Every quarter there's an e-book, and your perk codes work all year.",
   },
   {
     q: "Can I cancel anytime?",
-    a: (
-      <>
-        Yes. Cancel in your account, or with <Link href="/cancel">Cancel contracts here</Link> in the site footer. You
-        keep access until the end of the period you paid for.
-      </>
-    ),
+    a: "Yes. Cancel anytime from your account. You keep access until the end of the period you paid for.",
   },
   {
     q: "Is the coding app included?",
