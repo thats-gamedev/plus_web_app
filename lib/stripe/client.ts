@@ -16,7 +16,8 @@ export function getStripe(): Stripe {
 
 /** Link into the Stripe Dashboard, in test mode when a test key is configured. */
 export function stripeDashboardUrl(path: string): string {
-  const test = process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_")
+  // Secret (sk_) or restricted (rk_) key.
+  const test = /^[sr]k_test_/.test(process.env.STRIPE_SECRET_KEY ?? "")
   return `https://dashboard.stripe.com/${test ? "test/" : ""}${path.replace(/^\//, "")}`
 }
 
