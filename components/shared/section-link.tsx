@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 
 type Props = React.ComponentProps<typeof Link> & { href: `/#${string}` }
 
@@ -12,13 +11,14 @@ type Props = React.ComponentProps<typeof Link> & { href: `/#${string}` }
  * Elsewhere it's a normal link to the landing page.
  */
 export function SectionLink({ href, onClick, ...props }: Props) {
-  const pathname = usePathname()
+  // The path is read on click, not while rendering: usePathname() would keep
+  // the pages that show this link (the header is everywhere) from prerendering.
   return (
     <Link
       href={href}
       onClick={(e) => {
         onClick?.(e)
-        if (e.defaultPrevented || pathname !== "/" || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+        if (e.defaultPrevented || window.location.pathname !== "/" || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
         const hash = href.slice(1)
         const section = document.getElementById(hash.slice(1))
         if (!section) return
