@@ -39,8 +39,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except static assets, image optimization and webhooks
-    // (Stripe needs the untouched request and sends no session).
-    "/((?!_next/static|_next/image|favicon.ico|api/webhooks|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico)$).*)",
+    // Everything except static assets, image optimization, webhooks (Stripe
+    // needs the untouched request and sends no session) and the files only
+    // crawlers read (robots.txt, sitemap.xml, llms.txt, the manifest, Google's
+    // verification file in public/), which need no session.
+    "/((?!_next/static|_next/image|favicon.ico|api/webhooks|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|txt|xml|html|webmanifest)$).*)",
   ],
 }
