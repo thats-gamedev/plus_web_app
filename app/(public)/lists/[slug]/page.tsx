@@ -13,7 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { categoryLabels, resourceSize, resourceTypeLabel } from "@/lib/content/resources"
 import { getPublicList, type PublicList } from "@/lib/dal/public"
 import { teaserItemCount } from "@/lib/lists/teaser"
+import { JsonLd } from "@/components/seo/json-ld"
+import type { ListItem, ListSection } from "@/lib/lists/schema"
 import { PLANS } from "@/lib/plans"
+import { SITE_NAME, socialMetadata } from "@/lib/seo"
+import { SITE_URL } from "@/lib/site-url"
 
 // Public list teaser (LW12 / LM13): the items marked Teaser, rendered with the
 // member components, then locked rows and a join card. The data is cached
@@ -23,10 +27,53 @@ export async function generateMetadata({ params }: PageProps<"/lists/[slug]">): 
   const { slug } = await params
   const list = await getPublicList(slug)
   if (!list) return { title: "List not found" }
+  const description = listDescription(list)
   return {
     title: list.title,
-    description: list.summary || `${resourceTypeLabel({ type: "list", listKind: list.listKind })} from That's Game Dev Plus.`,
+    description,
     alternates: { canonical: `/lists/${list.slug}` },
+    ...socialMetadata({ title: list.title, description, path: `/lists/${list.slug}`, type: "article" }),
+  }
+}
+
+/** The list's summary, or a sentence from its kind, category and size. */
+function listDescription(list: PublicList) {
+  if (list.summary) return list.summary
+  const kind = resourceTypeLabel({ type: "list", listKind: list.listKind })
+  return `${kind} for ${categoryLabels[list.category]}: ${list.itemCount} hand-picked entries from ${SITE_NAME}, each with one line on why it made the list.`
+}
+
+/** Structured data: where the list sits on the site, and the picks shown free (name, link, why). */
+function listStructuredData(list: PublicList) {
+  const url = `${SITE_URL}/lists/${list.slug}`
+  const items = (list.doc.sections as ListSection[]).flatMap((s): ListItem[] => s.items)
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: SITE_NAME, item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: list.title, item: url },
+        ],
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${url}#list`,
+        name: list.title,
+        description: listDescription(list),
+        url,
+        numberOfItems: list.itemCount,
+        itemListElement: items.map((item, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: item.name,
+          description: item.why,
+          ...("url" in item && item.url ? { url: item.url } : {}),
+        })),
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+      },
+    ],
   }
 }
 
@@ -52,6 +99,7 @@ async function PublicListContent({ params }: Pick<PageProps<"/lists/[slug]">, "p
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:gap-10">
+      <JsonLd data={listStructuredData(list)} />
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="muted">{resourceTypeLabel({ type: "list", listKind: list.listKind })}</Badge>
