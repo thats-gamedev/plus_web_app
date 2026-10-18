@@ -33,7 +33,7 @@ const QUESTIONS: { q: string; a: string }[] = [
 export function Faq() {
   return (
     <section id="faq" className="bg-card">
-      <div className="mx-auto grid max-w-6xl scroll-mt-24 gap-8 px-7 py-16 sm:px-6 md:grid-cols-[1fr_2fr] md:py-24 lg:px-10">
+      <div className="mx-auto grid max-w-6xl scroll-mt-24 gap-8 px-7 pt-16 pb-44 sm:px-6 md:grid-cols-[1fr_2fr] md:pt-24 lg:pb-60 lg:px-10">
         <h2 className="text-[1.75rem] leading-tight font-bold tracking-tight sm:text-3xl md:text-5xl">FAQ</h2>
         <Accordion type="single" collapsible>
           {QUESTIONS.map(({ q, a }) => (

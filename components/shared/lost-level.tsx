@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { MotionConfig, motion } from "motion/react"
 import { buttonVariants } from "@/components/ui/button"
+import { LostScene } from "@/components/three/scenes"
 
 // The game engine's "missing texture": magenta and black checks.
 const CHECKER = "repeating-conic-gradient(#ff00dc 0 25%, #121212 0 50%) 0 0 / 22px 22px"
@@ -26,7 +27,7 @@ export function LostLevel({
   return (
     <MotionConfig reducedMotion="user">
       <div className="mx-auto w-full max-w-2xl px-4 py-6 md:py-10">
-        <div className="relative overflow-hidden rounded-[28px] bg-ink px-5 pt-5 pb-8 text-white md:px-8 md:pt-6 md:pb-10">
+        <div className="relative overflow-hidden rounded-[28px] bg-ink px-5 pt-5 text-white md:px-8 md:pt-6">
           {/* A faint pixel grid, like an empty editor viewport. */}
           <div
             aria-hidden
@@ -87,12 +88,17 @@ export function LostLevel({
           <p className="relative mt-6 text-center font-mono text-xs text-ink-muted" aria-live="polite">
             {found ? "texture loaded. the page is still missing." : "missing_texture.png · click to load"}
           </p>
+
+          {/* The barbarian from the landing page, sitting on the level's floor (the card's bottom edge). */}
+          <div className="relative -mx-5 mt-2 h-[140px] md:-mx-8 md:h-[170px]">
+            <LostScene />
+          </div>
         </div>
 
         <div className="mt-6 text-center">
           <h1 className="text-3xl font-bold md:text-4xl">This level doesn&apos;t exist.</h1>
           <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-            The page you&apos;re looking for was never shipped, or it moved. No progress was lost.
+            This page got knocked off the strip, or it was never shipped. No progress was lost.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Link href={primary.href} className={buttonVariants({ size: "lg" })}>

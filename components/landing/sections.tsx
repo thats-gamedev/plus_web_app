@@ -12,6 +12,8 @@ import {
 } from "lucide-react"
 import { cn } from "cn"
 import { InstagramIcon } from "@/components/layout/icons"
+import { DashDemo } from "@/components/landing/dash-demo"
+import { ComebackScene, FightersScene } from "@/components/three/scenes"
 import { SectionLink } from "@/components/shared/section-link"
 import { HeroCard, Reveal, Stagger, StaggerItem } from "@/components/ui/motion"
 import { LockedBlurRows } from "@/components/lists/locked-rows"
@@ -36,7 +38,7 @@ const monthly = PLANS.founding_monthly.price
 export function Hero({ cards }: { cards: PublicResource[] }) {
   return (
     <section className="overflow-hidden">
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pt-10 pb-14 sm:px-6 md:py-14 lg:grid-cols-2 lg:gap-12 lg:px-10 lg:py-20">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pt-10 pb-44 sm:px-6 md:pt-14 lg:grid-cols-2 lg:gap-12 lg:px-10 lg:pt-24 lg:pb-48">
         <Stagger when="mount" stagger={0.1}>
           <StaggerItem>
             <Badge variant="new" className="h-6 px-2.5 text-xs">
@@ -54,7 +56,8 @@ export function Hero({ cards }: { cards: PublicResource[] }) {
             </p>
           </StaggerItem>
           <StaggerItem>
-            <SectionLink href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full sm:w-auto")}>
+            {/* data-join-cta: the knight in ./fighters-scene throws his sword into this button. */}
+            <SectionLink href="/#pricing" data-join-cta className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full sm:w-auto")}>
               <span className="sm:hidden">Join · {monthly}/month</span>
               <span className="hidden sm:inline">Join as a founding member · {monthly}/mo</span>
             </SectionLink>
@@ -121,7 +124,11 @@ function HeroCards({ cards }: { cards: PublicResource[] }) {
 /** Dark strip under the hero; only real numbers (spec). */
 export function StatsStrip({ followers }: { followers: string | null }) {
   return (
-    <section aria-label="At a glance" className="bg-ink text-white">
+    <section aria-label="At a glance" className="relative bg-ink text-white">
+      {/* The fighters' stage: the page's full width, standing on the strip's top edge and reaching up past the join button (its height is set by ./fighters-scene). */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-full translate-y-px">
+        <FightersScene />
+      </div>
       <Stagger
         as="ul"
         stagger={0.12}
@@ -342,18 +349,7 @@ export function CodeYourHero() {
             Hero Pro is included for free in your thats_gamedev Plus subscription.
           </p>
         </div>
-        <pre
-          aria-hidden
-          className="shrink-0 overflow-x-auto rounded-2xl bg-ink px-5 py-4 font-mono text-[13px] leading-relaxed text-white md:px-6 md:py-5 md:text-sm"
-        >
-          <span className="text-sky-300">void</span> <span className="text-brand">Dash</span>(
-          <span className="text-sky-300">float</span> d) {"{"}
-          {"\n  "}
-          <span className="text-brand">MoveBy</span>(facing * d);
-          {"\n  "}
-          <span className="text-brand">SetInvulnerable</span>(<span className="text-emerald-300">0.2f</span>);
-          {"\n}"}
-        </pre>
+        <DashDemo />
       </Reveal>
     </section>
   )
@@ -361,10 +357,13 @@ export function CodeYourHero() {
 
 export function CtaBand() {
   return (
-    <section className="bg-ink text-white">
+    <section className="relative bg-ink text-white">
+      {/* The barbarian climbs back up over this band's top edge and throws his axe into its button. */}
+      <ComebackScene />
       <Reveal className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-16 sm:px-6 md:flex-row md:items-center md:justify-between md:py-20 lg:px-10">
         <h2 className="max-w-xl text-2xl leading-tight font-bold sm:text-3xl md:text-5xl">Support the page, level up your work.</h2>
-        <SectionLink href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "w-full md:w-auto")}>
+        {/* data-cta-join: the barbarian in ./comeback-scene throws his axe into this button. */}
+        <SectionLink href="/#pricing" data-cta-join className={cn(buttonVariants({ size: "lg" }), "w-full md:w-auto")}>
           <span className="sm:hidden">Join · {monthly}/month</span>
           <span className="hidden sm:inline">Join as a founding member · {monthly}/mo</span>
         </SectionLink>
