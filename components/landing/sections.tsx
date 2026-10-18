@@ -52,7 +52,7 @@ export function Hero({ cards }: { cards: PublicResource[] }) {
           </StaggerItem>
           <StaggerItem>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg md:text-xl">
-              Curated tools, assets, prompts and guides. Updated every month. From the team behind @thats_gamedev.
+              Curated tools, assets, prompts and guides for game devs and 3D artists. Updated every month. From the team behind @thats_gamedev.
             </p>
           </StaggerItem>
           <StaggerItem>
