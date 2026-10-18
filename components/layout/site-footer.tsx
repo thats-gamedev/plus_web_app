@@ -24,7 +24,7 @@ export function LegalLinks({ className }: { className?: string }) {
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between lg:px-16">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-8 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between lg:px-16">
         <LegalLinks />
         <a
           href={instagramUrl}

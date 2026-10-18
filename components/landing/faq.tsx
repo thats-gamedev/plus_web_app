@@ -39,8 +39,8 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
 export function Faq() {
   return (
     <section id="faq" className="bg-card">
-      <div className="mx-auto grid max-w-6xl scroll-mt-24 gap-6 px-4 py-14 sm:px-6 md:grid-cols-[1fr_2fr] md:py-24 lg:px-10">
-        <h2 className="text-4xl font-bold tracking-tight md:text-5xl">FAQ</h2>
+      <div className="mx-auto grid max-w-6xl scroll-mt-24 gap-8 px-7 py-16 sm:px-6 md:grid-cols-[1fr_2fr] md:py-24 lg:px-10">
+        <h2 className="text-[1.75rem] leading-tight font-bold tracking-tight sm:text-3xl md:text-5xl">FAQ</h2>
         <Accordion type="single" collapsible>
           {QUESTIONS.map(({ q, a }) => (
             <AccordionItem key={q} value={q} className="border-b border-border">
@@ -52,7 +52,7 @@ export function Faq() {
                   <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 rounded-full bg-current transition-transform duration-300 group-aria-expanded/accordion-trigger:scale-y-0" />
                 </span>
               </AccordionTrigger>
-              <AccordionContent className="pb-5 text-base text-muted-foreground">{a}</AccordionContent>
+              <AccordionContent className="pb-5 text-base leading-relaxed text-muted-foreground">{a}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>

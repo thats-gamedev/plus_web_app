@@ -16,15 +16,15 @@ export default async function LandingPage() {
       <WhatsInside examples={data.examples} />
       {data.drop && <DropTeaser drop={data.drop} />}
       {data.freeList && (
-        <div className="mt-14 md:mt-24">
+        <div className="mt-16 md:mt-24">
           <FreeList list={data.freeList} />
         </div>
       )}
       <CodeYourHero />
-      <section id="pricing" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-14 sm:px-6 md:py-24 lg:px-10">
+      <section id="pricing" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-16 sm:px-6 md:py-24 lg:px-10">
         <Reveal>
-          <h2 className="text-center text-4xl font-bold tracking-tight md:text-5xl">Founding pricing</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-muted-foreground">
+          <h2 className="text-center text-[1.75rem] leading-tight font-bold tracking-tight sm:text-3xl md:text-5xl">Founding pricing</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center leading-relaxed text-muted-foreground">
             Founding prices are available until Code Your Hero launches. After that, Plus costs{" "}
             <strong className="text-foreground">$12.99/month</strong> for new members. Join now and keep your founding
             price for as long as you stay subscribed.

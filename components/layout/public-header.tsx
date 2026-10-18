@@ -20,7 +20,7 @@ const links = [
 export function PublicHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-[76px] lg:px-10">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-5 sm:gap-4 sm:px-6 lg:h-[76px] lg:px-10">
         <Logo />
         <nav aria-label="Main" className="hidden items-center gap-9 md:flex">
           {links.map((l) => (
@@ -47,7 +47,7 @@ export function PublicHeader() {
                 <SheetTitle className="sr-only">Menu</SheetTitle>
                 <Logo />
               </SheetHeader>
-              <nav aria-label="Mobile" className="flex flex-col gap-1 px-4">
+              <nav aria-label="Mobile" className="flex flex-col gap-1 px-5">
                 {links.map((l) => (
                   <SheetClose key={l.href} asChild>
                     <Link

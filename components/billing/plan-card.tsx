@@ -64,7 +64,7 @@ export function PlanCard({ plan, checkout = false }: { plan: PlanId; checkout?: 
         <Badge variant={copy.badge.variant}>{copy.badge.label}</Badge>
       </div>
       <p className="mt-4 flex items-baseline gap-2">
-        <span className="text-5xl font-bold tracking-tight">{copy.price}</span>
+        <span className="text-4xl font-bold tracking-tight md:text-5xl">{copy.price}</span>
         <span className="text-muted-foreground">{copy.per}</span>
       </p>
       <p className="mt-4 text-sm text-muted-foreground">{copy.note}</p>
