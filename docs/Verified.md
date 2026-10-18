@@ -139,3 +139,6 @@ Checked in the production build (`next build`, 49 pages, then `next start`) and 
 - Login and the password pages are `noindex`; sign-up is in the sitemap. robots.txt names the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended and others) as allowed on the public pages.
 - `/llms.txt` (a map with links) and `/llms-full.txt` (all public content: what's inside, the current drop, plans and benefits, every free list's picks, the FAQ) are Markdown, prerendered and refreshed hourly from the same data as the pages.
 
+**Google Search Console verification (2026-10-18)**
+The meta tag `<meta name="google-site-verification" content="e1GG5bOJETcmrf119dGxe6i6wXi3jA8Ay1wMDwVV4_8"/>` is in the prerendered homepage's `<head>`, before `<body>` (and on every page, from the root layout). `public/google266e3c494526d3af.html` is served at `/google266e3c494526d3af.html` with status 200, byte for byte as Google issued it (checked with `next start`). The proxy no longer runs for files only crawlers read (`.txt`, `.xml`, `.html`, `.webmanifest`): robots.txt, sitemap.xml, both llms files, the manifest and the verification file load without a Supabase session call; `/app` still redirects to login.
+
