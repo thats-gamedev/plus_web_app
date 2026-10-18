@@ -4,7 +4,7 @@ import { CancelForm } from "@/components/cancel/cancel-forms"
 
 export const metadata: Metadata = { title: "Cancel your membership" }
 
-// Statutory cancellation button (§ 312k BGB, LW13), linked from every footer.
+// Statutory cancellation button (§ 312k BGB, LW13), linked from Account and More.
 // Works without logging in; the flow is lib/cancel/flow.ts.
 export default function CancelPage() {
   return (

@@ -19,8 +19,7 @@ export default function WithdrawalPage() {
         </p>
         <p>
           The easiest way to withdraw is our withdrawal function,{" "}
-          <Link href="/withdraw">Withdraw from contract here</Link>, linked in the footer of the website and in your
-          account. You can also inform us (<ProviderAddress inline />, email{" "}
+          <Link href="/withdraw">Withdraw from contract here</Link>, linked in your account. You can also inform us (<ProviderAddress inline />, email{" "}
           <a href={contactMailto("Withdrawal")}>{contactEmail}</a>) of your decision to withdraw from this contract by
           an unequivocal statement (e.g. a letter or an email). You may use the model withdrawal form below, but it is
           not obligatory.

@@ -116,7 +116,7 @@ export function welcomeEmail({
         button(`${siteUrl}/app`, "Open your dashboard") +
         p(`Your member codes for the merch shop and promotions are on the ${link(`${siteUrl}/app/perks`, "Perks page")}.`) +
         small(
-          `You can cancel any time under ${link(`${siteUrl}/app/account`, "Account")} or with the link “Cancel contracts here” at the bottom of every page. You keep access until the end of the period you paid for.`
+          `You can cancel any time under ${link(`${siteUrl}/app/account`, "Account")} or with ${link(`${siteUrl}/cancel`, "Cancel contracts here")}. You keep access until the end of the period you paid for.`
         ) +
         `<p style="margin:24px 0 8px;font-size:14px;font-weight:600;color:${C.ink}">Your contract</p>` +
         detailsTable(contractRows) +

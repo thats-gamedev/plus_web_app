@@ -1,23 +1,19 @@
 import Link from "next/link"
 import { cn } from "cn"
 import { InstagramIcon } from "@/components/layout/icons"
-import { contractLinks, instagramUrl, legalLinks } from "@/components/layout/nav-config"
+import { instagramUrl, legalLinks } from "@/components/layout/nav-config"
 
 /**
- * Imprint, privacy, terms and the two statutory contract links. The law
- * wants them reachable from every page, so pages without the footer (login,
- * sign-up) show this on its own.
+ * Imprint, privacy, terms and withdrawal policy. The two statutory contract
+ * links (contractLinks) are out of the footer by the owner's decision
+ * (2026-10-17); they're on Account and More. To bring them back, map
+ * contractLinks here with "font-medium text-foreground hover:text-brand".
  */
 export function LegalLinks({ className }: { className?: string }) {
   return (
     <nav aria-label="Legal" className={cn("flex flex-wrap gap-x-5 gap-y-2", className)}>
       {legalLinks.map((l) => (
         <Link key={l.href} href={l.href} className="hover:text-foreground">
-          {l.label}
-        </Link>
-      ))}
-      {contractLinks.map((l) => (
-        <Link key={l.href} href={l.href} className="font-medium text-foreground hover:text-brand">
           {l.label}
         </Link>
       ))}

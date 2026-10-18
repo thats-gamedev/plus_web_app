@@ -6,7 +6,7 @@ import { WithdrawForm } from "@/components/cancel/cancel-forms"
 export const metadata: Metadata = { title: "Withdraw from your contract" }
 
 // Withdrawal function (Art. 11a Consumer Rights Directive, § 356a BGB):
-// "Withdraw from contract here" in every footer leads here; the button
+// "Withdraw from contract here" (Account, More) leads here; the button
 // "Confirm withdrawal" sends it. The flow is lib/cancel/withdrawal.ts.
 export default function WithdrawPage() {
   return (
