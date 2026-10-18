@@ -12,7 +12,7 @@ Sources (details live there, every open task lives here):
 - `docs/Thats_Game_Dev_Plus_Development_Plan_Design_Concept.md` ("the spec"): the "Launch checklist & open decisions" section
 - whatever came up while building
 
-_Last updated: 2026-10-18 (landing page mobile pass and 3D scenes; the cancel and withdraw links are out of the footer and the FAQ, risk accepted; terms, privacy and withdrawal written out; the waiver is part of the sign-up checkbox, and the welcome email confirms it; prod database migrated; Phase 6 waits on Fourthwall credentials; Phase 11 needs its browser check)_
+_Last updated: 2026-10-18 (SEO and llms.txt; landing page mobile pass and 3D scenes; the cancel and withdraw links are out of the footer and the FAQ, risk accepted; terms, privacy and withdrawal written out; the waiver is part of the sign-up checkbox, and the welcome email confirms it; prod database migrated; Phase 6 waits on Fourthwall credentials; Phase 11 needs its browser check)_
 
 **Contents**
 1. Before deployment and launch (the checklist)
@@ -149,12 +149,14 @@ Without `RESEND_API_KEY` every app email is printed to the dev server console an
 - [ ] **Env vars on Vercel.** Everything from `.env.example`, with production values:
   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` (prod project)
   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_FOUNDING_MONTHLY`, `STRIPE_PRICE_FOUNDING_ANNUAL` (live)
-  - `NEXT_PUBLIC_SITE_URL` (the real domain; the sitemap, robots and share links use it), `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+  - `NEXT_PUBLIC_SITE_URL` (the real domain; the sitemap, robots, canonical URLs, structured data, `/llms.txt` and share links use it, and without it they all point to localhost), `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
   - `INSTAGRAM_FOLLOWERS`
   - `CRON_SECRET`, `UNSUBSCRIBE_SECRET` (new values for production)
   - `RESEND_API_KEY`, `EMAIL_FROM`, optional `EMAIL_REPLY_TO`
   - the Fourthwall credentials, once available
 - [ ] **Vercel Cron enabled** for both jobs in `vercel.json`.
+- [ ] **Search engines, once the domain is live.** Verify it in Google Search Console and Bing Webmaster Tools (Bing also feeds ChatGPT search and Copilot) and submit `/sitemap.xml`. Run the landing page and a list page through Google's Rich Results Test (https://search.google.com/test/rich-results) to confirm the structured data (Organization, Product with both prices, FAQPage, ItemList). Open `/llms.txt` and `/llms-full.txt` on the real domain once.
+- [ ] **Other social profiles for search.** The structured data names only the Instagram page as the same organization (`SAME_AS` in `lib/seo.ts`). Add the X, YouTube or TikTok profile URLs there if the brand has them; it helps search engines and LLMs tie the site to the brand.
 
 ## 4. Still to build (Phase 11 leftovers, Phase 12)
 

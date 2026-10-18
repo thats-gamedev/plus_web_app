@@ -130,3 +130,12 @@ Checked in Chrome at 390 px (and 320 px for overflow), 768, 1024, 1280 and 1440 
 - Mobile: smaller headings, more spacing, stats strip as an icon list, "Get featured" without the rocket, the Code Your Hero snippet visible, wider FAQ margins. The FAQ answer to "Can I cancel anytime?" no longer links `/cancel`.
 - 3D (three.js + @react-three/fiber, KayKit Adventurers models, CC0, trimmed to ~660 KB each): the fight on the stats strip ends with the knight's sword stuck in the hero's join button; the barbarian climbs back over the CTA band and throws his axe into its button; Code Your Hero's dash demo lights up the snippet line by line; the 404 card shows the barbarian sitting. Each stage loads lazily, starts when in view, keeps running while scrolling, pauses off screen, lets clicks through, and shows a still picture with "reduce motion".
 - Both join buttons stay clickable under the stages; all `/#…` section links on the landing page now scroll on every click (`SectionLink`), not only the first.
+
+**SEO and LLM readability (2026-10-18)**
+Checked in the production build (`next build`, 49 pages, then `next start`) and the server HTML:
+- Every public page has its own title, description, canonical URL and Open Graph/Twitter data with the share image and the large card (`pageMetadata`/`socialMetadata` in `lib/seo.ts`; Next.js replaces these objects per page, so the helpers keep the defaults). The root sets keywords, author and publisher, `max-image-preview:large`/`max-snippet:-1`, the theme colour and a web manifest (`/manifest.webmanifest`).
+- Structured data (JSON-LD): the landing page has Organization (with the Instagram profile), WebSite, WebPage, Product (the membership with both founding prices, VAT included) and FAQPage (the same text as the FAQ, `lib/content/faq.ts`); list pages have a BreadcrumbList and an ItemList of the free picks.
+- The FAQ answers are in the HTML while collapsed (forceMount; hidden and out of the accessibility tree when closed, the open and close animations unchanged).
+- Login and the password pages are `noindex`; sign-up is in the sitemap. robots.txt names the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended and others) as allowed on the public pages.
+- `/llms.txt` (a map with links) and `/llms-full.txt` (all public content: what's inside, the current drop, plans and benefits, every free list's picks, the FAQ) are Markdown, prerendered and refreshed hourly from the same data as the pages.
+
