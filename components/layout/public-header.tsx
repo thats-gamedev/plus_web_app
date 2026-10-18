@@ -10,8 +10,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Logo } from "@/components/layout/logo"
+import { SectionLink } from "@/components/shared/section-link"
 
-const links = [
+const links: { href: `/#${string}`; label: string }[] = [
   { href: "/#inside", label: "What's inside" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#faq", label: "FAQ" },
@@ -24,9 +25,9 @@ export function PublicHeader() {
         <Logo />
         <nav aria-label="Main" className="hidden items-center gap-9 md:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="font-medium hover:text-brand">
+            <SectionLink key={l.href} href={l.href} className="font-medium hover:text-brand">
               {l.label}
-            </Link>
+            </SectionLink>
           ))}
           <Button asChild variant="outline">
             <Link href="/login">Log in</Link>
@@ -50,12 +51,12 @@ export function PublicHeader() {
               <nav aria-label="Mobile" className="flex flex-col gap-1 px-5">
                 {links.map((l) => (
                   <SheetClose key={l.href} asChild>
-                    <Link
+                    <SectionLink
                       href={l.href}
                       className="rounded-lg px-3 py-3 text-lg font-medium hover:bg-muted"
                     >
                       {l.label}
-                    </Link>
+                    </SectionLink>
                   </SheetClose>
                 ))}
               </nav>

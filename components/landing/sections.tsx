@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { cn } from "cn"
 import { InstagramIcon } from "@/components/layout/icons"
+import { SectionLink } from "@/components/shared/section-link"
 import { HeroCard, Reveal, Stagger, StaggerItem } from "@/components/ui/motion"
 import { LockedBlurRows } from "@/components/lists/locked-rows"
 import { ResourceIcon } from "@/components/shared/resource-icon"
@@ -53,10 +54,10 @@ export function Hero({ cards }: { cards: PublicResource[] }) {
             </p>
           </StaggerItem>
           <StaggerItem>
-            <Link href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full sm:w-auto")}>
+            <SectionLink href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "mt-8 w-full sm:w-auto")}>
               <span className="sm:hidden">Join · {monthly}/month</span>
               <span className="hidden sm:inline">Join as a founding member · {monthly}/mo</span>
-            </Link>
+            </SectionLink>
           </StaggerItem>
         </Stagger>
         {cards.length > 0 && <HeroCards cards={cards} />}
@@ -316,9 +317,9 @@ export function FreeList({ list }: { list: PublicList }) {
           {list.itemCount > free && (
             <Reveal>
               <LockedBlurRows total={list.itemCount} tone="muted" className="mt-3 hidden md:block" />
-              <Link href="/#pricing" className={cn(buttonVariants({ variant: "dark", size: "lg" }), "mt-6 w-full md:hidden")}>
+              <SectionLink href="/#pricing" className={cn(buttonVariants({ variant: "dark", size: "lg" }), "mt-6 w-full md:hidden")}>
                 Unlock all {list.itemCount}
-              </Link>
+              </SectionLink>
             </Reveal>
           )}
         </div>
@@ -363,10 +364,10 @@ export function CtaBand() {
     <section className="bg-ink text-white">
       <Reveal className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-16 sm:px-6 md:flex-row md:items-center md:justify-between md:py-20 lg:px-10">
         <h2 className="max-w-xl text-2xl leading-tight font-bold sm:text-3xl md:text-5xl">Support the page, level up your work.</h2>
-        <Link href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "w-full md:w-auto")}>
+        <SectionLink href="/#pricing" className={cn(buttonVariants({ size: "lg" }), "w-full md:w-auto")}>
           <span className="sm:hidden">Join · {monthly}/month</span>
           <span className="hidden sm:inline">Join as a founding member · {monthly}/mo</span>
-        </Link>
+        </SectionLink>
       </Reveal>
     </section>
   )
