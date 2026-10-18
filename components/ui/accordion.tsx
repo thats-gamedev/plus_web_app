@@ -62,7 +62,10 @@ function AccordionContent({
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
+      // The data-closed height and visibility only matter with forceMount (the
+      // answer stays in the HTML for search engines): collapsed to 0 after the
+      // close animation, and invisible (so not read out or focusable) once it ends.
+      className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:invisible data-closed:h-0 data-closed:animate-accordion-up data-closed:transition-[visibility] data-closed:duration-200"
       {...props}
     >
       <div
